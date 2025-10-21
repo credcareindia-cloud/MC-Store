@@ -1,0 +1,22 @@
+-- -- Drop and recreate categories table with all required columns
+-- DROP TABLE IF EXISTS categories CASCADE;
+
+-- CREATE TABLE categories (
+--     id SERIAL PRIMARY KEY,
+--     name VARCHAR(100) NOT NULL UNIQUE,
+--     description TEXT,
+--     image_url TEXT,
+--     is_active BOOLEAN DEFAULT true,
+--     is_special BOOLEAN DEFAULT false,
+--     sort_order INTEGER DEFAULT 0,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- -- Insert default categories
+-- INSERT INTO categories (name, description, image_url, is_special, sort_order, is_active) VALUES
+-- ('Today''s Special', 'Chef''s handpicked selections for today', '/placeholder.svg?height=100&width=100', true, 0, true),
+-- ('Appetizers', 'Start your culinary journey with our exquisite appetizers', '/placeholder.svg?height=100&width=100', false, 1, true),
+-- ('Main Courses', 'Our signature main dishes crafted with premium ingredients', '/placeholder.svg?height=100&width=100', false, 2, true),
+-- ('Desserts', 'Sweet endings to your perfect meal', '/placeholder.svg?height=100&width=100', false, 3, true),
+-- ('Beverages', 'Carefully curated drinks to complement your dining experience', '/placeholder.svg?height=100&width=100', false, 4, true);

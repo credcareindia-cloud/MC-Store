@@ -1,0 +1,26 @@
+-- -- Create banner table for promotional banners and announcements
+-- CREATE TABLE IF NOT EXISTS banners (
+--     id SERIAL PRIMARY KEY,
+--     title VARCHAR(200) NOT NULL,
+--     message TEXT NOT NULL,
+--     banner_type VARCHAR(50) DEFAULT 'promotion', -- promotion, announcement, warning, info
+--     background_color VARCHAR(20) DEFAULT '#f59e0b',
+--     text_color VARCHAR(20) DEFAULT '#ffffff',
+--     button_text VARCHAR(100),
+--     button_link VARCHAR(200),
+--     button_color VARCHAR(20) DEFAULT '#ffffff',
+--     display_pages TEXT[] DEFAULT ARRAY['all'], -- all, home, menu, about, contact, etc.
+--     is_active BOOLEAN DEFAULT true,
+--     start_date TIMESTAMP,
+--     end_date TIMESTAMP,
+--     priority INTEGER DEFAULT 0,
+--     is_dismissible BOOLEAN DEFAULT true,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- -- Insert default banner content
+-- INSERT INTO banners (title, message, banner_type, background_color, text_color, button_text, button_link, display_pages, is_active, priority) VALUES
+-- ('Grand Opening Special!', 'Join us for our grand opening celebration. Get 20% off your first order this week only!', 'promotion', '#f59e0b', '#ffffff', 'Order Now', '/menu', ARRAY['all'], true, 1),
+-- ('New Menu Items', 'Discover our chef''s latest creations featuring seasonal ingredients and bold flavors.', 'announcement', '#3b82f6', '#ffffff', 'View Menu', '/menu', ARRAY['home', 'menu'], true, 2)
+-- ON CONFLICT DO NOTHING;

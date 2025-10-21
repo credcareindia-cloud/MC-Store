@@ -1,0 +1,103 @@
+-- -- Create tables for the restaurant website
+
+-- -- Categories table
+-- CREATE TABLE IF NOT EXISTS categories (
+--     id SERIAL PRIMARY KEY,
+--     name VARCHAR(100) NOT NULL,
+--     description TEXT,
+--     image_url TEXT,
+--     is_active BOOLEAN DEFAULT true,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- -- Menu items table
+-- CREATE TABLE IF NOT EXISTS menu_items (
+--     id SERIAL PRIMARY KEY,
+--     name VARCHAR(200) NOT NULL,
+--     description TEXT,
+--     price DECIMAL(10,2) NOT NULL,
+--     image_url TEXT,
+--     category_id INTEGER REFERENCES categories(id),
+--     is_available BOOLEAN DEFAULT true,
+--     is_featured BOOLEAN DEFAULT false,
+--     ingredients TEXT[],
+--     allergens TEXT[],
+--     preparation_time INTEGER, -- in minutes
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- -- Orders table
+-- CREATE TABLE IF NOT EXISTS orders (
+--     id SERIAL PRIMARY KEY,
+--     customer_name VARCHAR(200) NOT NULL,
+--     customer_email VARCHAR(200),
+--     customer_phone VARCHAR(50),
+--     order_type VARCHAR(50) DEFAULT 'dine-in', -- dine-in, takeaway, delivery
+--     table_number INTEGER,
+--     delivery_address TEXT,
+--     total_amount DECIMAL(10,2) NOT NULL,
+--     status VARCHAR(50) DEFAULT 'pending', -- pending, confirmed, preparing, ready, completed, cancelled
+--     special_instructions TEXT,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- -- Order items table
+-- CREATE TABLE IF NOT EXISTS order_items (
+--     id SERIAL PRIMARY KEY,
+--     order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+--     menu_item_id INTEGER REFERENCES menu_items(id),
+--     quantity INTEGER NOT NULL,
+--     unit_price DECIMAL(10,2) NOT NULL,
+--     special_requests TEXT,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- -- Reservations table
+-- CREATE TABLE IF NOT EXISTS reservations (
+--     id SERIAL PRIMARY KEY,
+--     customer_name VARCHAR(200) NOT NULL,
+--     customer_email VARCHAR(200),
+--     customer_phone VARCHAR(50) NOT NULL,
+--     party_size INTEGER NOT NULL,
+--     reservation_date DATE NOT NULL,
+--     reservation_time TIME NOT NULL,
+--     status VARCHAR(50) DEFAULT 'pending', -- pending, confirmed, cancelled, completed
+--     special_requests TEXT,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- -- Content management table
+-- CREATE TABLE IF NOT EXISTS content (
+--     id SERIAL PRIMARY KEY,
+--     section VARCHAR(100) NOT NULL, -- hero, about, contact, etc.
+--     title VARCHAR(500),
+--     subtitle VARCHAR(500),
+--     content TEXT,
+--     image_url TEXT,
+--     is_active BOOLEAN DEFAULT true,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- -- Admin users table
+-- CREATE TABLE IF NOT EXISTS admin_users (
+--     id SERIAL PRIMARY KEY,
+--     username VARCHAR(100) UNIQUE NOT NULL,
+--     email VARCHAR(200) UNIQUE NOT NULL,
+--     password_hash VARCHAR(500) NOT NULL,
+--     role VARCHAR(50) DEFAULT 'admin',
+--     is_active BOOLEAN DEFAULT true,
+--     last_login TIMESTAMP,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- -- Create indexes for better performance
+-- CREATE INDEX IF NOT EXISTS idx_menu_items_category ON menu_items(category_id);
+-- CREATE INDEX IF NOT EXISTS idx_menu_items_featured ON menu_items(is_featured);
+-- CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+-- CREATE INDEX IF NOT EXISTS idx_orders_date ON orders(created_at);
+-- CREATE INDEX IF NOT EXISTS idx_reservations_date ON reservations(reservation_date);
