@@ -20,7 +20,11 @@ export async function GET() {
         'shop_switch_enabled',
         'default_currency',
         'currency_switch_enabled',
-        'available_currencies'
+        'available_currencies',
+        'shop_a_name',
+        'shop_b_name',
+        'shop_a_tagline',
+        'shop_b_tagline'
       )
     `
 
@@ -39,7 +43,11 @@ export async function GET() {
       shop_switch_enabled: 'true',
       default_currency: 'INR',
       currency_switch_enabled: 'true',
-      available_currencies: 'AED,INR'
+      available_currencies: 'AED,INR',
+      shop_a_name: 'Motor Parts',
+      shop_b_name: 'Fragrance',
+      shop_a_tagline: 'Beauty & Cosmetics',
+      shop_b_tagline: 'Fashion & Accessories'
     }
 
     // Override with database values
@@ -76,7 +84,11 @@ export async function POST(request: Request) {
       'shop_switch_enabled',
       'default_currency',
       'currency_switch_enabled',
-      'available_currencies'
+      'available_currencies',
+      'shop_a_name',
+      'shop_b_name',
+      'shop_a_tagline',
+      'shop_b_tagline'
     ]
 
     if (!validKeys.includes(key)) {

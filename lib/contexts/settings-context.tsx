@@ -22,6 +22,7 @@ interface Settings {
   social_facebook: string
   social_instagram: string
   social_twitter: string
+  footer_description: string
 }
 
 interface SettingsContextType {
@@ -51,6 +52,7 @@ const defaultSettings: Settings = {
   social_facebook: "",
   social_instagram: "",
   social_twitter: "",
+  footer_description: "Sabs Online Store story began in 2015 in Dubai. we have created a niche for our customers with our high-quality products and our attention to detail in service.",
 }
 
 const SettingsContext = createContext<SettingsContextType>({

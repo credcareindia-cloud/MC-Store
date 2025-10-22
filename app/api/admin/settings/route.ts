@@ -26,12 +26,15 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Settings must be an array" }, { status: 400 })
     }
 
-    // Update each setting
+    // Update or insert each setting
     for (const setting of settings) {
       await sql`
-        UPDATE settings 
-        SET value = ${setting.value}, updated_at = CURRENT_TIMESTAMP
-        WHERE key = ${setting.key}
+        INSERT INTO settings (key, value, category, created_at, updated_at)
+        VALUES (${setting.key}, ${setting.value}, ${setting.category || 'general'}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT (key) 
+        DO UPDATE SET 
+          value = EXCLUDED.value,
+          updated_at = CURRENT_TIMESTAMP
       `
     }
 

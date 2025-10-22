@@ -49,6 +49,10 @@ function Nav() {
   const [searchDebounceTimer, setSearchDebounceTimer] = useState<NodeJS.Timeout | null>(null)
   const [autoScrollInterval, setAutoScrollInterval] = useState<NodeJS.Timeout | null>(null)
   const [isAutoScrolling, setIsAutoScrolling] = useState(false)
+  const [shopNames, setShopNames] = useState({
+    shop_a_name: 'Motor Parts',
+    shop_b_name: 'Fragrance'
+  })
 
   const pathname = usePathname()
   const router = useRouter()
@@ -166,6 +170,16 @@ function Nav() {
         
         const productsResponse = await fetch('/api/admin/products')
         const productsData = await productsResponse.json()
+        
+        // Fetch shop names from admin settings
+        const shopFeaturesResponse = await fetch('/api/admin/shop-features')
+        if (shopFeaturesResponse.ok) {
+          const shopFeaturesData = await shopFeaturesResponse.json()
+          setShopNames({
+            shop_a_name: shopFeaturesData.shop_a_name || 'Motor Parts',
+            shop_b_name: shopFeaturesData.shop_b_name || 'Fragrance'
+          })
+        }
         
       const shopFilteredCategories = shop
   ? categoriesData.filter((cat: Category) => 
@@ -398,7 +412,8 @@ function Nav() {
                     </div>
                   )}
                   <h1 className="text-2xl font-bold text-white">
-                    {shop === "A" ? `${settings.restaurant_name} - Beauty` : `${settings.restaurant_name} - Style`}
+                    {/* Old hardcoded version: {shop === "A" ? `${settings.restaurant_name} - Beauty` : `${settings.restaurant_name} - Style`} */}
+                    {shop === "A" ? `${settings.restaurant_name} - ${shopNames.shop_a_name}` : `${settings.restaurant_name} - ${shopNames.shop_b_name}`}
                   </h1>
                 </Link>
 
@@ -649,7 +664,8 @@ function Nav() {
                       <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                         <div className="p-3">
                           <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
-                            {shop === "A" ? "Beauty Categories" : shop === "B" ? "Style Categories" : "Categories"}
+                            {/* Old hardcoded version: {shop === "A" ? "Beauty Categories" : shop === "B" ? "Style Categories" : "Categories"} */}
+                            {shop === "A" ? `${shopNames.shop_a_name} Categories` : shop === "B" ? `${shopNames.shop_b_name} Categories` : "Categories"}
                           </div>
                           {categories.length > 0 ? (
                             <div className="space-y-1 max-h-80 overflow-y-auto">
@@ -800,7 +816,7 @@ function Nav() {
                           ? "text-white drop-shadow-lg" 
                           : "text-white/70 hover:text-white hover:drop-shadow-lg"
                       }`}
-                      title="Beauty Products"
+                      title={shop === "A" ? shopNames.shop_a_name : shopNames.shop_b_name}
                     >
                       <Sparkles className={`w-6 h-6 transition-all duration-300 ${
                         shop === "A" 
@@ -848,7 +864,8 @@ function Nav() {
           <div className="px-4 py-3">
             <div className="flex items-center justify-between mb-3">
               <h1 className="text-xl font-bold text-white">
-                {shop === "A" ? `${settings.restaurant_name} - Beauty` : `${settings.restaurant_name} - Style`}
+                {/* Old hardcoded version: {shop === "A" ? `${settings.restaurant_name} - Beauty` : `${settings.restaurant_name} - Style`} */}
+                {shop === "A" ? `${settings.restaurant_name} - ${shopNames.shop_a_name}` : `${settings.restaurant_name} - ${shopNames.shop_b_name}`}
               </h1>
               <div className="flex items-center gap-3">
                 {/* Currency Dropdown for Tablet */}
@@ -1119,38 +1136,45 @@ function Nav() {
                     </div>
                   )}
                   <h1 className="text-2xl font-bold text-white">
-                    {shop === "A" ? `Beauty` : `Style`}
+                    {/* Old hardcoded version: {shop === "A" ? `Beauty` : `Style`} */}
+                    {shop === "A" ? shopNames.shop_a_name : shopNames.shop_b_name}
                   </h1>
                 </Link>
              
               <div className="flex items-center gap-2">
-                {/* Currency for Mobile */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-white hover:bg-white/20 p-1">
-                      <div className="flex items-center gap-1">
-                        <Globe className="w-4 h-4" />
-                        <span className="text-xs font-bold">{selectedCurrency}</span>
-                      </div>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40 p-1 border-0 shadow-xl">
-                    <DropdownMenuItem
-                      onClick={() => setSelectedCurrency('AED')}
-                      className={`cursor-pointer rounded p-2 text-sm ${selectedCurrency === 'AED' ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                        }`}
-                    >
-                      AED
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => setSelectedCurrency('INR')}
-                      className={`cursor-pointer rounded p-2 text-sm ${selectedCurrency === 'INR' ? 'bg-green-50 text-green-700' : 'text-gray-700'
-                        }`}
-                    >
-                      INR ₹
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Currency for Mobile - Only show if currency switching is enabled and multiple currencies available */}
+                {isCurrencySwitchEnabled && availableCurrencies.length > 1 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="text-white hover:bg-white/20 p-1">
+                        <div className="flex items-center gap-1">
+                          <Globe className="w-4 h-4" />
+                          <span className="text-xs font-bold">{selectedCurrency}</span>
+                        </div>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40 p-1 border-0 shadow-xl">
+                      {availableCurrencies.includes('AED') && (
+                        <DropdownMenuItem
+                          onClick={() => setSelectedCurrency('AED')}
+                          className={`cursor-pointer rounded p-2 text-sm ${selectedCurrency === 'AED' ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                            }`}
+                        >
+                          AED
+                        </DropdownMenuItem>
+                      )}
+                      {availableCurrencies.includes('INR') && (
+                        <DropdownMenuItem
+                          onClick={() => setSelectedCurrency('INR')}
+                          className={`cursor-pointer rounded p-2 text-sm ${selectedCurrency === 'INR' ? 'bg-green-50 text-green-700' : 'text-gray-700'
+                            }`}
+                        >
+                          INR ₹
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
 
                 <Link href="/wishlist" className="relative">
                   <Heart className={`w-5 h-5 text-white ${wishlistCount > 0 ? 'fill-red-500 text-red-500' : ''}`} />
@@ -1242,9 +1266,9 @@ function Nav() {
                        {/* Categories Section */}
                        {categories.length > 0 && (
                          <>
-                           <div className="px-3 py-2 mt-6 text-xs font-medium text-gray-500 uppercase tracking-wider border-t border-gray-200 pt-4">
-                             {shop === "A" ? "Beauty Categories" : shop === "B" ? "Style Categories" : "Categories"}
-                           </div>
+                            <div className="px-3 py-2 mt-6 text-xs font-medium text-gray-500 uppercase tracking-wider border-t border-gray-200 pt-4">
+                              {shop === "A" ? `${shopNames.shop_a_name} Categories` : shop === "B" ? `${shopNames.shop_b_name} Categories` : "Categories"}
+                            </div>
                           <div className="space-y-1 pb-4">
                             {categories.map((category) => {
                               const item = {

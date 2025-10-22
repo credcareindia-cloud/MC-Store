@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { MapPin, Phone, Mail, Clock, Facebook, Instagram, Twitter, Heart, Zap, Sparkles, Cpu } from "lucide-react"
 import { useSettings } from "@/lib/contexts/settings-context"
@@ -11,6 +11,26 @@ export default function Footer() {
   const { settings } = useSettings()
   const { shop } = useShop()
   const [currentYear] = useState(new Date().getFullYear())
+  const [shopFeatures, setShopFeatures] = useState({
+    shop_a_tagline: 'Motor Parts & Spare Parts',
+    shop_b_tagline: 'Premium Fragrances and Perfumes'
+  })
+
+  // Fetch shop features for taglines
+  useState(() => {
+    const fetchShopFeatures = async () => {
+      try {
+        const response = await fetch('/api/admin/shop-features')
+        if (response.ok) {
+          const data = await response.json()
+          setShopFeatures(data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch shop features:', error)
+      }
+    }
+    fetchShopFeatures()
+  })
 
   const theme =
     shop === "A"
@@ -25,7 +45,7 @@ export default function Footer() {
           icon: Heart,
           socialHover: "hover:text-pink-200 hover:scale-110",
           description:
-            "Sabs Online Store story began in 2015 in Dubai. we have created a niche for our customers with our high-quality products and our attention to detail in service.",
+            settings.footer_description || "Sabs Online Store story began in 2015 in Dubai. we have created a niche for our customers with our high-quality products and our attention to detail in service.",
           shopName: "SABS ONLINE",
           category: "Beauty & Cosmetics",
         }
@@ -40,7 +60,7 @@ export default function Footer() {
           icon: Cpu,
           socialHover: "hover:text-blue-200 hover:scale-110",
           description:
-            "Sabs Online Store story began in 2015 in Dubai. we have created a niche for our customers with our high-quality products and our attention to detail in service.",
+            settings.footer_description || "Sabs Online Store story began in 2015 in Dubai. we have created a niche for our customers with our high-quality products and our attention to detail in service.",
           shopName: "SABS ONLINE",
           category: "Fashion & Accessories",
         }
@@ -99,25 +119,31 @@ export default function Footer() {
                 <p
                   className={`${theme.accent} text-lg ${shop === "A" ? "font-script" : "font-mono"} transition-all duration-500`}
                 >
-                  {theme.category}
+                  {shop === "A" ? shopFeatures.shop_a_tagline : shopFeatures.shop_b_tagline}
                 </p>
               </div>
             </div>
 
             <p className={`${theme.text} leading-relaxed text-lg max-w-md transition-all duration-500`}>
-              {theme.description}
+              {settings.footer_description || "Sabs Online Store story began in 2015 in Dubai. we have created a niche for our customers with our high-quality products and our attention to detail in service."}
             </p>
 
             <div className="flex space-x-6">
-              <a href="#" className={`${theme.text} ${theme.socialHover} transition-all duration-300`}>
-                <Facebook className="w-6 h-6" />
-              </a>
-              <a href="#" className={`${theme.text} ${theme.socialHover} transition-all duration-300`}>
-                <Instagram className="w-6 h-6" />
-              </a>
-              <a href="#" className={`${theme.text} ${theme.socialHover} transition-all duration-300`}>
-                <Twitter className="w-6 h-6" />
-              </a>
+              {settings.social_facebook && (
+                <a href={settings.social_facebook} target="_blank" rel="noopener noreferrer" className={`${theme.text} ${theme.socialHover} transition-all duration-300`}>
+                  <Facebook className="w-6 h-6" />
+                </a>
+              )}
+              {settings.social_instagram && (
+                <a href={settings.social_instagram} target="_blank" rel="noopener noreferrer" className={`${theme.text} ${theme.socialHover} transition-all duration-300`}>
+                  <Instagram className="w-6 h-6" />
+                </a>
+              )}
+              {settings.social_twitter && (
+                <a href={settings.social_twitter} target="_blank" rel="noopener noreferrer" className={`${theme.text} ${theme.socialHover} transition-all duration-300`}>
+                  <Twitter className="w-6 h-6" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -161,10 +187,10 @@ export default function Footer() {
               <div className="flex items-start space-x-4">
                 <MapPin className={`w-6 h-6 ${theme.accent} mt-1 flex-shrink-0`} />
                 <div>
-                  <p className={`${theme.text} text-lg`}>23/384/A62 Prince Tower</p>
-                  <p className={`${theme.text} text-lg`}>Near KNH Hospital</p>
-                  <p className={`${theme.text} text-lg`}>Railway Station Road Uppala</p>
-                  <p className={`${theme.text} text-lg`}>Kasaragod, India</p>
+                  <p className={`${theme.text} text-lg`}>{settings.address_line1 || "23/384/A62 Prince Tower"}</p>
+                  <p className={`${theme.text} text-lg`}>{settings.address_line2 || "Near KNH Hospital"}</p>
+                  <p className={`${theme.text} text-lg`}>{settings.city || "Railway Station Road Uppala"}</p>
+                  <p className={`${theme.text} text-lg`}>{settings.state || "Kasaragod"}, {settings.country || "India"}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
@@ -173,7 +199,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center space-x-4">
                 <Mail className={`w-6 h-6 ${theme.accent} flex-shrink-0`} />
-                <p className={`${theme.text} text-lg`}>sabsonlinestore@gmail.com</p>
+                <p className={`${theme.text} text-lg`}>{settings.email || "sabsonlinestore@gmail.com"}</p>
               </div>
             </div>
           </div>
@@ -188,18 +214,59 @@ export default function Footer() {
        Contact & Opening Hours
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              <div className={`${theme.text} text-center`}>
-                <p className="font-semibold text-lg mb-2">Monday - Thursday</p>
-                <p className="text-lg">10:00 AM - 6:00 PM</p>
-              </div>
-              <div className={`${theme.text} text-center`}>
-                <p className="font-semibold text-lg mb-2">Friday - Saturday</p>
-                <p className="text-lg">10:00 AM - 1:00 PM</p>
-              </div>
-              <div className={`${theme.text} text-center`}>
-                <p className="font-semibold text-lg mb-2">Sunday</p>
-                <p className="text-lg">10:00 AM - 12:00 PM</p>
-              </div>
+              {settings.opening_hours ? (() => {
+                try {
+                  const hours = JSON.parse(settings.opening_hours);
+                  return (
+                    <>
+                      <div className={`${theme.text} text-center`}>
+                        <p className="font-semibold text-lg mb-2">Monday - Thursday</p>
+                        <p className="text-lg">{hours.monday || "10:00 AM - 6:00 PM"}</p>
+                      </div>
+                      <div className={`${theme.text} text-center`}>
+                        <p className="font-semibold text-lg mb-2">Friday - Saturday</p>
+                        <p className="text-lg">{hours.friday || "10:00 AM - 1:00 PM"}</p>
+                      </div>
+                      <div className={`${theme.text} text-center`}>
+                        <p className="font-semibold text-lg mb-2">Sunday</p>
+                        <p className="text-lg">{hours.sunday || "10:00 AM - 12:00 PM"}</p>
+                      </div>
+                    </>
+                  );
+                } catch (e) {
+                  return (
+                    <>
+                      <div className={`${theme.text} text-center`}>
+                        <p className="font-semibold text-lg mb-2">Monday - Thursday</p>
+                        <p className="text-lg">10:00 AM - 6:00 PM</p>
+                      </div>
+                      <div className={`${theme.text} text-center`}>
+                        <p className="font-semibold text-lg mb-2">Friday - Saturday</p>
+                        <p className="text-lg">10:00 AM - 1:00 PM</p>
+                      </div>
+                      <div className={`${theme.text} text-center`}>
+                        <p className="font-semibold text-lg mb-2">Sunday</p>
+                        <p className="text-lg">10:00 AM - 12:00 PM</p>
+                      </div>
+                    </>
+                  );
+                }
+              })() : (
+                <>
+                  <div className={`${theme.text} text-center`}>
+                    <p className="font-semibold text-lg mb-2">Monday - Thursday</p>
+                    <p className="text-lg">10:00 AM - 6:00 PM</p>
+                  </div>
+                  <div className={`${theme.text} text-center`}>
+                    <p className="font-semibold text-lg mb-2">Friday - Saturday</p>
+                    <p className="text-lg">10:00 AM - 1:00 PM</p>
+                  </div>
+                  <div className={`${theme.text} text-center`}>
+                    <p className="font-semibold text-lg mb-2">Sunday</p>
+                    <p className="text-lg">10:00 AM - 12:00 PM</p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

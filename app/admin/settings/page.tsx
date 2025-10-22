@@ -59,7 +59,9 @@ export default function AdminSettings() {
     shop_switch_enabled: 'true',
     default_currency: 'INR',
     currency_switch_enabled: 'true',
-    available_currencies: 'AED,INR'
+    available_currencies: 'AED,INR',
+    shop_a_name: 'Motor Parts',
+    shop_b_name: 'Fragrance'
   })
   
   // URL validation state
@@ -373,7 +375,7 @@ export default function AdminSettings() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="restaurant_name">Company Name</Label>
+                <Label htmlFor="restaurant_name" className="text-white">Company Name</Label>
                 <Input
                   id="restaurant_name"
                   value={getSetting("restaurant_name")}
@@ -383,11 +385,11 @@ export default function AdminSettings() {
               </div>
 
               <div>
-                <Label>Opening Hours</Label>
+                <Label className="text-white">Opening Hours</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                   {Object.entries(openingHours).map(([day, hours]) => (
                     <div key={day}>
-                      <Label htmlFor={day} className="capitalize">
+                      <Label htmlFor={day} className="capitalize text-white">
                         {day}
                       </Label>
                       <Input
@@ -413,7 +415,7 @@ export default function AdminSettings() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone" className="text-white">Phone Number</Label>
                   <Input
                     id="phone"
                     value={getSetting("phone")}
@@ -422,7 +424,7 @@ export default function AdminSettings() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="email" className="text-white">Email Address</Label>
                   <Input
                     id="email"
                     type="email"
@@ -434,7 +436,7 @@ export default function AdminSettings() {
               </div>
 
               <div>
-                <Label htmlFor="website">Website URL</Label>
+                <Label htmlFor="website" className="text-white">Website URL</Label>
                 <Input
                   id="website"
                   value={getSetting("website")}
@@ -444,10 +446,10 @@ export default function AdminSettings() {
               </div>
 
               <div className="space-y-4">
-                <Label>Address</Label>
+                <Label className="text-white">Address</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="address_line1">Address Line 1</Label>
+                    <Label htmlFor="address_line1" className="text-white">Address Line 1</Label>
                     <Input
                       id="address_line1"
                       value={getSetting("address_line1")}
@@ -456,7 +458,7 @@ export default function AdminSettings() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="address_line2">Address Line 2</Label>
+                    <Label htmlFor="address_line2" className="text-white">Address Line 2</Label>
                     <Input
                       id="address_line2"
                       value={getSetting("address_line2")}
@@ -465,7 +467,7 @@ export default function AdminSettings() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="city" className="text-white">City</Label>
                     <Input
                       id="city"
                       value={getSetting("city")}
@@ -474,7 +476,7 @@ export default function AdminSettings() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="state">State/Province</Label>
+                    <Label htmlFor="state" className="text-white">State/Province</Label>
                     <Input
                       id="state"
                       value={getSetting("state")}
@@ -483,7 +485,7 @@ export default function AdminSettings() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="postal_code">Postal Code</Label>
+                    <Label htmlFor="postal_code" className="text-white">Postal Code</Label>
                     <Input
                       id="postal_code"
                       value={getSetting("postal_code")}
@@ -492,7 +494,7 @@ export default function AdminSettings() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="country">Country</Label>
+                    <Label htmlFor="country" className="text-white">Country</Label>
                     <Input
                       id="country"
                       value={getSetting("country")}
@@ -504,10 +506,10 @@ export default function AdminSettings() {
               </div>
 
               <div className="space-y-4">
-                <Label>Social Media</Label>
+                <Label className="text-white">Social Media</Label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="social_facebook">Facebook URL</Label>
+                    <Label htmlFor="social_facebook" className="text-white">Facebook URL</Label>
                     <div className="relative">
                       <Input
                         id="social_facebook"
@@ -550,7 +552,7 @@ export default function AdminSettings() {
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="social_instagram">Instagram URL</Label>
+                    <Label htmlFor="social_instagram" className="text-white">Instagram URL</Label>
                     <div className="relative">
                       <Input
                         id="social_instagram"
@@ -593,7 +595,7 @@ export default function AdminSettings() {
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="social_twitter">Twitter/X URL</Label>
+                    <Label htmlFor="social_twitter" className="text-white">Twitter/X URL</Label>
                     <div className="relative">
                       <Input
                         id="social_twitter"
@@ -637,6 +639,28 @@ export default function AdminSettings() {
                   </div>
                 </div>
               </div>
+
+              {/* Footer Settings */}
+              <div className="space-y-4">
+                <Label className="text-white">Footer Settings</Label>
+                
+                {/* Footer Description */}
+                <div>
+                  <Label htmlFor="footer_description" className="text-white">Footer Description</Label>
+                  <textarea
+                    id="footer_description"
+                    value={getSetting("footer_description") || "Sabs Online Store story began in 2015 in Dubai. we have created a niche for our customers with our high-quality products and our attention to detail in service."}
+                    onChange={(e) => updateSetting("footer_description", e.target.value)}
+                    className="w-full bg-gray-700 border-gray-600 text-white h-20 mt-2 rounded-md px-3 py-2 focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none"
+                    placeholder="Enter footer description text"
+                  />
+                  <p className="text-gray-400 text-xs mt-1">Description text shown in the footer</p>
+                </div>
+
+
+
+
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -649,7 +673,7 @@ export default function AdminSettings() {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="currency_code">Currency Code</Label>
+                  <Label htmlFor="currency_code" className="text-white">Currency Code</Label>
                   <Input
                     id="currency_code"
                     value={getSetting("currency_code")}
@@ -660,7 +684,7 @@ export default function AdminSettings() {
                   <p className="text-gray-400 text-sm mt-1">ISO currency code (USD, EUR, GBP, etc.)</p>
                 </div>
                 <div>
-                  <Label htmlFor="currency_symbol">Currency Symbol</Label>
+                  <Label htmlFor="currency_symbol" className="text-white">Currency Symbol</Label>
                   <Input
                     id="currency_symbol"
                     value={getSetting("currency_symbol")}
@@ -704,6 +728,60 @@ export default function AdminSettings() {
                 </p>
               </CardHeader>
               <CardContent className="space-y-6">
+                {/* Shop Names Configuration */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="shop_a_name" className="text-white">Shop A Name</Label>
+                    <Input
+                      id="shop_a_name"
+                      value={getShopFeaturesSetting("shop_a_name") || "Motor Parts"}
+                      onChange={(e) => updateShopFeaturesSetting("shop_a_name", e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white h-10 mt-2"
+                      placeholder="Motor Parts"
+                    />
+                    <p className="text-gray-400 text-xs mt-1">Display name for Shop A (appears in navbar and UI)</p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="shop_b_name" className="text-white">Shop B Name</Label>
+                    <Input
+                      id="shop_b_name"
+                      value={getShopFeaturesSetting("shop_b_name") || "Fragrance"}
+                      onChange={(e) => updateShopFeaturesSetting("shop_b_name", e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white h-10 mt-2"
+                      placeholder="Fragrance"
+                    />
+                    <p className="text-gray-400 text-xs mt-1">Display name for Shop B (appears in navbar and UI)</p>
+                  </div>
+                </div>
+
+                {/* Shop Taglines Configuration */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="shop_a_tagline" className="text-white">Shop A Tagline</Label>
+                    <Input
+                      id="shop_a_tagline"
+                      value={getShopFeaturesSetting("shop_a_tagline") || "Motor Parts & Spare Parts"}
+                      onChange={(e) => updateShopFeaturesSetting("shop_a_tagline", e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white h-10 mt-2"
+                      placeholder="Motor Parts & Spare Parts"
+                    />
+                    <p className="text-gray-400 text-xs mt-1">Category tagline for Shop A (appears in footer and other places)</p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="shop_b_tagline" className="text-white">Shop B Tagline</Label>
+                    <Input
+                      id="shop_b_tagline"
+                      value={getShopFeaturesSetting("shop_b_tagline") || "Premium Fragrances and Perfumes"}
+                      onChange={(e) => updateShopFeaturesSetting("shop_b_tagline", e.target.value)}
+                      className="bg-gray-700 border-gray-600 text-white h-10 mt-2"
+                      placeholder="Premium Fragrances and Perfumes"
+                    />
+                    <p className="text-gray-400 text-xs mt-1">Category tagline for Shop B (appears in footer and other places)</p>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <Label htmlFor="default_shop" className="text-white">Default Shop</Label>
@@ -713,8 +791,8 @@ export default function AdminSettings() {
                       onChange={(e) => updateShopFeaturesSetting("default_shop", e.target.value)}
                       className="w-full bg-gray-700 border-gray-600 text-white h-10 mt-2 rounded-md px-3 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                     >
-                      <option value="A">Shop A - Beauty Products</option>
-                      <option value="B">Shop B - Style Accessories</option>
+                      <option value="A">Shop A - {getShopFeaturesSetting("shop_a_name") || "Motor Parts"}</option>
+                      <option value="B">Shop B - {getShopFeaturesSetting("shop_b_name") || "Fragrance"}</option>
                     </select>
                     <p className="text-gray-400 text-xs mt-1">Shop that users see when they first visit the site</p>
                   </div>
@@ -741,11 +819,15 @@ export default function AdminSettings() {
                     Current Shop Configuration
                   </h4>
                   <div className="text-sm text-gray-300 space-y-1">
-                    <p>• Default Shop: <strong>{getShopFeaturesSetting("default_shop") === "B" ? "Shop B - Style Accessories" : "Shop A - Beauty Products"}</strong></p>
+                    <p>• Shop A Name: <strong>{getShopFeaturesSetting("shop_a_name") || "Motor Parts"}</strong></p>
+                    <p>• Shop A Tagline: <strong>{getShopFeaturesSetting("shop_a_tagline") || "Motor Parts & Spare Parts"}</strong></p>
+                    <p>• Shop B Name: <strong>{getShopFeaturesSetting("shop_b_name") || "Fragrance"}</strong></p>
+                    <p>• Shop B Tagline: <strong>{getShopFeaturesSetting("shop_b_tagline") || "Premium Fragrances and Perfumes"}</strong></p>
+                    <p>• Default Shop: <strong>{getShopFeaturesSetting("default_shop") === "B" ? `Shop B - ${getShopFeaturesSetting("shop_b_name") || "Fragrance"}` : `Shop A - ${getShopFeaturesSetting("shop_a_name") || "Motor Parts"}`}</strong></p>
                     <p>• Shop Switching: <span className={getShopFeaturesSetting("shop_switch_enabled") === "true" ? "text-green-400" : "text-red-400"}>
                       {getShopFeaturesSetting("shop_switch_enabled") === "true" ? "Enabled" : "Disabled"}
                     </span></p>
-                    <p>• Current Admin Shop: <strong>Shop {shop} - {shop === "A" ? "Beauty Products" : "Style Accessories"}</strong></p>
+                    <p>• Current Admin Shop: <strong>Shop {shop} - {shop === "A" ? (getShopFeaturesSetting("shop_a_name") || "Motor Parts") : (getShopFeaturesSetting("shop_b_name") || "Fragrance")}</strong></p>
                   </div>
                 </div>
               </CardContent>
