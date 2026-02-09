@@ -13,6 +13,7 @@ export const metadata: Metadata = {
     'motoclub kottackal',
     'spare parts and accessories',
     'motoclub kottackal',
+  ],
   authors: [{ name: 'Motoclub kottackal Team' }],
   creator: 'Motoclub kottackal',
   publisher: 'Motoclub kottackal',
