@@ -366,16 +366,29 @@ function Nav() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-8">
                 {/* Logo */}
-                <Link href="/" className="flex items-center group shrink-0" aria-label={settings.restaurant_name}>
+                <Link href="/" className="nav-logo-link flex items-center group shrink-0" aria-label={settings.restaurant_name}>
                   {settings.restaurant_logo ? (
-                    <div className="relative w-72 h-20 sm:w-80 sm:h-20 overflow-hidden rounded-lg transition-transform duration-300 group-hover:scale-105">
-                      <Image
-                        src={settings.restaurant_logo || "/placeholder.svg"}
-                        alt=""
-                        fill
-                        className="object-cover object-left"
-                        sizes="(min-width: 640px) 320px, 288px"
-                      />
+                    <div className="relative w-72 h-20 sm:w-80 sm:h-20 overflow-visible rounded-lg">
+                      <div className="nav-logo-3d h-full w-full">
+                        <div className="nav-logo-exhaust" aria-hidden>
+                          <span className="nav-logo-smoke nav-logo-smoke--haze" />
+                          <span className="nav-logo-smoke nav-logo-smoke--billow" />
+                          <span className="nav-logo-smoke nav-logo-smoke--wisp-1" />
+                          <span className="nav-logo-smoke nav-logo-smoke--wisp-2" />
+                          <span className="nav-logo-smoke nav-logo-smoke--core" />
+                        </div>
+                        <span className="nav-logo-streak nav-logo-streak--1" aria-hidden />
+                        <span className="nav-logo-streak nav-logo-streak--2" aria-hidden />
+                        <div className="relative z-[1] h-full w-full overflow-hidden rounded-lg">
+                          <Image
+                            src={settings.restaurant_logo || "/placeholder.svg"}
+                            alt=""
+                            fill
+                            className="object-cover object-left"
+                            sizes="(min-width: 640px) 320px, 288px"
+                          />
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div className="w-72 h-20 sm:w-80 sm:h-20 bg-zinc-800 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:bg-zinc-700">
@@ -695,16 +708,29 @@ function Nav() {
         <div className="hidden md:block lg:hidden">
           <div className="px-4 py-3">
             <div className="flex items-center justify-between mb-3">
-              <Link href="/" className="flex items-center group shrink-0" aria-label={settings.restaurant_name}>
+              <Link href="/" className="nav-logo-link flex items-center group shrink-0" aria-label={settings.restaurant_name}>
                 {settings.restaurant_logo ? (
-                  <div className="relative w-56 h-16 overflow-hidden rounded-lg transition-transform duration-300 group-hover:scale-105">
-                    <Image
-                      src={settings.restaurant_logo || "/placeholder.svg"}
-                      alt=""
-                      fill
-                      className="object-cover object-left"
-                      sizes="224px"
-                    />
+                  <div className="relative w-56 h-16 overflow-visible rounded-lg">
+                    <div className="nav-logo-3d h-full w-full">
+                      <div className="nav-logo-exhaust" aria-hidden>
+                        <span className="nav-logo-smoke nav-logo-smoke--haze" />
+                        <span className="nav-logo-smoke nav-logo-smoke--billow" />
+                        <span className="nav-logo-smoke nav-logo-smoke--wisp-1" />
+                        <span className="nav-logo-smoke nav-logo-smoke--wisp-2" />
+                        <span className="nav-logo-smoke nav-logo-smoke--core" />
+                      </div>
+                      <span className="nav-logo-streak nav-logo-streak--1" aria-hidden />
+                      <span className="nav-logo-streak nav-logo-streak--2" aria-hidden />
+                      <div className="relative z-[1] h-full w-full overflow-hidden rounded-lg">
+                        <Image
+                          src={settings.restaurant_logo || "/placeholder.svg"}
+                          alt=""
+                          fill
+                          className="object-cover object-left"
+                          sizes="224px"
+                        />
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="w-56 h-16 bg-white/20 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-105">
@@ -933,16 +959,29 @@ function Nav() {
                 </Button>
               </div>
               <div className="flex justify-center min-w-0">
-                <Link href="/" className="flex items-center justify-center group" aria-label={settings.restaurant_name}>
+                <Link href="/" className="nav-logo-link flex items-center justify-center group" aria-label={settings.restaurant_name}>
                   {settings.restaurant_logo ? (
-                    <div className="relative h-14 w-[11.5rem] sm:w-52 sm:h-16 mx-auto overflow-hidden rounded-md transition-transform duration-300 group-hover:scale-105">
-                      <Image
-                        src={settings.restaurant_logo || "/placeholder.svg"}
-                        alt=""
-                        fill
-                        className="object-cover object-left"
-                        sizes="(max-width: 768px) 184px, 208px"
-                      />
+                    <div className="relative h-14 w-[11.5rem] sm:w-52 sm:h-16 mx-auto overflow-visible rounded-md">
+                      <div className="nav-logo-3d h-full w-full">
+                        <div className="nav-logo-exhaust" aria-hidden>
+                          <span className="nav-logo-smoke nav-logo-smoke--haze" />
+                          <span className="nav-logo-smoke nav-logo-smoke--billow" />
+                          <span className="nav-logo-smoke nav-logo-smoke--wisp-1" />
+                          <span className="nav-logo-smoke nav-logo-smoke--wisp-2" />
+                          <span className="nav-logo-smoke nav-logo-smoke--core" />
+                        </div>
+                        <span className="nav-logo-streak nav-logo-streak--1" aria-hidden />
+                        <span className="nav-logo-streak nav-logo-streak--2" aria-hidden />
+                        <div className="relative z-[1] h-full w-full overflow-hidden rounded-md">
+                          <Image
+                            src={settings.restaurant_logo || "/placeholder.svg"}
+                            alt=""
+                            fill
+                            className="object-cover object-left"
+                            sizes="(max-width: 768px) 184px, 208px"
+                          />
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div className="h-14 w-[11.5rem] sm:w-52 sm:h-16 bg-white/20 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-105 mx-auto">

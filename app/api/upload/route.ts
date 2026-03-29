@@ -132,6 +132,14 @@ export async function POST(request: NextRequest) {
       offset += chunk.length
     }
 
+    const maxUploadBytes = 50 * 1024 * 1024
+    if (totalLength > maxUploadBytes) {
+      return NextResponse.json(
+        { error: "File size must be less than 50MB" },
+        { status: 413 },
+      )
+    }
+
     // Check if it's an image file
     const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(filename)
     

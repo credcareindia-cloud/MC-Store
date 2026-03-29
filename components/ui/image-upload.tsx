@@ -19,7 +19,7 @@ export default function MultipleImageUpload({
   value = [], 
   onChange, 
   label = "Product Images", 
-  maxImages = 2,
+  maxImages = 4,
   className = "" 
 }: MultipleImageUploadProps) {
   const [uploading, setUploading] = useState<number[]>([]) // Track which slots are uploading
@@ -36,9 +36,9 @@ export default function MultipleImageUpload({
       return
     }
 
-    // File size validation (10MB limit since compression happens on server)
-    if (file.size > 10 * 1024 * 1024) {
-      setErrors(prev => ({ ...prev, [index]: "File size must be less than 10MB" }))
+    // File size validation (50MB limit; server compresses after upload)
+    if (file.size > 50 * 1024 * 1024) {
+      setErrors(prev => ({ ...prev, [index]: "File size must be less than 50MB" }))
       return
     }
 
@@ -151,7 +151,7 @@ export default function MultipleImageUpload({
                     <>
                       <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
                       <span className="text-sm text-gray-400">Click to upload</span>
-                      <span className="text-xs text-gray-500">JPG, PNG, WebP (Max 10MB)</span>
+                      <span className="text-xs text-gray-500">JPG, PNG, WebP (Max 50MB)</span>
                     </>
                   )}
                 </div>

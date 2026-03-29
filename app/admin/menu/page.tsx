@@ -732,7 +732,7 @@ const formatPrice = (product: Product) => {
   value={formData.image_urls}
   onChange={(urls) => setFormData({ ...formData, image_urls: urls })}
   label="Product Images"
-  maxImages={2}
+  maxImages={4}
 />
 
 {/* Updated table cell for images - replace the existing image cell */}
