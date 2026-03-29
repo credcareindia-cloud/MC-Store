@@ -33,18 +33,11 @@ export async function PUT(
       variants
     } = body
 
-    // Validate required fields
-    if (!name || !description || !category_id) {
+    // Validate required fields (match POST: description is optional, stored as '' if omitted)
+    const categoryIdNum = Number(category_id)
+    if (!name?.trim() || category_id == null || category_id === "" || !Number.isFinite(categoryIdNum) || categoryIdNum < 1) {
       return NextResponse.json(
-        { error: "Name, description, and category_id are required" },
-        { status: 400 }
-      )
-    }
-
-    // Validate category_id is a number
-    if (isNaN(Number(category_id))) {
-      return NextResponse.json(
-        { error: "Category ID must be a valid number" },
+        { error: "Name and a valid category_id are required" },
         { status: 400 }
       )
     }
