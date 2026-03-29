@@ -159,7 +159,7 @@ function PrivacyPolicyContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-orange-600" />
+                <Users className="w-5 h-5 text-zinc-600" />
                 When We Share Information
               </CardTitle>
             </CardHeader>
@@ -282,11 +282,11 @@ function PrivacyPolicyContent() {
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-orange-600 mt-0.5" />
+                <div className="flex items-start gap-3 p-3 bg-zinc-50 border border-zinc-200 rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-zinc-600 mt-0.5" />
                   <div>
-                    <h4 className="font-medium text-orange-900">Opt-out</h4>
-                    <p className="text-orange-800 text-sm">Unsubscribe from marketing communications at any time</p>
+                    <h4 className="font-medium text-zinc-900">Opt-out</h4>
+                    <p className="text-zinc-700 text-sm">Unsubscribe from marketing communications at any time</p>
                   </div>
                 </div>
               </div>
@@ -295,7 +295,7 @@ function PrivacyPolicyContent() {
                 <h4 className="font-medium text-gray-900 mb-2">How to Exercise Your Rights</h4>
                 <p className="text-gray-600 text-sm mb-2">Contact us using any of the methods below:</p>
                 <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Email: privacy@sabsonline.com</li>
+                  <li>• Email: motoclubkottakkal@gmail.com</li>
                   <li>• Phone: +971-XXX-XXXX</li>
                   <li>• Account Settings page</li>
                   <li>• Customer service chat</li>
@@ -308,7 +308,7 @@ function PrivacyPolicyContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Globe className="w-5 h-5 text-amber-600" />
+                <Globe className="w-5 h-5 text-zinc-600" />
                 Cookies & Tracking Technologies
               </CardTitle>
             </CardHeader>
@@ -337,7 +337,7 @@ function PrivacyPolicyContent() {
                 <div className="border rounded-lg p-4">
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="font-medium text-gray-900">Marketing Cookies</h4>
-                    <Badge className="bg-orange-100 text-orange-800">Your Choice</Badge>
+                    <Badge className="bg-zinc-100 text-zinc-800 border border-zinc-200">Your Choice</Badge>
                   </div>
                   <p className="text-gray-600 text-sm">Used to show relevant ads and measure campaign effectiveness.</p>
                 </div>
@@ -362,24 +362,12 @@ function PrivacyPolicyContent() {
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-2">UAE Residents</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Data processed locally when possible</li>
-                    <li>• Compliance with UAE data protection laws</li>
-                    <li>• Secure international transfers</li>
-                  </ul>
-                </div>
-
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-2">Indian Residents</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Compliance with Indian privacy laws</li>
-                    <li>• Local data storage preferences</li>
-                    <li>• Appropriate safeguards in place</li>
-                  </ul>
-                </div>
+              <div className="border rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-2">Users in India</h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• We process data in line with applicable Indian law, including the Digital Personal Data Protection Act where it applies</li>
+                  <li>• Sub-processors (e.g. payments, email) may be located outside India with appropriate safeguards</li>
+                </ul>
               </div>
             </CardContent>
           </Card>
@@ -399,7 +387,7 @@ function PrivacyPolicyContent() {
                 <div>
                   <h4 className="font-semibold mb-2">Privacy Officer Contact</h4>
                   <ul className="text-gray-300 space-y-1">
-                    <li>📧 privacy@sabsonline.com</li>
+                    <li>📧 motoclubkottakkal@gmail.com</li>
                     <li>📱 WhatsApp: +971-XXX-XXXX</li>
                     <li>⏰ Mon-Fri: 9AM-6PM GST</li>
                   </ul>

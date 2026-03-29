@@ -88,26 +88,26 @@ export default function WishlistPage() {
 
         {wishlistItems.length === 0 ? (
           <div className="text-center py-16">
-            <div className="text-6xl mb-4">💝</div>
+            <Heart className="w-16 h-16 mx-auto mb-4 text-zinc-300" strokeWidth={1.25} />
             <h3 className="text-2xl font-semibold text-gray-900 mb-2">Your wishlist is empty</h3>
             <p className="text-gray-500 mb-6">Start adding products you love to your wishlist!</p>
             <Link href="/products">
-              <Button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full">
-                Browse Products
+              <Button className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-3 rounded-lg">
+                Browse products
               </Button>
             </Link>
           </div>
         ) : currencyFilteredItems.length === 0 ? (
           <div className="text-center py-16">
-            <div className="text-6xl mb-4">💱</div>
-            <h3 className="text-2xl font-semibold text-gray-900 mb-2">No items available in {selectedCurrency === 'AED' ? 'UAE' : 'India'}</h3>
+            <Globe className="w-16 h-16 mx-auto mb-4 text-zinc-300" strokeWidth={1.25} />
+            <h3 className="text-2xl font-semibold text-gray-900 mb-2">No items available in India (INR)</h3>
             <p className="text-gray-500 mb-6">
-              You have {wishlistItems.length} items in your wishlist, but none have availability in {selectedCurrency === 'AED' ? 'UAE' : 'India'}.
+              You have {wishlistItems.length} items in your wishlist, but none have INR pricing available for India.
             </p>
             <div className="flex justify-center gap-4">
               <Link href="/products">
-                <Button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-full">
-                  Browse Products
+                <Button className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-3 rounded-lg">
+                  Browse products
                 </Button>
               </Link>
             </div>
@@ -133,18 +133,18 @@ export default function WishlistPage() {
                     size="sm"
                     className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md"
                   >
-                    <Trash2 className="w-4 h-4 text-red-500" />
+                    <Trash2 className="w-4 h-4 text-zinc-600" />
                   </Button>
 
                   {item.shop_category && item.brand && (
-                    <Badge className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs">
+                    <Badge className="absolute bottom-2 left-2 bg-zinc-900 text-white text-xs font-medium">
                       {item.brand}
                     </Badge>
                   )}
 
                   {/* Condition type badge */}
                   {item.condition_type && item.condition_type !== 'none' && (
-                    <Badge className="absolute bottom-2 right-2 bg-purple-500 text-white text-xs capitalize">
+                    <Badge className="absolute bottom-2 right-2 bg-zinc-700 text-white text-xs capitalize font-medium">
                       {item.condition_type === 'first-copy' ? '1st Copy' : 
                        item.condition_type === 'second-copy' ? '2nd Copy' : 
                        item.condition_type}
@@ -152,7 +152,7 @@ export default function WishlistPage() {
                   )}
 
                   {/* Currency badge */}
-                  <Badge className="absolute top-2 left-2 bg-red-500 text-white text-xs">
+                  <Badge className="absolute top-2 left-2 bg-zinc-800 text-white text-xs font-medium">
                     {item.is_new ? 'New' : item.is_featured ? 'Featured' : 'FAV'}
                   </Badge>
                 </div>
@@ -160,7 +160,7 @@ export default function WishlistPage() {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="text-orange-600 font-bold text-lg">
+                      <p className="text-zinc-900 font-semibold text-lg">
                         {item.variants && item.variants.length > 0
                           ? formatCurrencyPrice(item.variants[0].price_aed, item.variants[0].price_inr, item.default_currency)
                           : formatCurrencyPrice(item.price_aed, item.price_inr, item.default_currency)
@@ -184,7 +184,7 @@ export default function WishlistPage() {
                   </h3>
 
                   {item.brand && (
-                    <p className="text-xs text-blue-600 font-medium mb-1">
+                    <p className="text-xs text-zinc-600 font-medium mb-1">
                       Brand: {item.brand}
                     </p>
                   )}
@@ -193,7 +193,7 @@ export default function WishlistPage() {
                   <div className="space-y-2">
                     <Button
                       onClick={() => router.push(`/product/${item.id}`)}
-                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-full py-3 text-sm font-medium shadow-lg flex items-center justify-center gap-2"
+                      className="w-full bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg py-3 text-sm font-medium shadow-sm flex items-center justify-center gap-2"
                       disabled={!item.is_available}
                     >
                       <ShoppingCart className="w-4 h-4" />
@@ -203,9 +203,9 @@ export default function WishlistPage() {
                     <Button
                       onClick={() => handleRemoveFromWishlist(item.id)}
                       variant="outline"
-                      className="w-full text-red-600 border-red-200 hover:bg-red-50 rounded-full py-2 text-sm font-medium flex items-center justify-center gap-2"
+                      className="w-full text-zinc-700 border-zinc-200 hover:bg-zinc-50 rounded-lg py-2 text-sm font-medium flex items-center justify-center gap-2"
                     >
-                      <Heart className="w-4 h-4 fill-red-500 text-red-500" />
+                      <Heart className="w-4 h-4 fill-zinc-400 text-zinc-600" />
                       Remove from Wishlist
                     </Button>
                   </div>
@@ -217,12 +217,11 @@ export default function WishlistPage() {
 
         {/* Summary section for filtered results */}
         {wishlistItems.length > 0 && currencyFilteredItems.length !== wishlistItems.length && (
-          <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="mt-8 p-4 bg-zinc-50 border border-zinc-200 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
-              <Globe className="w-5 h-5 text-amber-600" />
-             <p className="text-amber-700 text-sm">
-              Showing {currencyFilteredItems.length} out of {wishlistItems.length} items which available in  {selectedCurrency === 'AED' ? 'UAE' : 'India'}. 
-              Switch Country to see other items.
+              <Globe className="w-5 h-5 text-zinc-600 shrink-0" />
+             <p className="text-zinc-700 text-sm">
+              Showing {currencyFilteredItems.length} of {wishlistItems.length} items with INR pricing for India.
             </p>
             </div>
             

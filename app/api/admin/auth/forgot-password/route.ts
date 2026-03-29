@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     `
 
     // Send password reset email
-    const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://sabsonlinestore.com'}/admin/reset-password?token=${resetToken}`
+    const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://motoclub.in'}/admin/reset-password?token=${resetToken}`
     
     const emailHtml = `
       <!DOCTYPE html>
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #dc2626, #b91c1c); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
           <h1 style="color: white; margin: 0; font-size: 28px;">🔐 Admin Password Reset</h1>
-          <p style="color: white; margin: 10px 0 0 0; font-size: 16px;">Sabs Online Admin Panel</p>
+          <p style="color: white; margin: 10px 0 0 0; font-size: 16px;">Motoclub Admin Panel</p>
         </div>
 
         <div style="background: #fff; padding: 30px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 10px 10px;">
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
           
           <p>Hello ${adminUser.name},</p>
           
-          <p>You have requested to reset your admin password for Sabs Online. Click the button below to reset your password:</p>
+          <p>You have requested to reset your admin password for Motoclub. Click the button below to reset your password:</p>
           
           <div style="text-align: center; margin: 30px 0;">
             <a href="${resetUrl}" style="display: inline-block; background: #dc2626; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
           </div>
 
           <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
-            <p style="margin: 0; color: #666; font-size: 14px;">Sabs Online Admin Team</p>
+            <p style="margin: 0; color: #666; font-size: 14px;">Motoclub Admin Team</p>
             <p style="margin: 5px 0 0 0; color: #666; font-size: 12px;">This is an automated message, please do not reply.</p>
           </div>
         </div>
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: "🔐 Admin Password Reset - Sabs Online",
+      subject: "🔐 Admin Password Reset - Motoclub",
       html: emailHtml,
     }
 

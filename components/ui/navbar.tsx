@@ -5,7 +5,7 @@ import { Suspense } from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useSearchParams, useRouter } from "next/navigation"
-import { Search, ShoppingCart, Heart, Menu, X, User, LogOut, Settings, Package, Users, BarChart3, Calendar, MessageSquare, Star, ChevronDown, Globe, Zap, Crown, Gift, ShoppingBag, Sparkles, Watch, Bell } from "lucide-react"
+import { Search, ShoppingCart, Heart, Menu, X, User, LogOut, Settings, Package, Users, BarChart3, Calendar, MessageSquare, Star, ChevronDown, Zap, Crown, Gift, ShoppingBag, Bell } from "lucide-react"
 import EnhancedSearch from "@/components/ui/enhanced-search"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -57,9 +57,9 @@ function Nav() {
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
   const { settings } = useSettings()
   const { user, logout, isAuthenticated } = useAuth()
-  const { shop, setShop, isLoading: shopLoading, isShopSwitchEnabled } = useShop()
+  const { shop } = useShop()
   const { user: clerkUser } = useUser()
-  const { selectedCurrency, setSelectedCurrency, getCurrencySymbol } = useCurrency()
+  const { selectedCurrency } = useCurrency()
   const searchParams = useSearchParams()
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items)
   const wishlistCount = wishlistItems.length
@@ -99,7 +99,6 @@ function Nav() {
       try {
         const searchUrl = new URL('/api/products/search', window.location.origin)
         searchUrl.searchParams.set('q', term.trim())
-        searchUrl.searchParams.set('shop', shop)
         searchUrl.searchParams.set('currency', selectedCurrency)
         searchUrl.searchParams.set('limit', '8') // Show 8 results in dropdown
 
@@ -168,17 +167,8 @@ function Nav() {
         const productsResponse = await fetch('/api/admin/products')
         const productsData = await productsResponse.json()
         
-      const shopFilteredCategories = shop
-  ? categoriesData.filter((cat: Category) => 
-      !cat.shop || cat.shop === shop || cat.shop === "Both"
-    )
-  : categoriesData
-        
-       const shopFilteredProducts = shop
-  ? productsData.filter((product: any) => 
-      product.shop_category === shop || product.shop_category === "Both"
-    )
-  : productsData
+      const shopFilteredCategories = categoriesData
+      const shopFilteredProducts = productsData
         
         const productCounts = shopFilteredProducts.reduce((acc: any, product: any) => {
           const categoryId = product.category_id?.toString()
@@ -198,8 +188,8 @@ function Nav() {
       } catch (error) {
         console.error('Error fetching data:', error)
         setCategories([
-          { id: 1, name: "Beauty Products", slug: "beauty" },
-          { id: 2, name: "Style Accessories", slug: "style" }
+          { id: 1, name: "Parts", slug: "parts" },
+          { id: 2, name: "Accessories", slug: "accessories" },
         ])
       } finally {
         setLoading(false)
@@ -207,7 +197,7 @@ function Nav() {
     }
 
     fetchData()
-  }, [shop])
+  }, [])
 
   const navigation = [
     ...baseNavigation,
@@ -336,10 +326,6 @@ function Nav() {
     }
   }
 
-  const handleShopToggle = (selectedShop: "A" | "B") => {
-    setShop(selectedShop)
-  }
-
   const handleLoginClick = () => {
     openModal()
   }
@@ -371,32 +357,29 @@ function Nav() {
         <Banner page={currentPage} />
       </div>
       <nav
-        className={`sticky top-0 z-40 shadow-lg transition-all duration-300 ${isScrolled ? "shadow-xl" : ""} ${shop === "A"
-          ? "bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-500"
-          : "bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700"
-          }`}
+        className={`sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950 transition-all duration-300 ${isScrolled ? "shadow-md shadow-black/20" : ""}`}
         style={{ top: "var(--banner-height, 0px)" }}
       >
         {/* Desktop Header */}
         <div className="hidden lg:block">
-          <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="max-w-7xl mx-auto px-6 py-4 lg:py-5">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-8">
                 {/* Logo */}
                 <Link href="/" className="flex items-center group shrink-0" aria-label={settings.restaurant_name}>
                   {settings.restaurant_logo ? (
-                    <div className="relative w-44 h-14 transition-transform duration-300 group-hover:scale-110">
+                    <div className="relative w-72 h-20 sm:w-80 sm:h-20 overflow-hidden rounded-lg transition-transform duration-300 group-hover:scale-105">
                       <Image
                         src={settings.restaurant_logo || "/placeholder.svg"}
                         alt=""
                         fill
-                        className="object-contain object-left"
-                        sizes="176px"
+                        className="object-cover object-left"
+                        sizes="(min-width: 640px) 320px, 288px"
                       />
                     </div>
                   ) : (
-                    <div className="w-44 h-14 bg-white/20 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110">
-                      <ShoppingBag className="w-8 h-8 text-white" />
+                    <div className="w-72 h-20 sm:w-80 sm:h-20 bg-zinc-800 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:bg-zinc-700">
+                      <ShoppingBag className="w-10 h-10 sm:w-11 sm:h-11 text-zinc-100" />
                     </div>
                   )}
                 </Link>
@@ -404,67 +387,12 @@ function Nav() {
                 {/* Enhanced Search Bar */}
                 <EnhancedSearch 
                   className="flex-1 max-w-2xl"
-                  placeholder={shop === "A" ? "Search beauty products..." : "Search for style accessories..."}
+                  placeholder="Search parts, brands, accessories..."
                 />
               </div>
 
               {/* Right side buttons */}
               <div className="flex items-center gap-4">
-                {/* Currency Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-white hover:bg-white/20 rounded-full p-3 flex items-center gap-2">
-                      <Globe className="w-5 h-5" />
-                      <span className="font-semibold">{selectedCurrency}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 p-2 border-0 shadow-xl">
-                    <div className="bg-white rounded-lg">
-                      <DropdownMenuItem
-                        onClick={() => setSelectedCurrency('AED')}
-                        className={`cursor-pointer rounded-lg p-3 hover:bg-gray-50 transition-colors ${selectedCurrency === 'AED' ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                          }`}
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                              <span className="text-blue-600 font-bold text-sm">AED</span>
-                            </div>
-                            <div>
-                              <span className="font-medium">UAE Dirham</span>
-                              <p className="text-xs text-gray-500">AED</p>
-                            </div>
-                          </div>
-                          {selectedCurrency === 'AED' && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          )}
-                        </div>
-                      </DropdownMenuItem>
-
-                      <DropdownMenuItem
-                        onClick={() => setSelectedCurrency('INR')}
-                        className={`cursor-pointer rounded-lg p-3 hover:bg-gray-50 transition-colors ${selectedCurrency === 'INR' ? 'bg-green-50 text-green-700' : 'text-gray-700'
-                          }`}
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                              <span className="text-green-600 font-bold text-sm">₹</span>
-                            </div>
-                            <div>
-                              <span className="font-medium">Indian Rupee</span>
-                              <p className="text-xs text-gray-500">INR</p>
-                            </div>
-                          </div>
-                          {selectedCurrency === 'INR' && (
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          )}
-                        </div>
-                      </DropdownMenuItem>
-                    </div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
                 <Link href="/orders">
                   <Button variant="ghost" className="text-white hover:bg-white/20 rounded-full p-3">
                     <ShoppingBag className="w-6 h-6" />
@@ -475,7 +403,7 @@ function Nav() {
                   <Button variant="ghost" className="text-white hover:bg-white/20 rounded-full p-3">
                     <Heart className={`w-6 h-6 ${wishlistCount > 0 ? 'fill-red-500 text-red-500' : ''}`} />
                     {wishlistCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse">
+                      <span className="absolute -top-2 -right-2 bg-zinc-100 text-zinc-900 text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold border border-zinc-300">
                         {wishlistCount}
                       </span>
                     )}
@@ -486,7 +414,7 @@ function Nav() {
                   <Button variant="ghost" className="text-white hover:bg-white/20 rounded-full p-3">
                     <ShoppingCart className="w-6 h-6" />
                     {cartCount > 0 && (
-                      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse">
+                      <span className="absolute -top-2 -right-2 bg-zinc-100 text-zinc-900 text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold border border-zinc-300">
                         {cartCount}
                       </span>
                     )}
@@ -515,7 +443,7 @@ function Nav() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-80 p-0 border-0 shadow-2xl">
-                      <div className="bg-gradient-to-br from-orange-400 via-orange-500 to-yellow-500 rounded-t-lg p-6">
+                      <div className="bg-zinc-900 rounded-t-lg p-6 border-b border-zinc-800">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                             {user?.isClerkUser && clerkUser?.imageUrl ? (
@@ -544,8 +472,8 @@ function Nav() {
                         <div className="p-2">
                           <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-gray-50 transition-colors">
                             <Link href="/dashboard" className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                                <User className="w-4 h-4 text-orange-600" />
+                              <div className="w-8 h-8 bg-zinc-100 rounded-lg flex items-center justify-center">
+                                <User className="w-4 h-4 text-zinc-700" />
                               </div>
                               <span className="font-medium text-gray-700">My Profile</span>
                             </Link>
@@ -553,8 +481,8 @@ function Nav() {
 
                           <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-gray-50 transition-colors">
                             <Link href="/orders" className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-                                <ShoppingBag className="w-4 h-4 text-orange-600" />
+                              <div className="w-8 h-8 bg-zinc-100 rounded-lg flex items-center justify-center">
+                                <ShoppingBag className="w-4 h-4 text-zinc-700" />
                               </div>
                               <span className="font-medium text-gray-700">My Orders</span>
                             </Link>
@@ -586,7 +514,7 @@ function Nav() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-64 p-0 border-0 shadow-2xl">
-                      <div className="bg-gradient-to-br from-orange-400 via-orange-500 to-yellow-500 rounded-t-lg p-6">
+                      <div className="bg-zinc-900 rounded-t-lg p-6 border-b border-zinc-800">
                         <div className="text-center">
                           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm mx-auto mb-3">
                             <User className="w-6 h-6 text-white" />
@@ -599,7 +527,7 @@ function Nav() {
                       <div className="bg-white rounded-b-lg p-4">
                         <Button
                           onClick={handleLoginClick}
-                          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 rounded-lg transition-colors"
+                          className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-medium py-3 rounded-lg transition-colors"
                         >
                           Sign In / Login
                         </Button>
@@ -632,7 +560,7 @@ function Nav() {
                         onClick={(e) => handleNavClick(baseNavigation[0], e)}
                         className={`hidden lg:flex items-center rounded-full px-6 py-2 font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
                           pathname === '/products' && !searchParams.get('category')
-                            ? `bg-white ${shop === "A" ? "text-orange-600" : "text-purple-600"} shadow-lg`
+                            ? "bg-white text-zinc-900 shadow-sm border border-zinc-200"
                             : "text-white hover:bg-white/20"
                         }`}
                       >
@@ -642,7 +570,7 @@ function Nav() {
                       <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                         <div className="p-3">
                           <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
-                            {shop === "A" ? "Beauty Categories" : shop === "B" ? "Style Categories" : "Categories"}
+                            Categories
                           </div>
                           {categories.length > 0 ? (
                             <div className="space-y-1 max-h-80 overflow-y-auto">
@@ -652,7 +580,7 @@ function Nav() {
                                   href={`/products?category=${category.slug || category.id}`}
                                   className={`block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors ${
                                     category.is_special 
-                                      ? `border-l-2 ${shop === "A" ? "border-orange-500 hover:bg-orange-100" : "border-purple-400 hover:bg-purple-50"}` 
+                                      ? "border-l-2 border-zinc-400 hover:bg-zinc-50" 
                                       : ""
                                   }`}
                                   onClick={(e) => {
@@ -668,7 +596,7 @@ function Nav() {
                                   <div className="flex items-center justify-between">
                                     <span>{category.name}</span>
                                     {category.is_special && (
-                                      <span className={`text-xs ${shop === "A" ? "text-orange-500" : "text-purple-600"}`}>✨</span>
+                                      <span className="text-xs text-zinc-500">★</span>
                                     )}
                                   </div>
                                 </Link>
@@ -700,9 +628,7 @@ function Nav() {
                           : ''
                       }`}
                       style={{
-                        maxWidth: categories.length > 5 
-                          ? (isShopSwitchEnabled ? '900px' : '1100px') // Expand when shop switcher is hidden
-                          : 'auto',
+                        maxWidth: categories.length > 5 ? '1100px' : 'auto',
                         scrollBehavior: 'smooth',
                         WebkitOverflowScrolling: 'touch'
                       }}
@@ -733,11 +659,11 @@ function Nav() {
                             onClick={(e) => handleNavClick(item, e)}
                             className={`rounded-full px-6 py-2 font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0 relative ${
                               isActiveCategoryLink(item)
-                                ? `bg-white ${shop === "A" ? "text-orange-600" : "text-purple-600"} shadow-lg`
+                                ? "bg-white text-zinc-900 shadow-sm border border-zinc-200"
                                 : "text-white hover:bg-white/20"
                             } ${
                               category.is_special 
-                                ? `border-2 ${shop === "A" ? "border-orange-500 shadow-orange-500/40" : "border-purple-400 shadow-purple-400/30"} shadow-lg` 
+                                ? "border-2 border-zinc-300 shadow-sm" 
                                 : ""
                             }`}
                           >
@@ -746,8 +672,8 @@ function Nav() {
                               {category.is_special && (
                                 <span className={`inline-flex items-center justify-center w-5 h-5 text-xs rounded-full font-bold ${
                                   shop === "A" 
-                                    ? "bg-orange-500 text-white" 
-                                    : "bg-purple-400 text-purple-900"
+                                    ? "bg-zinc-900 text-white"
+                                    : "bg-zinc-600 text-white"
                                 }`}>
                                   ✨
                                 </span>
@@ -761,77 +687,6 @@ function Nav() {
                 )}
               </div>
 
-              {/* Show entire shop switcher only if enabled in admin settings */}
-              {isShopSwitchEnabled && (
-                <div className="relative bg-gradient-to-r from-purple-900/30 via-pink-900/30 to-orange-900/30 backdrop-blur-md rounded-full p-1.5 border border-white/20 transition-all duration-500 flex-shrink-0 ml-4 shadow-2xl hover:shadow-purple-500/25">
-                  {/* Animated Background Glow */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-orange-500/20 blur-xl animate-pulse"></div>
-                  
-                  {/* Active Slider with Enhanced Glow */}
-                  <div
-                    className={`absolute top-1.5 rounded-full transition-all duration-500 ease-out shadow-2xl ${
-                      shop === "A" 
-                        ? "bg-gradient-to-r from-orange-400 to-pink-500 shadow-orange-500/50" 
-                        : "bg-gradient-to-r from-purple-500 to-indigo-600 shadow-purple-500/50"
-                    }`}
-                    style={{
-                      width: "calc(50% - 6px)",
-                      height: "calc(100% - 12px)",
-                      left: shop === "A" ? "6px" : "calc(50% + 0px)",
-                      boxShadow: shop === "A" 
-                        ? "0 0 20px rgba(251, 146, 60, 0.6), 0 0 40px rgba(251, 146, 60, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)" 
-                        : "0 0 20px rgba(147, 51, 234, 0.6), 0 0 40px rgba(147, 51, 234, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
-                    }}
-                  />
-                  
-                  {/* Shop switcher buttons */}
-                  <div className="relative flex">
-                    <button
-                      onClick={() => handleShopToggle("A")}
-                      className={`group flex items-center justify-center w-14 h-14 rounded-full transition-all duration-500 relative z-10 transform hover:scale-110 ${
-                        shop === "A" 
-                          ? "text-white drop-shadow-lg" 
-                          : "text-white/70 hover:text-white hover:drop-shadow-lg"
-                      }`}
-                      title="Beauty Products"
-                    >
-                      <Sparkles className={`w-6 h-6 transition-all duration-300 ${
-                        shop === "A" 
-                          ? "drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] animate-pulse" 
-                          : "group-hover:drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]"
-                      }`} />
-                      {shop === "A" && (
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-orange-400/20 to-pink-500/20 animate-ping"></div>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleShopToggle("B")}
-                      className={`group flex items-center justify-center w-14 h-14 rounded-full transition-all duration-500 relative z-10 transform hover:scale-110 ${
-                        shop === "B" 
-                          ? "text-white drop-shadow-lg" 
-                          : "text-white/70 hover:text-white hover:drop-shadow-lg"
-                      }`}
-                      title="Style Accessories"
-                    >
-                      <Watch className={`w-6 h-6 transition-all duration-300 ${
-                        shop === "B" 
-                          ? "drop-shadow-[0_0_8px_rgba(255,255,255,0.8)] animate-pulse" 
-                          : "group-hover:drop-shadow-[0_0_6px_rgba(255,255,255,0.5)]"
-                      }`} />
-                      {shop === "B" && (
-                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500/20 to-indigo-600/20 animate-ping"></div>
-                      )}
-                    </button>
-                  </div>
-                  
-                  {/* Floating Particles Effect */}
-                  <div className="absolute inset-0 overflow-hidden rounded-full pointer-events-none">
-                    <div className={`absolute w-1 h-1 bg-white rounded-full animate-bounce ${shop === "A" ? "left-4 top-2" : "right-4 top-2"}`} style={{animationDelay: "0s"}}></div>
-                    <div className={`absolute w-1 h-1 bg-white/60 rounded-full animate-bounce ${shop === "A" ? "left-6 bottom-3" : "right-6 bottom-3"}`} style={{animationDelay: "0.5s"}}></div>
-                    <div className={`absolute w-0.5 h-0.5 bg-white/40 rounded-full animate-bounce ${shop === "A" ? "left-8 top-4" : "right-8 top-4"}`} style={{animationDelay: "1s"}}></div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -842,57 +697,22 @@ function Nav() {
             <div className="flex items-center justify-between mb-3">
               <Link href="/" className="flex items-center group shrink-0" aria-label={settings.restaurant_name}>
                 {settings.restaurant_logo ? (
-                  <div className="relative w-36 h-12 transition-transform duration-300 group-hover:scale-110">
+                  <div className="relative w-56 h-16 overflow-hidden rounded-lg transition-transform duration-300 group-hover:scale-105">
                     <Image
                       src={settings.restaurant_logo || "/placeholder.svg"}
                       alt=""
                       fill
-                      className="object-contain object-left"
-                      sizes="144px"
+                      className="object-cover object-left"
+                      sizes="224px"
                     />
                   </div>
                 ) : (
-                  <div className="w-36 h-12 bg-white/20 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110">
-                    <ShoppingBag className="w-7 h-7 text-white" />
+                  <div className="w-56 h-16 bg-white/20 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-105">
+                    <ShoppingBag className="w-9 h-9 text-white" />
                   </div>
                 )}
               </Link>
               <div className="flex items-center gap-3">
-                {/* Currency Dropdown for Tablet */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-white hover:bg-white/20 rounded-full p-2 flex items-center gap-1">
-                      <Globe className="w-4 h-4" />
-                      <span className="text-sm font-semibold">{selectedCurrency}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44 p-1 border-0 shadow-xl">
-                    <div className="bg-white rounded-lg">
-                      <DropdownMenuItem
-                        onClick={() => setSelectedCurrency('AED')}
-                        className={`cursor-pointer rounded-lg p-2 hover:bg-gray-50 transition-colors ${selectedCurrency === 'AED' ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                          }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-blue-600 font-bold text-sm">AED</span>
-                          <span className="text-sm">UAE Dirham</span>
-                        </div>
-                      </DropdownMenuItem>
-
-                      <DropdownMenuItem
-                        onClick={() => setSelectedCurrency('INR')}
-                        className={`cursor-pointer rounded-lg p-2 hover:bg-gray-50 transition-colors ${selectedCurrency === 'INR' ? 'bg-green-50 text-green-700' : 'text-gray-700'
-                          }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-green-600 font-bold text-sm">₹</span>
-                          <span className="text-sm">Indian Rupee</span>
-                        </div>
-                      </DropdownMenuItem>
-                    </div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
                 <Button variant="ghost" className="text-white hover:bg-white/20 rounded-full p-2">
                   <Bell className="w-5 h-5" />
                 </Button>
@@ -938,7 +758,7 @@ function Nav() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-64 p-0 border-0 shadow-2xl">
-                      <div className="bg-gradient-to-br from-orange-400 via-orange-500 to-yellow-500 rounded-t-lg p-4">
+                      <div className="bg-zinc-900 rounded-t-lg p-4 border-b border-zinc-800">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                             {user?.isClerkUser && clerkUser?.imageUrl ? (
@@ -962,7 +782,7 @@ function Nav() {
                       <div className="bg-white rounded-b-lg p-2 space-y-1">
                         <DropdownMenuItem asChild>
                           <Link href="/dashboard" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
-                            <User className="w-4 h-4 text-orange-600" />
+                            <User className="w-4 h-4 text-zinc-300" />
                             <span className="text-gray-700">Dashboard</span>
                           </Link>
                         </DropdownMenuItem>
@@ -988,7 +808,7 @@ function Nav() {
             <div className="relative mb-3 search-container">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
               <Input
-                placeholder={shop === "A" ? "Search beauty products" : "Search style accessories"}
+                placeholder="Search parts, brands, accessories..."
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="pl-10 pr-12 h-10 rounded-full bg-white border-0 text-sm shadow-lg"
@@ -1024,7 +844,7 @@ function Nav() {
                           <div className="flex-1">
                             <p className="font-medium text-gray-900 text-sm line-clamp-1">{product.name}</p>
                             {product.display_price ? (
-                              <p className="text-orange-600 font-semibold text-xs">
+                              <p className="text-zinc-700 font-semibold text-xs">
                                 {product.display_price.symbol} {product.display_price.price}
                               </p>
                             ) : (
@@ -1035,7 +855,7 @@ function Nav() {
                       ))}
                       <div
                         onClick={handleViewAllResults}
-                        className="p-3 text-center text-orange-600 hover:bg-orange-50 cursor-pointer font-medium text-sm border-t"
+                        className="p-3 text-center text-zinc-800 hover:bg-zinc-50 cursor-pointer font-medium text-sm border-t border-zinc-200"
                       >
                         View all results
                       </div>
@@ -1081,18 +901,18 @@ function Nav() {
                       href={item.href}
                       onClick={(e) => handleNavClick(item, e)}
                       className={`rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap ${isActiveCategoryLink(item) || ((item as any).scroll && pathname === "/" && item.href.includes("#"))
-                        ? `bg-white ${shop === "A" ? "text-orange-600" : "text-purple-600"}`
+                        ? "bg-white text-zinc-900"
                         : "text-white hover:bg-white/20"
                         }`}
                     >
                       <span className={`flex items-center gap-1 ${
                         isSpecial 
-                          ? `animate-pulse font-bold ${shop === "A" ? "drop-shadow-[0_0_8px_rgba(251,146,60,0.8)]" : "drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]"}` 
+                          ? "font-semibold text-zinc-800" 
                           : ""
                       }`}>
                         {item.name}
                         {isSpecial && (
-                          <span className="text-yellow-300 animate-pulse drop-shadow-[0_0_4px_rgba(253,224,71,0.8)]">✨</span>
+                          <span className="text-zinc-500">★</span>
                         )}
                       </span>
                     </Link>
@@ -1115,51 +935,23 @@ function Nav() {
               <div className="flex justify-center min-w-0">
                 <Link href="/" className="flex items-center justify-center group" aria-label={settings.restaurant_name}>
                   {settings.restaurant_logo ? (
-                    <div className="relative w-28 h-11 transition-transform duration-300 group-hover:scale-110">
+                    <div className="relative h-14 w-[11.5rem] sm:w-52 sm:h-16 mx-auto overflow-hidden rounded-md transition-transform duration-300 group-hover:scale-105">
                       <Image
                         src={settings.restaurant_logo || "/placeholder.svg"}
                         alt=""
                         fill
-                        className="object-contain object-center"
-                        sizes="112px"
+                        className="object-cover object-left"
+                        sizes="(max-width: 768px) 184px, 208px"
                       />
                     </div>
                   ) : (
-                    <div className="w-28 h-11 bg-white/20 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-110">
-                      <ShoppingBag className="w-6 h-6 text-white" />
+                    <div className="h-14 w-[11.5rem] sm:w-52 sm:h-16 bg-white/20 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-105 mx-auto">
+                      <ShoppingBag className="w-8 h-8 text-white" />
                     </div>
                   )}
                 </Link>
               </div>
               <div className="flex items-center justify-end gap-2 min-w-0">
-                {/* Currency for Mobile */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="text-white hover:bg-white/20 p-1">
-                      <div className="flex items-center gap-1">
-                        <Globe className="w-4 h-4" />
-                        <span className="text-xs font-bold">{selectedCurrency}</span>
-                      </div>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40 p-1 border-0 shadow-xl">
-                    <DropdownMenuItem
-                      onClick={() => setSelectedCurrency('AED')}
-                      className={`cursor-pointer rounded p-2 text-sm ${selectedCurrency === 'AED' ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-                        }`}
-                    >
-                      AED
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => setSelectedCurrency('INR')}
-                      className={`cursor-pointer rounded p-2 text-sm ${selectedCurrency === 'INR' ? 'bg-green-50 text-green-700' : 'text-gray-700'
-                        }`}
-                    >
-                      INR ₹
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
                 <Link href="/wishlist" className="relative">
                   <Heart className={`w-5 h-5 text-white ${wishlistCount > 0 ? 'fill-red-500 text-red-500' : ''}`} />
                   {wishlistCount > 0 && (
@@ -1175,7 +967,7 @@ function Nav() {
 
             <div className="mb-3">
               <EnhancedSearch
-                placeholder={shop === "A" ? "Search beauty products..." : "Search style products..."}
+                placeholder="Search parts, brands, accessories..."
                 onSearchSubmit={(query) => {
                   router.push(`/products?search=${encodeURIComponent(query)}`)
                   setIsOpen(false)
@@ -1199,18 +991,18 @@ function Nav() {
                       href={item.href}
                       onClick={(e) => handleNavClick(item, e)}
                       className={`rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap ${isActiveCategoryLink(item) || ((item as any).scroll && pathname === "/" && item.href.includes("#"))
-                        ? `bg-white ${shop === "A" ? "text-orange-600" : "text-purple-600"}`
+                        ? "bg-white text-zinc-900"
                         : "text-white hover:bg-white/20"
                         }`}
                     >
                       <span className={`flex items-center gap-1 ${
                         isSpecial 
-                          ? `animate-pulse font-bold ${shop === "A" ? "drop-shadow-[0_0_8px_rgba(251,146,60,0.8)]" : "drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]"}` 
+                          ? "font-semibold text-zinc-800" 
                           : ""
                       }`}>
                         {item.name}
                         {isSpecial && (
-                          <span className="text-yellow-300 animate-pulse drop-shadow-[0_0_4px_rgba(253,224,71,0.8)]">✨</span>
+                          <span className="text-zinc-500">★</span>
                         )}
                       </span>
                     </Link>
@@ -1240,7 +1032,7 @@ function Nav() {
                         }}
                         className={`block px-4 py-3 text-base font-semibold transition-colors rounded-lg border-2 ${
                           pathname === '/products' && !searchParams.get('category')
-                            ? `${shop === "A" ? "text-orange-600 bg-orange-50 border-orange-200" : "text-purple-600 bg-purple-50 border-purple-200"}`
+                            ? "text-zinc-900 bg-zinc-50 border-zinc-200"
                             : `text-gray-700 hover:bg-gray-50 border-gray-200`
                         }`}
                       >
@@ -1251,7 +1043,7 @@ function Nav() {
                        {categories.length > 0 && (
                          <>
                            <div className="px-3 py-2 mt-6 text-xs font-medium text-gray-500 uppercase tracking-wider border-t border-gray-200 pt-4">
-                             {shop === "A" ? "Beauty Categories" : shop === "B" ? "Style Categories" : "Categories"}
+                             Categories
                            </div>
                           <div className="space-y-1 pb-4">
                             {categories.map((category) => {
@@ -1271,40 +1063,22 @@ function Nav() {
                                   }}
                                   className={`block px-4 py-2 text-sm font-medium transition-all duration-300 rounded-lg relative overflow-hidden ${
                                     isActiveCategoryLink(item)
-                                      ? `${shop === "A" ? "text-orange-600 bg-orange-50" : "text-purple-600 bg-purple-50"}`
+                                      ? "text-zinc-900 bg-zinc-50"
                                       : `text-gray-600 hover:bg-gray-50`
                                   } ${
                                     category.is_special 
-                                      ? `border-l-4 ${shop === "A" ? "border-orange-500 bg-gradient-to-r from-orange-100/70 to-amber-50/50" : "border-purple-400 bg-gradient-to-r from-purple-50/50 to-pink-50/30"} shadow-md` 
+                                      ? "border-l-4 border-zinc-400 bg-zinc-50 shadow-sm" 
                                       : ""
                                   }`}
                                 >
-                                  {category.is_special && (
-                                    <div className={`absolute inset-0 bg-gradient-to-r ${
-                                      shop === "A" 
-                                        ? "from-orange-200/20 via-amber-200/30 to-yellow-200/20" 
-                                        : "from-purple-200/20 via-pink-200/30 to-indigo-200/20"
-                                    } animate-pulse`}></div>
-                                  )}
                                   <div className="flex items-center justify-between relative z-10">
                                     <span className={category.is_special ? "font-semibold" : ""}>{category.name}</span>
                                     {category.is_special && (
-                                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-bold shadow-sm animate-pulse ${
-                                        shop === "A" 
-                                          ? "bg-gradient-to-r from-orange-400 to-amber-500 text-white" 
-                                          : "bg-gradient-to-r from-purple-400 to-pink-500 text-white"
-                                      }`}>
-                                        ✨ Special
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border border-zinc-300 bg-white text-zinc-700">
+                                        Featured
                                       </span>
                                     )}
                                   </div>
-                                  {category.is_special && (
-                                    <div className={`absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r ${
-                                      shop === "A" 
-                                        ? "from-transparent via-orange-400 to-transparent" 
-                                        : "from-transparent via-purple-400 to-transparent"
-                                    } animate-pulse`}></div>
-                                  )}
                                 </Link>
                               )
                             })}

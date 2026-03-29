@@ -15,14 +15,11 @@ interface CurrencyContextType {
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined)
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
-    const [selectedCurrency, setSelectedCurrency] = useState<Currency>('AED')
+    const [selectedCurrency, setSelectedCurrency] = useState<Currency>('INR')
 
-    // Load currency preference from localStorage on mount
     useEffect(() => {
-        const savedCurrency = localStorage.getItem('selectedCurrency') as Currency
-        if (savedCurrency && (savedCurrency === 'AED' || savedCurrency === 'INR')) {
-            setSelectedCurrency(savedCurrency)
-        }
+        localStorage.setItem('selectedCurrency', 'INR')
+        setSelectedCurrency('INR')
     }, [])
 
     // Save currency preference to localStorage when it changes
@@ -79,14 +76,17 @@ const getCurrencySymbol = (currency: Currency, colorClass?: string) => {
             }
         }
 
-        // Last fallback
-        if (priceAed) return (
-            <span className="flex items-center gap-1">
-                {getCurrencySymbol('AED')}
-                {priceAed.toFixed(2)}
-            </span>
-        )
-        if (priceInr) return `₹ ${priceInr.toFixed(2)}`
+        if (priceInr != null && !isNaN(Number(priceInr))) {
+            return `₹ ${Number(priceInr).toFixed(2)}`
+        }
+        if (priceAed != null && !isNaN(Number(priceAed))) {
+            return (
+                <span className="flex items-center gap-1">
+                    {getCurrencySymbol('AED')}
+                    {Number(priceAed).toFixed(2)}
+                </span>
+            )
+        }
 
         return 'Price not available'
     }

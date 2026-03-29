@@ -77,20 +77,14 @@ export default function UserCoupons() {
   };
 
   const getStatusColor = (coupon: Coupon) => {
-    if (!mounted) return "from-gray-300 to-gray-400";
-    
-    const expired = new Date(coupon.valid_to) < new Date();
-    const isActive = coupon.is_active && !expired;
+    if (!mounted) return "from-zinc-400 to-zinc-500"
 
-    if (!isActive || expired) return "from-gray-300 to-gray-400";
-    
-    // Different gradients based on discount type
-    if (coupon.discount_type === "percentage") {
-      return "from-purple-500 to-pink-600";
-    } else {
-      return "from-blue-500 to-teal-600";
-    }
-  };
+    const expired = new Date(coupon.valid_to) < new Date()
+    const isActive = coupon.is_active && !expired
+
+    if (!isActive || expired) return "from-zinc-400 to-zinc-500"
+    return "from-zinc-700 to-zinc-900"
+  }
 
   const getDiscountIcon = (discountType: string) => {
     return discountType === "percentage" ? 
@@ -193,12 +187,12 @@ export default function UserCoupons() {
       {/* Header */}
       <div className="mb-8 text-center">
         <div className="flex justify-center items-center gap-3 mb-4">
-          <Gift className="w-8 h-8 text-purple-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Exclusive Offers & Coupons</h1>
-          <Sparkles className="w-8 h-8 text-yellow-500" />
+          <Gift className="w-8 h-8 text-zinc-600" />
+          <h1 className="text-3xl font-bold text-gray-900">Offers & coupons</h1>
+          <Sparkles className="w-8 h-8 text-zinc-400" />
         </div>
         <p className="text-gray-600">
-          You have <span className="font-bold text-indigo-600">{activeCoupons.length} active offers</span> waiting for you!
+          You have <span className="font-semibold text-zinc-900">{activeCoupons.length} active offers</span> available.
         </p>
       </div>
 
@@ -206,9 +200,9 @@ export default function UserCoupons() {
       {activeCoupons.length > 0 && (
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <Zap className="w-6 h-6 text-green-500" />
-            <h2 className="text-2xl font-bold text-gray-800">Active Offers</h2>
-            <span className="px-3 py-1 bg-green-100 text-green-800 text-sm font-semibold rounded-full">
+            <Zap className="w-6 h-6 text-zinc-600" />
+            <h2 className="text-2xl font-bold text-gray-800">Active offers</h2>
+            <span className="px-3 py-1 bg-zinc-100 text-zinc-800 text-sm font-medium rounded-full border border-zinc-200">
               {activeCoupons.length} Available
             </span>
           </div>
@@ -234,8 +228,8 @@ export default function UserCoupons() {
 
                   {/* Urgency Badge */}
                   {urgencyLevel === "urgent" && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-red-500 text-white text-sm font-bold rounded-full z-20 animate-pulse">
-                      ⚡ Expires Soon!
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-zinc-900 text-white text-sm font-medium rounded-md z-20">
+                      Expires soon
                     </div>
                   )}
 
@@ -266,9 +260,9 @@ export default function UserCoupons() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-                              urgencyLevel === "urgent" ? "bg-red-500/30" :
-                              urgencyLevel === "warning" ? "bg-yellow-500/30" : "bg-white/20"
+                            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              urgencyLevel === "urgent" ? "bg-white/25" :
+                              urgencyLevel === "warning" ? "bg-white/20" : "bg-white/15"
                             }`}>
                               {timeLeft}
                             </div>
@@ -286,7 +280,7 @@ export default function UserCoupons() {
                       <div className="mb-6">
                         <div className="flex items-center justify-between bg-gradient-to-r from-gray-50 to-white p-4 rounded-xl border border-gray-200">
                           <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
+                            <div className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center shadow-sm">
                               <Tag className="w-5 h-5 text-white" />
                             </div>
                             <div>
@@ -298,7 +292,7 @@ export default function UserCoupons() {
                           </div>
                           <button
                             onClick={() => copyToClipboard(coupon.code)}
-                            className="p-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-lg transition-all hover:scale-105 active:scale-95 group"
+                            className="p-3 rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 transition-colors group"
                             title="Copy to clipboard"
                           >
                             <Copy className="w-5 h-5" />
@@ -308,7 +302,7 @@ export default function UserCoupons() {
 
                       {/* Discount Value */}
                       <div className="mb-6 text-center">
-                        <div className="inline-block px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+                        <div className="inline-block px-6 py-4 bg-zinc-50 rounded-xl border border-zinc-200">
                           <div className="text-4xl font-bold text-gray-900 mb-2">
                             {getDiscountDisplay(coupon)}
                           </div>
@@ -349,9 +343,9 @@ export default function UserCoupons() {
                         <button
                           onClick={() => {
                             copyToClipboard(coupon.code);
-                            alert(`🎉 Coupon ${coupon.code} copied! Apply it at checkout.`);
+                            alert(`Coupon ${coupon.code} copied. Apply it at checkout.`);
                           }}
-                          className="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-700 text-white font-bold text-lg rounded-xl hover:shadow-2xl transition-all shadow-lg hover:scale-[1.02] active:scale-[0.98]"
+                          className="w-full py-4 bg-zinc-900 text-white font-semibold text-lg rounded-lg hover:bg-zinc-800 transition-colors shadow-sm"
                         >
                           <span className="flex items-center justify-center gap-2">
                             <Copy className="w-5 h-5" />
@@ -418,7 +412,7 @@ export default function UserCoupons() {
             <div className="flex gap-4 justify-center">
               <button
                 onClick={() => window.location.href = "/shop"}
-                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+                className="px-6 py-3 bg-zinc-900 text-white font-medium rounded-lg hover:bg-zinc-800 transition-colors"
               >
                 Browse Products
               </button>
@@ -435,14 +429,14 @@ export default function UserCoupons() {
 
       {/* Stats Footer */}
       {coupons.length > 0 && mounted && (
-        <div className="mt-12 p-6 bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl border border-gray-200">
+        <div className="mt-12 p-6 bg-zinc-50 rounded-2xl border border-zinc-200">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center p-4">
-              <div className="text-3xl font-bold text-indigo-600 mb-2">{activeCoupons.length}</div>
+              <div className="text-3xl font-semibold text-zinc-900 mb-2">{activeCoupons.length}</div>
               <p className="text-gray-600 font-medium">Active Coupons</p>
             </div>
             <div className="text-center p-4">
-              <div className="text-3xl font-bold text-green-600 mb-2">
+              <div className="text-3xl font-semibold text-zinc-800 mb-2">
                 {coupons.filter(c => c.is_active && !c.is_redeemed).length}
               </div>
               <p className="text-gray-600 font-medium">Available</p>
@@ -452,7 +446,7 @@ export default function UserCoupons() {
               <p className="text-gray-600 font-medium">Expired</p>
             </div>
             <div className="text-center p-4">
-              <div className="text-3xl font-bold text-yellow-600 mb-2">
+              <div className="text-3xl font-semibold text-zinc-700 mb-2">
                 {activeCoupons.filter(c => getUrgencyLevel(c.valid_to) === "urgent").length}
               </div>
               <p className="text-gray-600 font-medium">Expiring Soon</p>

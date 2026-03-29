@@ -48,7 +48,7 @@ async function sendOTPEmail(email: string, otp: string) {
     from: `"Your App" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: "Your OTP Code",
-    html: `<p>Your Sabs E-commerce verification code is:</p>
+    html: `<p>Your Motoclub verification code is:</p>
            <h2 style="color: #333;">${otp}</h2>
            <p>This code will expire in 5 minutes.</p>`,
   });

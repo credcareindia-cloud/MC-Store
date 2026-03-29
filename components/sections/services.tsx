@@ -1,228 +1,149 @@
 "use client"
 
-import { Truck, RotateCcw, Shield, Zap, Cpu, Heart, Sparkles } from "lucide-react"
-import { useShop } from "@/lib/contexts/shop-context"
-import { motion } from "framer-motion"
-import { useState, useEffect, useRef } from "react"
+import type { ReactNode } from "react"
+import Image from "next/image"
+import { MapPin, ShieldCheck, Store, Truck } from "lucide-react"
 
-const Services = () => {
-  const { shop } = useShop()
-  const [isMounted, setIsMounted] = useState(false)
-  const scrollerRef = useRef(null)
+const LOGO_CLASS =
+  "h-7 w-auto max-w-[100px] object-contain object-left opacity-80 grayscale transition hover:opacity-100 hover:grayscale-0 sm:h-8 sm:max-w-[120px]"
 
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
+type TrustLogo = { src: string; alt: string; className?: string }
 
-  const services =
-    shop === "A"
-      ? [
-          {
-            icon: Truck,
-            title: "Free shipping",
-            subtitle: "Beauty delivered",
-            bgColor: "bg-pink-50",
-            borderColor: "border-pink-200",
-            iconColor: "text-pink-600",
-            titleColor: "text-pink-700",
-            subtitleColor: "text-pink-600",
-            gradient: "from-pink-100 to-rose-100",
-          },
-          {
-            icon: Heart,
-            title: "Authentic Products",
-            subtitle: "Genuine brands",
-            bgColor: "bg-purple-50",
-            borderColor: "border-purple-200",
-            iconColor: "text-purple-600",
-            titleColor: "text-purple-700",
-            subtitleColor: "text-purple-600",
-            gradient: "from-purple-100 to-indigo-100",
-          },
-          {
-            icon: Heart,
-            title: "Result guarantee",
-            subtitle: "100% authentic",
-            bgColor: "bg-rose-50",
-            borderColor: "border-rose-200",
-            iconColor: "text-rose-600",
-            titleColor: "text-rose-700",
-            subtitleColor: "text-rose-600",
-            gradient: "from-rose-100 to-pink-100",
-          },
-          {
-            icon: Sparkles,
-            title: "Premium quality",
-            subtitle: "High standards",
-            bgColor: "bg-orange-50",
-            borderColor: "border-orange-200",
-            iconColor: "text-orange-600",
-            titleColor: "text-orange-700",
-            subtitleColor: "text-orange-600",
-            gradient: "from-orange-100 to-amber-100",
-          },
-        ]
-      : [
-          {
-            icon: Truck,
-            title: "Fast delivery",
-            subtitle: "Tech in 24hrs",
-            bgColor: "bg-blue-50",
-            borderColor: "border-blue-200",
-            iconColor: "text-blue-600",
-            titleColor: "text-blue-700",
-            subtitleColor: "text-blue-600",
-            gradient: "from-blue-100 to-cyan-100",
-          },
-          {
-            icon: Shield,
-            title: "High Quality",
-            subtitle: "Safe & trusted",
-            bgColor: "bg-indigo-50",
-            borderColor: "border-indigo-200",
-            iconColor: "text-indigo-600",
-            titleColor: "text-indigo-700",
-            subtitleColor: "text-indigo-600",
-            gradient: "from-indigo-100 to-blue-100",
-          },
-          {
-            icon: Cpu,
-            title: "Latest Models",
-            subtitle: "Top brands",
-            bgColor: "bg-purple-50",
-            borderColor: "border-purple-200",
-            iconColor: "text-purple-600",
-            titleColor: "text-purple-700",
-            subtitleColor: "text-purple-600",
-            gradient: "from-purple-100 to-violet-100",
-          },
-          {
-            icon: Zap,
-            title: "Fast support",
-            subtitle: "24/7 tech help",
-            bgColor: "bg-cyan-50",
-            borderColor: "border-cyan-200",
-            iconColor: "text-cyan-600",
-            titleColor: "text-cyan-700",
-            subtitleColor: "text-cyan-600",
-            gradient: "from-cyan-100 to-teal-100",
-          },
-        ]
+const marketplaceLogos: TrustLogo[] = [
+  { src: "/trust/amazon.svg", alt: "Amazon" },
+  { src: "/trust/flipkart.svg", alt: "Flipkart" },
+]
 
-  // Duplicate services for seamless looping
-  const loopedServices = [...services, ...services]
+const paymentLogos: TrustLogo[] = [
+  { src: "/trust/googlepay.svg", alt: "Google Pay" },
+  { src: "/trust/phonepe.svg", alt: "PhonePe" },
+  { src: "/trust/paytm.svg", alt: "Paytm" },
+  { src: "/trust/razorpay.svg", alt: "Razorpay" },
+]
 
-  const cardVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: (i: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.2,
-        duration: 0.5,
-      },
-    }),
-    hover: {
-      scale: 1.05,
-      boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
-      transition: {
-        duration: 0.3,
-      },
-    },
-  }
+const shippingLogos: TrustLogo[] = [
+  { src: "/trust/dhl.svg", alt: "DHL" },
+]
 
+function LogoStrip({
+  label,
+  logos,
+  extra,
+}: {
+  label: string
+  logos: TrustLogo[]
+  extra?: ReactNode
+}) {
   return (
-    <div className="px-4 sm:px-6 lg:px-8 mt-4 sm:mt-6 lg:mt-8 pb-8 sm:pb-12 lg:pb-12 overflow-hidden">
-      <style jsx>{`
-        @keyframes pulseGlow {
-          0% {
-            box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.1);
-          }
-          50% {
-            box-shadow: 0 0 15px 5px rgba(0, 0, 0, 0.1);
-          }
-          100% {
-            box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.1);
-          }
-        }
-        @keyframes scroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-        .animate-scroll {
-          animation: scroll 20s linear infinite;
-          display: flex;
-          width: calc(100% * 2);
-        }
-        .animate-scroll:hover {
-          animation-play-state: paused;
-        }
-        .animate-pulse-glow {
-          animation: pulseGlow 2s infinite;
-        }
-        @media (max-width: 640px) {
-          .animate-scroll {
-            animation-duration: 15s;
-          }
-        }
-        @media (min-width: 641px) and (max-width: 1024px) {
-          .animate-scroll {
-            animation-duration: 18s;
-          }
-        }
-      `}</style>
-      <div className="max-w-7xl mx-auto">
-        <div className="overflow-hidden">
-          <div ref={scrollerRef} className="animate-scroll">
-            {loopedServices.map((service, index) => {
-              const IconComponent = service.icon
-              return (
-                <motion.div
-                  key={`${service.title}-${index}`}
-                  className={`
-                    ${service.bgColor} 
-                    border ${service.borderColor} 
-                    rounded-xl 
-                    p-4 sm:p-5 lg:p-6 
-                    flex items-center 
-                    gap-3 sm:gap-4 
-                    bg-gradient-to-br ${service.gradient}
-                    animate-pulse-glow
-                    cursor-pointer
-                    relative
-                    overflow-hidden
-                    min-w-[250px] sm:min-w-[300px] lg:min-w-[280px]
-                    mx-2
-                  `}
-                  variants={cardVariants}
-                  initial="hidden"
-                  animate={isMounted ? "visible" : "hidden"}
-                  whileHover="hover"
-                  custom={index % services.length}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
-                  <motion.div
-                    className="flex-shrink-0"
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
-                  >
-                    <IconComponent className={`w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 ${service.iconColor}`} />
-                  </motion.div>
-                  <div>
-                    <p className={`${service.titleColor} font-semibold text-sm sm:text-base lg:text-lg`}>{service.title}</p>
-                    <p className={`${service.subtitleColor} text-xs sm:text-sm lg:text-base`}>{service.subtitle}</p>
-                  </div>
-                </motion.div>
-              )
-            })}
-          </div>
-        </div>
+    <div className="rounded-xl border border-zinc-200/80 bg-white/80 px-4 py-4 shadow-sm backdrop-blur-sm sm:px-5 sm:py-5">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-500 sm:text-xs">
+        {label}
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-x-8 gap-y-4 sm:gap-x-10">
+        {logos.map((logo) => (
+          <Image
+            key={logo.src}
+            src={logo.src}
+            alt={logo.alt}
+            width={120}
+            height={32}
+            className={logo.className ?? LOGO_CLASS}
+            unoptimized
+          />
+        ))}
+        {extra}
       </div>
     </div>
+  )
+}
+
+const Services = () => {
+  const pillars = [
+    {
+      icon: Truck,
+      title: "Free delivery, all India",
+      body: "Orders ship nationwide with tracked logistics and careful packaging for parts & gear.",
+    },
+    {
+      icon: Store,
+      title: "Also on Amazon & Flipkart",
+      body: "Shop where you already trust—same quality inventory available on major marketplaces.",
+    },
+    {
+      icon: ShieldCheck,
+      title: "Secure payments",
+      body: "Checkout protected with Razorpay. Pay with UPI apps like Google Pay, PhonePe, Paytm, cards & more.",
+    },
+    {
+      icon: MapPin,
+      title: "Trusted carriers",
+      body: "Fulfilled via DHL, India Post Speed Post & leading courier partners for reliable last-mile delivery.",
+    },
+  ]
+
+  return (
+    <section
+      className="relative overflow-hidden px-4 sm:px-6 lg:px-8 mt-6 sm:mt-8 lg:mt-10 pb-10 sm:pb-14 lg:pb-16"
+      aria-labelledby="trust-heading"
+    >
+      <div
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(24,24,27,0.06),transparent)]"
+        aria-hidden
+      />
+      <div className="relative mx-auto max-w-7xl">
+        <div className="mb-8 text-center sm:mb-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-zinc-500">
+            Why riders choose us
+          </p>
+          <h2
+            id="trust-heading"
+            className="mt-2 text-2xl font-semibold tracking-tight text-zinc-900 sm:text-3xl"
+          >
+            Professional shopping, nationwide
+          </h2>
+          <p className="mx-auto mt-2 max-w-2xl text-sm text-zinc-600 sm:text-base">
+            Genuine parts, marketplace presence you recognize, and payments & shipping partners built for scale.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5">
+          {pillars.map(({ icon: Icon, title, body }) => (
+            <div
+              key={title}
+              className="flex flex-col rounded-2xl border border-zinc-200/90 bg-white p-5 shadow-[0_1px_0_rgba(0,0,0,0.04)] transition hover:border-zinc-300 hover:shadow-md"
+            >
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 text-white">
+                <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+              </div>
+              <h3 className="text-base font-semibold text-zinc-900">{title}</h3>
+              <p className="mt-1.5 flex-1 text-sm leading-relaxed text-zinc-600">{body}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 space-y-4 sm:mt-10">
+          <LogoStrip label="Find us on" logos={marketplaceLogos} />
+          <LogoStrip label="Payments & checkout" logos={paymentLogos} />
+          <LogoStrip
+            label="Shipping partners"
+            logos={shippingLogos}
+            extra={
+              <div className="flex items-center gap-2 border-l border-zinc-200 pl-6 sm:pl-8">
+                <span
+                  className="inline-flex h-9 items-center rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-900 sm:text-sm"
+                  title="India Post Speed Post"
+                >
+                  India Post
+                </span>
+                <span className="max-w-[140px] text-[11px] leading-snug text-zinc-500 sm:max-w-none sm:text-xs">
+                  Speed Post &amp; express courier network
+                </span>
+              </div>
+            }
+          />
+        </div>
+      </div>
+    </section>
   )
 }
 

@@ -259,7 +259,7 @@ export default function AdminResetPassword() {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            © 2025 Sabs Online. All rights reserved.
+            © 2025 Motoclub. All rights reserved.
           </p>
         </div>
       </div>

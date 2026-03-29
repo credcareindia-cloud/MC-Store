@@ -68,7 +68,7 @@ export default function AdminRegister() {
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Admin Account</h1>
-          <p className="text-gray-600">Set up your Sabs Online admin access</p>
+          <p className="text-gray-600">Set up your Motoclub admin access</p>
         </div>
 
         {/* Register Form */}
@@ -113,7 +113,7 @@ export default function AdminRegister() {
                     type="email"
                     value={formData.email}
                     onChange={handleChange}
-                    placeholder="admin@sabsonline.com"
+                    placeholder="admin@motoclub.in"
                     className="pl-10 h-12 border-gray-200 focus:border-red-500 focus:ring-red-500"
                     required
                   />
@@ -224,7 +224,7 @@ export default function AdminRegister() {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            © 2025 Sabs Online. All rights reserved.
+            © 2025 Motoclub. All rights reserved.
           </p>
         </div>
       </div>

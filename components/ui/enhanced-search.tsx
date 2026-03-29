@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useShop } from "@/lib/contexts/shop-context"
 import { useCurrency } from "@/lib/contexts/currency-context"
 
 interface SearchResult {
@@ -56,18 +55,17 @@ export default function EnhancedSearch({
   const debounceRef = useRef<NodeJS.Timeout | undefined>(undefined)
   
   const router = useRouter()
-  const { shop } = useShop()
   const { selectedCurrency, formatPrice, getCurrencySymbol } = useCurrency()
+  const recentKey = "recent-searches-motoclub"
 
-  // Load recent searches from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(`recent-searches-${shop}`)
+      const saved = localStorage.getItem(recentKey)
       if (saved) {
         setRecentSearches(JSON.parse(saved).slice(0, 5))
       }
     }
-  }, [shop])
+  }, [])
 
   // Re-trigger search when currency changes
   useEffect(() => {
@@ -118,7 +116,6 @@ export default function EnhancedSearch({
     try {
       const searchUrl = new URL('/api/products/search', window.location.origin)
       searchUrl.searchParams.set('q', query.trim())
-      searchUrl.searchParams.set('shop', shop)
       searchUrl.searchParams.set('currency', selectedCurrency)
       searchUrl.searchParams.set('limit', '8') // Limit dropdown results
       searchUrl.searchParams.set('sort', 'relevance')
@@ -152,7 +149,7 @@ export default function EnhancedSearch({
     // Save to recent searches
     const updated = [finalQuery, ...recentSearches.filter(s => s !== finalQuery)].slice(0, 5)
     setRecentSearches(updated)
-    localStorage.setItem(`recent-searches-${shop}`, JSON.stringify(updated))
+    localStorage.setItem(recentKey, JSON.stringify(updated))
 
     setShowDropdown(false)
     
@@ -207,9 +204,7 @@ export default function EnhancedSearch({
     }
   }
 
-  const defaultPlaceholder = shop === "A" 
-    ? "Search beauty products..." 
-    : "Search style accessories..."
+  const defaultPlaceholder = "Search parts, brands, accessories..."
 
   return (
     <div ref={searchRef} className={`relative ${className}`}>
@@ -276,11 +271,11 @@ export default function EnhancedSearch({
             {/* Search Results */}
             {searchResults.length > 0 && (
               <div className="border-b border-gray-100">
-                <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-100">
+                <div className="px-4 py-3 bg-zinc-50 border-b border-zinc-200">
                   <div className="flex items-center gap-2">
                     {/* <Sparkles className="w-4 h-4 text-blue-500" /> */}
                     <span className="text-sm font-medium text-gray-700">
-                      Found {searchResults.length} result{searchResults.length > 1 ? 's' : ''} in Shop {shop === "A" ? "Beauty" : "Style"}
+                      Found {searchResults.length} result{searchResults.length > 1 ? 's' : ''}
                     </span>
                   </div>
                 </div>

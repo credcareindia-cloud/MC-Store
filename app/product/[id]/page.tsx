@@ -8,7 +8,6 @@ import { addToCart } from "@/lib/store/slices/orderSlice"
 import { addToWishlistAPI, removeFromWishlistAPI } from '@/lib/store/slices/wishlistSlice'
 import { useCurrency } from "@/lib/contexts/currency-context"
 import { useAuth } from "@/lib/contexts/auth-context"
-import { useShop } from "@/lib/contexts/shop-context"
 import { Button } from "@/components/ui/button"
 import { useLoginModal } from '@/lib/stores/useLoginModal'
 import { Card, CardContent } from "@/components/ui/card"
@@ -72,7 +71,6 @@ export default function ProductPage() {
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
   const { selectedCurrency, formatPriceWithSmallDecimals } = useCurrency()
-  const { shop, setShop } = useShop()
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items)
 
   const [product, setProduct] = useState<Product | null>(null)
@@ -111,7 +109,7 @@ export default function ProductPage() {
     if (variant.stock_quantity === 0) {
       return 'Out of Stock'
     } else if (!hasSelectedCurrencyPrice(variant)) {
-      return `Not available in ${selectedCurrency === 'INR' ? 'India' : 'UAE'}`
+      return "Not available in INR"
     } else if (variant.stock_quantity <= 5) {
       return `Only ${variant.stock_quantity} left`
     } else {
@@ -170,13 +168,6 @@ export default function ProductPage() {
       if (response.ok) {
         const data = await response.json()
         
-        // Auto-switch shop if product is only available in a different shop
-        if (data.shop_category && data.shop_category !== 'Both' && data.shop_category !== shop) {
-          console.log(`Auto-switching from Shop ${shop} to Shop ${data.shop_category} for product: ${data.name}`)
-          setShop(data.shop_category)
-          // toast.success(`Switched to Shop ${data.shop_category === 'A' ? 'Beauty' : 'Style'} to view this product`)
-        }
-        
         setProduct(data)
         // Set default variant based on currency availability
         const defaultVariant = data.variants?.find((v: Variant) => 
@@ -217,7 +208,7 @@ export default function ProductPage() {
       triggerBlurAnimation('cart')
       toast.success('Added to cart')
     } else if (!hasSelectedCurrencyPrice(selectedVariant)) {
-      toast.error(`This product is not available in ${selectedCurrency === 'INR' ? 'India' : 'UAE'}`)
+      toast.error("This product is not available in INR")
     } else if ((selectedVariant?.stock_quantity ?? 0) === 0) {
       toast.error('This variant is currently out of stock')
     } else {
@@ -240,7 +231,7 @@ export default function ProductPage() {
         router.push('/order')
       }, 1500)
     } else if (!hasSelectedCurrencyPrice(selectedVariant)) {
-      toast.error(`This product is not available in ${selectedCurrency === 'INR' ? 'India' : 'UAE'}`)
+      toast.error("This product is not available in INR")
     } else if ((selectedVariant?.stock_quantity ?? 0) === 0) {
       toast.error('This variant is currently out of stock')
     } else {
@@ -304,7 +295,7 @@ export default function ProductPage() {
           <p className="text-gray-600 mb-8 text-lg">The product you're looking for doesn't exist or has been removed.</p>
           <Button
             onClick={() => router.back()}
-            className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-8 py-3 text-lg rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200"
+            className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-3 text-lg rounded-lg shadow-sm transition-colors"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
@@ -328,13 +319,13 @@ export default function ProductPage() {
     none: ""
   }
 const conditionColors = {
-  master: "from-green-500 to-green-700",
-  "first-copy": "from-yellow-500 to-yellow-700",
-  "second-copy": "from-purple-500 to-purple-700",
-  hot: "from-red-500 to-red-700",
-  sale: "from-blue-500 to-blue-700",
-  none: "from-gray-400 to-gray-600",
-};
+  master: "from-zinc-700 to-zinc-900",
+  "first-copy": "from-zinc-600 to-zinc-800",
+  "second-copy": "from-zinc-500 to-zinc-700",
+  hot: "from-zinc-800 to-zinc-950",
+  sale: "from-zinc-500 to-zinc-700",
+  none: "from-zinc-400 to-zinc-600",
+}
 
   const discountPercent = selectedVariant
     ? selectedCurrency === 'AED' && selectedVariant.price_aed && selectedVariant.discount_aed
@@ -359,15 +350,9 @@ const conditionColors = {
         <div className="animate-in zoom-in-50 duration-700 animate-out zoom-out-95 fade-out delay-2000 duration-800">
           {/* Main icon container with enhanced styling */}
           <div className="relative">
-            <div className="bg-gradient-to-br from-rose-500 via-pink-600 to-red-600 rounded-3xl p-10 shadow-2xl animate-bounce transform hover:scale-105 transition-transform duration-300">
-              <Heart className="w-24 h-24 text-white fill-white animate-pulse drop-shadow-lg" />
-              {/* Sparkle effects */}
-              <div className="absolute -top-2 -right-2 w-4 h-4 bg-yellow-400 rounded-full animate-ping opacity-75" />
-              <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-white rounded-full animate-pulse" />
+            <div className="bg-zinc-900 rounded-2xl p-10 shadow-xl">
+              <Heart className="w-24 h-24 text-white fill-white" />
             </div>
-            {/* Enhanced ring effects */}
-            <div className="absolute inset-0 bg-gradient-to-br from-rose-500 via-pink-600 to-red-600 rounded-3xl opacity-20 animate-ping scale-110" />
-            <div className="absolute inset-0 bg-gradient-to-br from-rose-500 via-pink-600 to-red-600 rounded-3xl opacity-10 animate-ping scale-125 animation-delay-200" />
           </div>
           
           {/* Enhanced message styling */}
@@ -376,7 +361,7 @@ const conditionColors = {
               <p className="text-white font-bold text-xl tracking-wide">
                 {isInWishlist(product.id) ? '💔 Removed from Wishlist' : '❤️ Added to Wishlist'}
               </p>
-              <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-pink-500 to-transparent mt-2 animate-pulse" />
+              <div className="w-full h-px bg-zinc-600 mt-3" />
             </div>
           </div>
         </div>
@@ -385,14 +370,9 @@ const conditionColors = {
       {animationType === 'cart' && (
         <div className="animate-in zoom-in-50 duration-700 animate-out zoom-out-95 fade-out delay-2000 duration-800">
           <div className="relative">
-            <div className="bg-gradient-to-br from-orange-500 via-red-500 to-pink-600 rounded-3xl p-10 shadow-2xl animate-bounce transform hover:scale-105 transition-transform duration-300">
-              <ShoppingCart className="w-24 h-24 text-white animate-pulse drop-shadow-lg" />
-              {/* Shopping effect dots */}
-              <div className="absolute top-3 right-3 w-3 h-3 bg-green-400 rounded-full animate-bounce animation-delay-100" />
-              <div className="absolute top-6 right-6 w-2 h-2 bg-blue-400 rounded-full animate-bounce animation-delay-300" />
+            <div className="bg-zinc-900 rounded-2xl p-10 shadow-xl">
+              <ShoppingCart className="w-24 h-24 text-white" />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500 via-red-500 to-pink-600 rounded-3xl opacity-20 animate-ping scale-110" />
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500 via-red-500 to-pink-600 rounded-3xl opacity-10 animate-ping scale-125 animation-delay-200" />
           </div>
           
           <div className="text-center mt-6 animate-in slide-in-from-bottom-4 duration-500 delay-300">
@@ -400,7 +380,7 @@ const conditionColors = {
               <p className="text-white font-bold text-xl tracking-wide">
                 🛒 Added to Cart Successfully!
               </p>
-              <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-orange-500 to-transparent mt-2 animate-pulse" />
+              <div className="w-full h-px bg-zinc-600 mt-3" />
             </div>
           </div>
         </div>
@@ -409,14 +389,9 @@ const conditionColors = {
       {animationType === 'buy' && (
         <div className="animate-in zoom-in-50 duration-700 animate-out zoom-out-95 fade-out delay-1800 duration-800">
           <div className="relative">
-            <div className="bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-3xl p-10 shadow-2xl animate-bounce transform hover:scale-105 transition-transform duration-300">
-              <Zap className="w-24 h-24 text-white animate-pulse drop-shadow-lg" />
-              {/* Lightning effect */}
-              <div className="absolute inset-0 bg-yellow-400/30 rounded-3xl animate-ping opacity-50" />
-              <div className="absolute top-2 left-2 w-2 h-8 bg-yellow-300 rounded-full animate-pulse transform rotate-12" />
+            <div className="bg-zinc-800 rounded-2xl p-10 shadow-xl">
+              <Zap className="w-24 h-24 text-white" />
             </div>
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-3xl opacity-20 animate-ping scale-110" />
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 rounded-3xl opacity-10 animate-ping scale-125 animation-delay-200" />
           </div>
           
           <div className="text-center mt-6 animate-in slide-in-from-bottom-4 duration-500 delay-300">
@@ -424,10 +399,9 @@ const conditionColors = {
               <p className="text-white font-bold text-xl tracking-wide">
                 ⚡ Processing Your Order...
               </p>
-              <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-green-500 to-transparent mt-2 animate-pulse" />
-              {/* Progress indicator */}
-              <div className="mt-3 w-32 h-1 bg-gray-700 rounded-full mx-auto overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse" style={{width: '100%', animation: 'progress 1.5s ease-in-out'}} />
+              <div className="w-full h-px bg-zinc-600 mt-3" />
+              <div className="mt-3 w-32 h-1 bg-zinc-700 rounded-full mx-auto overflow-hidden">
+                <div className="h-full bg-zinc-300 rounded-full" style={{ width: "100%", animation: "progress 1.5s ease-in-out" }} />
               </div>
             </div>
           </div>
@@ -435,21 +409,6 @@ const conditionColors = {
       )}
     </div>
 
-    {/* Enhanced floating particles */}
-    <div className="absolute inset-0 pointer-events-none">
-      {[...Array(8)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 bg-white/40 rounded-full animate-float"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${i * 0.2}s`,
-            animationDuration: `${3 + Math.random() * 2}s`
-          }}
-        />
-      ))}
-    </div>
   </div>
 )}
 
@@ -491,7 +450,7 @@ const conditionColors = {
               <Button
                 variant="ghost"
                 onClick={() => router.back()}
-                className="flex items-center gap-2 hover:bg-white/80 rounded-xl px-4 py-2 transition-all duration-200 transform hover:scale-105"
+                className="flex items-center gap-2 hover:bg-zinc-100 rounded-lg px-4 py-2 transition-colors"
                 aria-label="Go back"
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -508,7 +467,7 @@ const conditionColors = {
               <span className="text-gray-900 font-medium truncate max-w-48 sm:max-w-64">{product.name}</span> */}
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">
+              <Badge variant="outline" className="text-zinc-700 border-zinc-200 bg-zinc-50">
                 <Eye className="w-3 h-3 mr-1" />
                 {Math.floor(Math.random() * 1000) + 100} views
               </Badge>
@@ -530,10 +489,10 @@ const conditionColors = {
 
           {/* Currency availability warning */}
           {!currencyAvailable && (
-            <Alert className="mb-8 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl">
-              <AlertCircle className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-700">
-                This product is not available in {selectedCurrency === 'INR' ? 'India' : 'UAE'}. Please select a variant available in {selectedCurrency === 'INR' ? 'India' : 'UAE'}.
+            <Alert className="mb-8 border-zinc-200 bg-zinc-50 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-zinc-600" />
+              <AlertDescription className="text-zinc-700">
+                This product is not available in INR for India. Please select another variant if listed.
               </AlertDescription>
             </Alert>
           )}
@@ -553,7 +512,7 @@ const conditionColors = {
                   />
                   <div className="absolute top-6 left-6 flex flex-col gap-2">
                     {product.is_new && (
-                      <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg">
+                      <Badge className="bg-zinc-900 text-white font-medium">
                         <Sparkles className="w-3 h-3 mr-1" />
                        New Release
                       </Badge>
@@ -578,7 +537,7 @@ const conditionColors = {
                   </Badge> */}
                   <Badge
   variant={(selectedVariant?.stock_quantity ?? 0) > 5 ? "default" : "destructive"}
-  className={`absolute bottom-6 right-6 shadow-lg ${(selectedVariant?.stock_quantity ?? 0) <= 5 ? "bg-red-500 text-white" : ""}`}
+  className={`absolute bottom-6 right-6 shadow-sm font-medium ${(selectedVariant?.stock_quantity ?? 0) <= 5 ? "bg-zinc-900 text-white" : ""}`}
 >
   {(selectedVariant?.stock_quantity ?? 0) > 5
     ? "In Stock"
@@ -595,8 +554,8 @@ const conditionColors = {
                     <button
                       key={index}
                       onClick={() => setSelectedImageIndex(index)}
-                      className={`relative overflow-hidden rounded-xl transition-all duration-300 transform hover:scale-105 ${
-                        selectedImageIndex === index ? "ring-2 ring-orange-500 shadow-lg" : "hover:shadow-md"
+                      className={`relative overflow-hidden rounded-xl transition-shadow duration-200 ${
+                        selectedImageIndex === index ? "ring-2 ring-zinc-900 shadow-md" : "hover:shadow-md"
                       }`}
                       aria-label={`Select image ${index + 1}`}
                     >
@@ -626,12 +585,12 @@ const conditionColors = {
                     <div className="flex items-center gap-4 flex-wrap">
                       {/* <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                          <Star key={i} className="w-4 h-4 fill-zinc-300 text-zinc-300" />
                         ))}
                         <span className="text-sm text-gray-600 ml-1">(4.8 • 234 reviews)</span>
                       </div> */}
                       {product.is_new && (
-                      <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+                      <Badge variant="outline" className="text-zinc-700 border-zinc-200 bg-zinc-50">
                         <Award className="w-3 h-3 mr-1" />
                         Bestseller
                       </Badge>
@@ -644,14 +603,14 @@ const conditionColors = {
               <Card className="p-6 bg-gradient-to-br from-gray-50 to-white border-0 shadow-lg rounded-2xl">
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <span className="text-4xl font-bold bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+                    <span className="text-4xl font-bold text-zinc-900">
                       {currencyAvailable && selectedVariant
                         ? formatPriceWithSmallDecimals(
                             selectedVariant.discount_aed,
                             selectedVariant.discount_inr,
                             selectedCurrency,
                             true,
-                            "#ef4444"
+                            "#18181b"
                           )
                         : `Not available in ${selectedCurrency}`}
                     </span>
@@ -671,25 +630,25 @@ const conditionColors = {
                     )}
                     {discountPercent > 0 && (
                       <div className="flex flex-col">
-                       <Badge className="bg-red-100 text-red-700 text-xs">Save {discountPercent}%</Badge>
+                       <Badge className="bg-zinc-100 text-zinc-800 text-xs font-medium">Save {discountPercent}%</Badge>
                       </div>
                     )}
                   </div>
                   <div className="grid grid-cols-3 gap-4 pt-4 border-t">
                     <div className="flex items-center gap-2 text-sm">
-                      <Truck className="w-4 h-4 text-green-500" />
+                      <Truck className="w-4 h-4 text-zinc-600" />
                       <span className="text-gray-600">Doorstep Delivery</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <Verified className="w-4 h-4 text-blue-500" />
-                      <span className="text-gray-600">Sabs Verified</span>
+                      <Verified className="w-4 h-4 text-zinc-600" />
+                      <span className="text-gray-600">Motoclub verified</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-  <Shield className="w-4 h-4 text-purple-500" />
+  <Shield className="w-4 h-4 text-zinc-600" />
   {product.warranty_months && product.warranty_months !== "0" ? (
     <span className="text-gray-600">{product.warranty_months} Months Warranty</span>
   ) : (
-    <span className="text-green-600 font-medium">Quality Assured</span>
+    <span className="text-zinc-700 font-medium">Quality assured</span>
   )}
 </div>
 
@@ -713,7 +672,7 @@ const conditionColors = {
             variant={isSelected ? "default" : "outline"}
             className={`p-3 text-sm h-auto text-left flex flex-col gap-1 ${
               isSelected
-                ? "bg-gradient-to-r from-orange-500 to-red-500 text-white"
+                ? "bg-zinc-900 text-white hover:bg-zinc-800"
                 : isDisabled
                 ? "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
                 : "border-gray-200 hover:bg-gray-50"
@@ -729,22 +688,22 @@ const conditionColors = {
                 variant.discount_inr,
                 selectedCurrency,
                 true,
-                isSelected ? "#fff" : isDisabled ? "#9ca3af" : "#ef4444"
+                isSelected ? "#fff" : isDisabled ? "#9ca3af" : "#18181b"
               )}
             </span>
             {variant.stock_quantity === 0 && (
-              <span className="text-xs text-red-500 font-medium mt-1">
+              <span className="text-xs text-zinc-500 font-medium mt-1">
                 Out of Stock
               </span>
             )}
             {!hasSelectedCurrencyPrice(variant) && variant.stock_quantity > 0 && (
-              <span className="text-xs text-red-500 font-medium mt-1">
-                Not available in {selectedCurrency === 'INR' ? 'India' : 'UAE'}
+              <span className="text-xs text-zinc-500 font-medium mt-1">
+                Not available in INR
               </span>
             )}
             {variant.stock_quantity > 0 && hasSelectedCurrencyPrice(variant) && (
               <span className={`text-xs font-medium mt-1 ${
-                isSelected ? "text-white/80" : isLowStock ? "text-orange-600" : "text-green-600"
+                isSelected ? "text-white/80" : isLowStock ? "text-zinc-300" : "text-zinc-200"
               }`}>
                 {isLowStock ? `Only ${variant.stock_quantity} left` : `${variant.stock_quantity} in stock`}
               </span>
@@ -762,7 +721,7 @@ const conditionColors = {
                 {product.description && (
                   <Card className="p-6 border-0 shadow-lg rounded-2xl">
                     <h3 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-orange-500" />
+                      <Sparkles className="w-5 h-5 text-zinc-500" />
                       About Product
                     </h3>
                     <p className="text-gray-600 leading-relaxed">{product.description}</p>
@@ -773,13 +732,13 @@ const conditionColors = {
                 {product.features?.length > 0 && (
                   <Card className="p-6 border-0 shadow-lg rounded-2xl">
                     <h3 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
-                      <Award className="w-5 h-5 text-green-500" />
+                      <Award className="w-5 h-5 text-zinc-500" />
                       Key Features
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {product.features.map((feature, index) => (
                         <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="w-2 h-2 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
+                          <div className="w-2 h-2 rounded-full bg-zinc-400" />
                           <span className="text-sm text-gray-700">{feature}</span>
                         </div>
                       ))}
@@ -790,7 +749,7 @@ const conditionColors = {
                 {/* Specifications */}
                 <Card className="p-6 border-0 shadow-lg rounded-2xl">
                   <h3 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
-                    <Globe className="w-5 h-5 text-blue-500" />
+                    <Globe className="w-5 h-5 text-zinc-500" />
                     Specifications
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -814,7 +773,7 @@ const conditionColors = {
                     ].map((spec, index) => (
                       <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                         <span className="text-sm text-gray-500 font-medium">{spec.label}:</span>
-                        <span className={`text-sm font-semibold ${spec.label === 'Stock' ? 'text-green-600' : 'text-gray-900'}`}>
+                        <span className={`text-sm font-semibold ${spec.label === "Stock" ? "text-zinc-700" : "text-gray-900"}`}>
                           {spec.value}
                         </span>
                       </div>
@@ -857,7 +816,7 @@ const conditionColors = {
               <div className="space-y-4 bottom-4 z-10">
                 <Button
                   onClick={handleBuyNow}
-                  className="w-full bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:via-red-600 hover:to-pink-600 text-white py-4 text-lg font-bold rounded-2xl shadow-2xl transform transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:transform-none"
+                  className="w-full bg-zinc-900 hover:bg-zinc-800 text-white py-4 text-lg font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50"
                   disabled={!product.is_available || !selectedVariant || (selectedVariant?.stock_quantity ?? 0) === 0 || !currencyAvailable}
                   aria-label="Buy now"
                 >
@@ -872,7 +831,7 @@ const conditionColors = {
                   <Button
                     onClick={handleAddToCart}
                     variant="outline"
-                    className="py-3 rounded-xl border-2 border-orange-200 hover:border-orange-300 hover:bg-orange-50 transition-all duration-200 transform hover:scale-105 active:scale-95"
+                    className="py-3 rounded-lg border border-zinc-300 hover:border-zinc-400 hover:bg-zinc-50 transition-colors"
                     disabled={!product.is_available || !selectedVariant || (selectedVariant?.stock_quantity ?? 0) === 0 || !currencyAvailable}
                     aria-label="Add to cart"
                   >
@@ -882,14 +841,14 @@ const conditionColors = {
                   <Button
                     onClick={() => handleToggleWishlist(product)}
                     variant="outline"
-                    className={`py-3 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                    className={`py-3 rounded-lg transition-colors ${
                       isInWishlist(product.id)
-                        ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100 border-2'
-                        : 'border-2 border-gray-200 hover:border-red-200 hover:bg-red-50'
+                        ? "bg-zinc-100 text-zinc-900 border-zinc-300 hover:bg-zinc-200 border"
+                        : "border border-zinc-200 hover:border-zinc-400 hover:bg-zinc-50"
                     }`}
                     aria-label={isInWishlist(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
                   >
-                    <Heart className={`w-4 h-4 mr-2 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                    <Heart className={`w-4 h-4 mr-2 ${isInWishlist(product.id) ? "fill-zinc-900 text-zinc-900" : ""}`} />
                     {isInWishlist(product.id) ? 'Saved' : 'Save'}
                   </Button>
                 </div>
@@ -903,7 +862,6 @@ const conditionColors = {
       <RecommendedProducts 
         currentProductId={product.id}
         categoryId={product.category_id}
-        shopCategory={product.shop_category}
       />
 
       <Footer />

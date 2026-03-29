@@ -12,7 +12,6 @@ import { CurrencyProvider } from '@/lib/contexts/currency-context'
 import WishlistSync from '@/components/wishlist-sync'
 import CartSync from '@/components/cart-sync'
 import { Toaster } from 'react-hot-toast'
-import ConditionalCountrySelection from '@/components/ui/conditional-country-selection'
 import { Analytics } from '@vercel/analytics/next'
 
 import {
@@ -23,8 +22,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" })
 
 export const metadata: Metadata = {
-  title: "SABS - ONLINE STORE",
-  description: "Your trusted source for GADGETS AND COSMETICS.",
+  title: "Motoclub — Spare Parts & Accessories",
+  description: "Motorcycle spare parts and riding accessories, delivered across India.",
   generator: "Shah",
   icons: {
     icon: [
@@ -49,7 +48,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                     <WishlistSync />
                     <CartSync />
                     <UserNavVisibility />
-                    <ConditionalCountrySelection />
                     <Toaster 
                       position="top-center"
                       toastOptions={{

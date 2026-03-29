@@ -438,7 +438,7 @@ export default function SearchFilters({
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="outline" 
-                  className="hidden md:flex items-center gap-2 bg-white border-2 border-gray-200 hover:border-orange-400 hover:bg-orange-50 shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5"
+                  className="hidden md:flex items-center gap-2 bg-white border-2 border-gray-200 hover:border-zinc-400 hover:bg-zinc-50 shadow-sm transition-all duration-200 rounded-lg px-4 py-2.5"
                 >
                   <ArrowUpDown className="w-4 h-4" />
                   <span className="text-sm">{currentSort.label}</span>
@@ -446,7 +446,7 @@ export default function SearchFilters({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 bg-white border-2 border-gray-100 shadow-xl rounded-xl p-2 backdrop-blur-sm">
-                <DropdownMenuLabel className="text-sm text-gray-700 font-semibold px-3 py-2 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg mb-2">
+                <DropdownMenuLabel className="text-sm text-gray-700 font-semibold px-3 py-2 bg-zinc-50 rounded-lg mb-2">
                   📊 Sort Results
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -456,7 +456,7 @@ export default function SearchFilters({
                     onClick={() => onSortChange(option.value)}
                     className={`cursor-pointer rounded-lg mx-1 my-0.5 px-3 py-2.5 transition-all duration-200 ${
                       sortBy === option.value 
-                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md transform scale-[0.98]' 
+                        ? 'bg-zinc-900 text-white shadow-sm' 
                         : 'hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:shadow-sm'
                     }`}
                   >
@@ -644,7 +644,7 @@ export default function SearchFilters({
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className="md:hidden flex items-center gap-0.5 bg-white border border-gray-200 hover:border-orange-400 hover:bg-orange-50 shadow-sm transition-all duration-200 rounded-md px-1.5 py-1"
+                  className="md:hidden flex items-center gap-0.5 bg-white border border-gray-200 hover:border-zinc-400 hover:bg-zinc-50 shadow-sm transition-all duration-200 rounded-md px-1.5 py-1"
                 >
                   <ArrowUpDown className="w-3 h-3" />
                   <span className="text-xs">Sort</span>
@@ -652,7 +652,7 @@ export default function SearchFilters({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="min-w-[12rem] w-48 max-h-[40vh] overflow-y-auto bg-white border-2 border-gray-100 shadow-xl rounded-xl p-2 backdrop-blur-sm z-[9999]">
-                <DropdownMenuLabel className="text-sm text-gray-700 font-semibold px-3 py-2 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg mb-2">
+                <DropdownMenuLabel className="text-sm text-gray-700 font-semibold px-3 py-2 bg-zinc-50 rounded-lg mb-2">
                   📊 Sort Results
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -662,7 +662,7 @@ export default function SearchFilters({
                     onClick={() => onSortChange(option.value)}
                     className={`cursor-pointer rounded-lg mx-1 my-0.5 px-3 py-2.5 transition-all duration-200 ${
                       sortBy === option.value 
-                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md transform scale-[0.98]' 
+                        ? 'bg-zinc-900 text-white shadow-sm' 
                         : 'hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:shadow-sm'
                     }`}
                   >

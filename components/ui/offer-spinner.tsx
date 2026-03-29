@@ -126,7 +126,7 @@ const SpinWheel = ({ onClose }: SpinWheelProps) => {
           }
 
           // Convert to wheel format with dynamic colors
-          const colors = ["#FF6B35", "#FFE4B5", "#F5E6D3", "#FFD700", "#FF4500", "#98FB98"]
+          const colors = ["#e4e4e7", "#d4d4d8", "#a1a1aa", "#71717a", "#52525b", "#3f3f46"]
           const wheelOffers: WheelOffer[] = offerDiscounts.map((discount, index) => ({
             id: index + 1,
             title: formatOfferTitle(discount.value, discount.type),
@@ -325,7 +325,7 @@ const SpinWheel = ({ onClose }: SpinWheelProps) => {
           <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
-          <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 text-zinc-500 animate-spin mx-auto mb-4" />
           <p className="text-gray-600 text-lg">Loading offers...</p>
         </div>
       </div>
@@ -374,14 +374,14 @@ const SpinWheel = ({ onClose }: SpinWheelProps) => {
           {/* Status Messages */}
           {hasRedeemed && (
             <div className="mt-3 sm:mt-4 relative overflow-hidden">
-              <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-lg border border-green-300">
+              <div className="bg-zinc-900 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-zinc-700">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
-                    <span className="text-green-500 text-sm sm:text-lg">✅</span>
+                    <span className="text-zinc-700 text-sm sm:text-lg">✓</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-white font-bold text-xs sm:text-sm mb-0.5 sm:mb-1">Reward Claimed!</h4>
-                    <p className="text-green-100 text-xs leading-relaxed">You have successfully claimed your reward. Check your account for the coupon code.</p>
+                    <h4 className="text-white font-semibold text-xs sm:text-sm mb-0.5 sm:mb-1">Reward claimed</h4>
+                    <p className="text-zinc-300 text-xs leading-relaxed">Your coupon is saved to your account.</p>
                   </div>
                 </div>
                 <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-white/10 rounded-full -mr-6 sm:-mr-8 -mt-6 sm:-mt-8"></div>
@@ -391,14 +391,14 @@ const SpinWheel = ({ onClose }: SpinWheelProps) => {
           )}
           {hasSpun && !hasRedeemed && (
             <div className="mt-3 sm:mt-4 relative overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-500 p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-lg border border-blue-300">
+              <div className="bg-zinc-800 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-zinc-600">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
-                    <span className="text-blue-500 text-sm sm:text-lg">🎯</span>
+                    <span className="text-zinc-700 text-sm sm:text-lg">◉</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-white font-bold text-xs sm:text-sm mb-0.5 sm:mb-1">Ready to Claim!</h4>
-                    <p className="text-blue-100 text-xs leading-relaxed">You've already spun the wheel. Your reward is waiting below - claim it now!</p>
+                    <h4 className="text-white font-semibold text-xs sm:text-sm mb-0.5 sm:mb-1">Ready to claim</h4>
+                    <p className="text-zinc-300 text-xs leading-relaxed">You have already spun. Claim your reward below.</p>
                   </div>
                 </div>
                 <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-white/10 rounded-full -mr-6 sm:-mr-8 -mt-6 sm:-mt-8"></div>
@@ -408,19 +408,18 @@ const SpinWheel = ({ onClose }: SpinWheelProps) => {
           )}
           {!hasSpun && !hasRedeemed && (
             <div className="mt-3 sm:mt-4 relative overflow-hidden">
-              <div className="bg-gradient-to-r from-orange-500 to-red-500 p-3 sm:p-4 rounded-lg sm:rounded-xl shadow-lg border border-orange-300">
+              <div className="bg-zinc-900 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-zinc-700">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-full flex items-center justify-center shadow-sm animate-pulse flex-shrink-0">
-                    <span className="text-orange-500 text-sm sm:text-lg">🎁</span>
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-full flex items-center justify-center shadow-sm flex-shrink-0">
+                    <Gift className="w-3 h-3 sm:w-4 sm:h-4 text-zinc-700" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-white font-bold text-xs sm:text-sm mb-0.5 sm:mb-1">Your Lucky Spin!</h4>
-                    <p className="text-orange-100 text-xs leading-relaxed">One spin per user - Make it count! Spin the wheel to win amazing discounts.</p>
+                    <h4 className="text-white font-semibold text-xs sm:text-sm mb-0.5 sm:mb-1">Welcome offer</h4>
+                    <p className="text-zinc-300 text-xs leading-relaxed">One spin per account. Spin for a discount code.</p>
                   </div>
                 </div>
-                <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-white/10 rounded-full -mr-6 sm:-mr-8 -mt-6 sm:-mt-8"></div>
-                <div className="absolute bottom-0 left-0 w-8 h-8 sm:w-12 sm:h-12 bg-white/10 rounded-full -ml-4 sm:-ml-6 -mb-4 sm:-mb-6"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse"></div>
+                <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-white/5 rounded-full -mr-6 sm:-mr-8 -mt-6 sm:-mt-8" />
+                <div className="absolute bottom-0 left-0 w-8 h-8 sm:w-12 sm:h-12 bg-white/5 rounded-full -ml-4 sm:-ml-6 -mb-4 sm:-mb-6" />
               </div>
             </div>
           )}
@@ -428,11 +427,11 @@ const SpinWheel = ({ onClose }: SpinWheelProps) => {
 
         <div className="relative mb-4 sm:mb-6 flex justify-center">
           <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 z-20">
-            <div className="w-0 h-0 border-l-[8px] border-r-[8px] border-b-[16px] sm:border-l-[10px] sm:border-r-[10px] sm:border-b-[20px] border-l-transparent border-r-transparent border-b-orange-400 drop-shadow-lg"></div>
-            <div className="w-4 h-4 sm:w-5 sm:h-5 bg-orange-400 rounded-full -mt-1.5 sm:-mt-2 mx-auto border-2 border-white shadow-lg"></div>
+            <div className="w-0 h-0 border-l-[8px] border-r-[8px] border-b-[16px] sm:border-l-[10px] sm:border-r-[10px] sm:border-b-[20px] border-l-transparent border-r-transparent border-b-zinc-800" />
+            <div className="w-4 h-4 sm:w-5 sm:h-5 bg-zinc-900 rounded-full -mt-1.5 sm:-mt-2 mx-auto border-2 border-white shadow-sm" />
           </div>
 
-          <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-72 lg:h-72 rounded-full border-2 sm:border-4 border-orange-400 shadow-2xl overflow-hidden bg-white">
+          <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-72 lg:h-72 rounded-full border-2 sm:border-4 border-zinc-300 shadow-md overflow-hidden bg-white">
             <div
               ref={wheelRef}
               className="w-full h-full rounded-full transition-transform ease-out duration-4000"
@@ -444,7 +443,8 @@ const SpinWheel = ({ onClose }: SpinWheelProps) => {
               {wheelOffers.map((offer, index) => {
                 const segmentAngle = 360 / wheelOffers.length
                 const angle = segmentAngle * index + segmentAngle / 2
-                const isLightColor = offer.color === "#F5E6D3" || offer.color === "#FFE4B5" || offer.color === "#98FB98"
+                const isLightColor =
+                  offer.color === "#e4e4e7" || offer.color === "#d4d4d8" || offer.color === "#a1a1aa"
 
                 return (
                   <div
@@ -491,17 +491,17 @@ const SpinWheel = ({ onClose }: SpinWheelProps) => {
           <Button
             onClick={stopWheel}
             disabled={!canStop}
-            className="w-full bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold py-2.5 sm:py-3 text-sm sm:text-base rounded-full mb-3 sm:mb-4 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation transition-all duration-200"
+            className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-semibold py-2.5 sm:py-3 text-sm sm:text-base rounded-lg mb-3 sm:mb-4 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation transition-colors"
           >
             Stop
           </Button>
         )}
 
         {result && (
-          <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-orange-50 to-yellow-50 border-2 border-orange-200 rounded-lg sm:rounded-xl">
+          <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-zinc-50 border border-zinc-200 rounded-lg sm:rounded-xl">
             <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
-              <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
-              <h3 className="text-base sm:text-lg font-bold text-orange-600">Congratulations!</h3>
+              <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600" />
+              <h3 className="text-base sm:text-lg font-semibold text-zinc-900">You won</h3>
             </div>
             <div className="mb-2 sm:mb-3">
               <div className="text-lg sm:text-2xl font-bold text-gray-900 mb-1 leading-tight">
@@ -511,15 +511,13 @@ const SpinWheel = ({ onClose }: SpinWheelProps) => {
             </div>
 
             {result.discount !== "0" && offerCode && (
-              <div className="bg-white p-2.5 sm:p-3 rounded-lg mb-3 sm:mb-4 border border-orange-200">
+              <div className="bg-white p-2.5 sm:p-3 rounded-lg mb-3 sm:mb-4 border border-zinc-200">
                 <p className="text-xs text-gray-500 mb-1">
                   Your {result.type === "cash" ? "cash discount" : "discount"} code:
                 </p>
                 <div className="flex items-center gap-2 bg-gray-50 p-2 rounded border">
                   <code
-                    className={`flex-1 font-mono font-bold text-xs sm:text-sm ${
-                      result.type === "cash" ? "text-green-600" : "text-orange-600"
-                    } break-all`}
+                    className="flex-1 font-mono font-semibold text-xs sm:text-sm text-zinc-900 break-all"
                   >
                     {offerCode}
                   </code>
@@ -527,17 +525,13 @@ const SpinWheel = ({ onClose }: SpinWheelProps) => {
                     size="sm"
                     variant="outline"
                     onClick={() => copyToClipboard(offerCode)}
-                    className={`h-7 w-7 sm:h-6 sm:w-6 p-0 touch-manipulation ${
-                      result.type === "cash"
-                        ? "border-green-300 text-green-600 hover:bg-green-50 active:bg-green-100"
-                        : "border-orange-300 text-orange-600 hover:bg-orange-50 active:bg-orange-100"
-                    }`}
+                    className="h-7 w-7 sm:h-6 sm:w-6 p-0 touch-manipulation border-zinc-300 text-zinc-700 hover:bg-zinc-100"
                   >
                     <Copy className="w-3 h-3" />
                   </Button>
                 </div>
                 {currentDbOffer && (
-                  <p className="text-red-500 text-xs mt-2">
+                  <p className="text-zinc-500 text-xs mt-2">
                     Expires: {new Date(currentDbOffer.end_date).toLocaleDateString()}
                   </p>
                 )}
@@ -547,13 +541,9 @@ const SpinWheel = ({ onClose }: SpinWheelProps) => {
             <Button
               onClick={handleRedeem}
               disabled={hasRedeemed}
-              className={`w-full font-semibold py-2.5 sm:py-3 text-sm sm:text-base rounded-full touch-manipulation transition-all duration-200 ${
-                hasRedeemed 
-                  ? "bg-gray-400 cursor-not-allowed" 
-                  : result.type === "cash" 
-                    ? "bg-green-500 hover:bg-green-600 active:bg-green-700" 
-                    : "bg-orange-500 hover:bg-orange-600 active:bg-orange-700"
-              } text-white`}
+              className={`w-full font-semibold py-2.5 sm:py-3 text-sm sm:text-base rounded-lg touch-manipulation transition-colors ${
+                hasRedeemed ? "bg-zinc-300 cursor-not-allowed text-zinc-600" : "bg-zinc-900 hover:bg-zinc-800 text-white"
+              }`}
             >
               <Gift className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
               {hasRedeemed ? "Already Claimed" : "Login to Claim Reward"}

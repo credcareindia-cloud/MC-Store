@@ -33,7 +33,7 @@ export async function GET() {
       floating_ad_cooldown: '4',
       floating_ad_max_shows: '3',
       default_shop: 'A',
-      shop_switch_enabled: 'true'
+      shop_switch_enabled: 'false'
     }
 
     // Override with database values

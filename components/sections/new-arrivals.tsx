@@ -121,10 +121,10 @@ const NewArrivals: React.FC = () => {
                       />
                       <Badge className="absolute top-2 left-2 bg-green-500 text-white text-xs">NEW</Badge>
                       {item.is_featured && (
-                        <Badge className="absolute top-2 right-2 bg-orange-500 text-white text-xs">HOT</Badge>
+                        <Badge className="absolute top-2 right-2 bg-zinc-900 text-white text-xs font-medium">New</Badge>
                       )}
                       <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded-full text-xs flex items-center">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400 mr-1" />
+                        <Star className="w-3 h-3 fill-zinc-300 text-zinc-300 mr-1" />
                         4.8
                       </div>
                     </div>
@@ -164,7 +164,7 @@ const NewArrivals: React.FC = () => {
 
                       <div className="flex items-center gap-1 mb-3">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                          <Star key={i} className="w-3 h-3 fill-zinc-300 text-zinc-300" />
                         ))}
                         <span className="text-xs text-gray-500 ml-1">(4.8) • New</span>
                       </div>

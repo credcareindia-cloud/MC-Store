@@ -7,16 +7,21 @@ import { sql } from "@/lib/database"
  */
 export async function GET(req) {
   try {
-    // Get shop from query param, default to 'A'
     const { searchParams } = new URL(req.url)
-    const shop = searchParams.get("shop") || "A"
+    const shop = searchParams.get("shop")
 
-    // Fetch active slides for the selected shop
-    const slides = await sql`
-      SELECT * FROM slider_content 
-      WHERE is_active = true AND shop = ${shop}
-      ORDER BY sort_order ASC, created_at ASC
-    `
+    const slides =
+      shop === "A" || shop === "B"
+        ? await sql`
+            SELECT * FROM slider_content
+            WHERE is_active = true AND shop = ${shop}
+            ORDER BY sort_order ASC, created_at ASC
+          `
+        : await sql`
+            SELECT * FROM slider_content
+            WHERE is_active = true
+            ORDER BY shop ASC, sort_order ASC, created_at ASC
+          `
 
     return NextResponse.json(slides)
   } catch (error) {

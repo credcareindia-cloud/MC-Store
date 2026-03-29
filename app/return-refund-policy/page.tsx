@@ -180,7 +180,7 @@ function ReturnRefundPolicyContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-amber-600" />
+                <AlertTriangle className="w-5 h-5 text-zinc-600" />
                 Special Circumstances
               </CardTitle>
             </CardHeader>
@@ -193,17 +193,17 @@ function ReturnRefundPolicyContent() {
                 </p>
               </div>
 
-              <div className="border-l-4 border-orange-400 bg-orange-50 p-4">
-                <h4 className="font-medium text-orange-900 mb-2">Wrong Item Received</h4>
-                <p className="text-orange-800 text-sm">
+              <div className="border-l-4 border-zinc-400 bg-zinc-50 p-4">
+                <h4 className="font-medium text-zinc-900 mb-2">Wrong Item Received</h4>
+                <p className="text-zinc-700 text-sm">
                   If you receive the wrong item, we'll cover all return shipping costs and send the correct item immediately. 
                   No questions asked!
                 </p>
               </div>
 
-              <div className="border-l-4 border-yellow-400 bg-yellow-50 p-4">
-                <h4 className="font-medium text-yellow-900 mb-2">Late Delivery Compensation</h4>
-                <p className="text-yellow-800 text-sm">
+              <div className="border-l-4 border-zinc-400 bg-zinc-50 p-4">
+                <h4 className="font-medium text-zinc-900 mb-2">Late Delivery Compensation</h4>
+                <p className="text-zinc-700 text-sm">
                   If your order arrives significantly later than promised, you may be eligible for a partial refund or store credit as compensation.
                 </p>
               </div>
@@ -246,7 +246,7 @@ function ReturnRefundPolicyContent() {
                 Our friendly customer service team is here to assist you with any return or refund questions.
               </p>
               <div className="flex flex-wrap justify-center gap-4 text-sm">
-                <span>📧 returns@sabsonline.com</span>
+                <span>📧 motoclubkottakkal@gmail.com</span>
                 <span>📱 WhatsApp: +971-56666-7178</span>
                 <span>⏰ Sun-Thu: 9AM-6PM GST</span>
               </div>

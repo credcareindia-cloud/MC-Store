@@ -172,7 +172,7 @@ export default function ReservationsPage() {
       case "confirmed":
         return "bg-green-100 text-green-800"
       case "pending":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-zinc-100 text-zinc-800"
       case "cancelled":
         return "bg-red-100 text-red-800"
       case "completed":
@@ -381,7 +381,7 @@ export default function ReservationsPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-black font-semibold py-3"
+                  className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-semibold py-3"
                 >
                   {loading ? "Submitting..." : isAuthenticated ? "Request Reservation" : "Login to Reserve"}
                 </Button>
@@ -422,7 +422,7 @@ export default function ReservationsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start space-x-3">
-                  <MapPin className="w-5 h-5 text-amber-500 mt-1" />
+                  <MapPin className="w-5 h-5 text-zinc-600 mt-1" />
                   <div>
                     <p className="font-medium">Address</p>
                     <p className="text-gray-600">
@@ -433,21 +433,21 @@ export default function ReservationsPage() {
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <Phone className="w-5 h-5 text-amber-500 mt-1" />
+                  <Phone className="w-5 h-5 text-zinc-600 mt-1" />
                   <div>
                     <p className="font-medium">Phone</p>
                     <p className="text-gray-600">+1 (555) 123-4567</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <Mail className="w-5 h-5 text-amber-500 mt-1" />
+                  <Mail className="w-5 h-5 text-zinc-600 mt-1" />
                   <div>
                     <p className="font-medium">Email</p>
                     <p className="text-gray-600">info@lumiere-restaurant.com</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
-                  <Clock className="w-5 h-5 text-amber-500 mt-1" />
+                  <Clock className="w-5 h-5 text-zinc-600 mt-1" />
                   <div>
                     <p className="font-medium">Hours</p>
                     <div className="text-gray-600 text-sm">
@@ -545,7 +545,7 @@ export default function ReservationsPage() {
                         </div>
                       )}
                       {reservation.dietary_restrictions && (
-                        <div className="mt-2 p-2 bg-yellow-50 rounded">
+                        <div className="mt-2 p-2 bg-zinc-50 rounded border border-zinc-100">
                           <p className="text-sm">
                             <strong>Dietary Restrictions:</strong> {reservation.dietary_restrictions}
                           </p>

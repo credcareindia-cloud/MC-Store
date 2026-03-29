@@ -1,29 +1,20 @@
 import { Metadata } from 'next'
-import { Award, Heart, Shield, Users, Star, Sparkles } from "lucide-react"
-import Link from "next/link"
-import Image from "next/image"
 import AboutPageClient from './about-client'
 
 export const metadata: Metadata = {
-  title: 'About Us - Sabs Online | Premium Beauty Products & Tech Accessories',
-  description: 'Discover Sabs Online\'s story, mission, and commitment to quality. Your trusted partner for authentic beauty products, skincare, cosmetics, and cutting-edge tech accessories since our founding.',
+  title: 'About Us - Motoclub | Motorcycle parts & accessories',
+  description:
+    'Motoclub supplies motorcycle spare parts and riding accessories with reliable quality and nationwide delivery across India.',
   keywords: [
-    'about sabs online',
-    'beauty products company',
-    'tech accessories store',
-    'skincare brand',
-    'cosmetics retailer',
-    'authentic beauty products',
-    'premium tech accessories',
-    'customer satisfaction',
-    'quality guarantee',
-    'beauty and technology',
-    'online beauty store',
-    'trusted retailer'
+    'motoclub',
+    'motorcycle parts India',
+    'bike spare parts',
+    'riding accessories',
+    'motorcycle accessories online',
   ].join(', '),
-  authors: [{ name: 'Sabs Online Team' }],
-  creator: 'Sabs Online',
-  publisher: 'Sabs Online',
+  authors: [{ name: 'Motoclub Team' }],
+  creator: 'Motoclub',
+  publisher: 'Motoclub',
   robots: {
     index: true,
     follow: true,
@@ -36,36 +27,38 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'About Us - Sabs Online | Premium Beauty Products & Tech Accessories',
-    description: 'Learn about our story, mission, and commitment to bringing you authentic beauty products and cutting-edge tech accessories. Discover why thousands trust Sabs Online.',
+    title: 'About Motoclub',
+    description:
+      'Motorcycle spare parts and accessories, delivered across India.',
     type: 'website',
-    url: 'https://sabsonline.com/about',
-    siteName: 'Sabs Online',
+    url: 'https://motoclub.in/about',
+    siteName: 'Motoclub',
     images: [
       {
         url: '/og-about.jpg',
         width: 1200,
         height: 630,
-        alt: 'About Sabs Online - Premium Beauty & Tech Store',
+        alt: 'About Motoclub',
       },
     ],
-    locale: 'en_US',
+    locale: 'en_IN',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'About Us - Sabs Online | Premium Beauty Products & Tech Accessories',
-    description: 'Discover our story, mission, and commitment to quality beauty products and tech accessories.',
+    title: 'About Motoclub',
+    description: 'Motorcycle spare parts and accessories, delivered across India.',
     images: ['/og-about.jpg'],
-    creator: '@sabsonline',
+    creator: '@motoclub',
   },
   alternates: {
-    canonical: 'https://sabsonline.com/about',
+    canonical: 'https://motoclub.in/about',
   },
   other: {
-    'business:contact_data:street_address': '23/384/A62 Prince Tower, Near KNH Hospital',
-    'business:contact_data:locality': 'Uppala',
-    'business:contact_data:region': 'Kasaragod',
-    'business:contact_data:postal_code': '671322',
+    'business:contact_data:street_address':
+      'Moto club Kottakkal, Thoppil tower, Parakkori, Puthoor, Kottakkal, Malappuram dist., Kerala',
+    'business:contact_data:locality': 'Kottakkal',
+    'business:contact_data:region': 'Kerala',
+    'business:contact_data:postal_code': '676503',
     'business:contact_data:country_name': 'India',
   },
 }

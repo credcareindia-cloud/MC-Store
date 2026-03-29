@@ -2,15 +2,12 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { Gift, Sparkles, Zap } from "lucide-react"
+import { Gift, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import SpinnerWheel from "@/components/ui/offer-spinner"
-import { useShop } from "@/lib/contexts/shop-context"
-
 const NewUserSpinnerSection: React.FC = () => {
   const [showSpinner, setShowSpinner] = useState(false)
   const [hasActiveOffer, setHasActiveOffer] = useState<boolean | null>(null)
-  const { shop } = useShop()
 
   useEffect(() => {
     let cancelled = false
@@ -33,33 +30,16 @@ const NewUserSpinnerSection: React.FC = () => {
     }
   }, [])
 
-  const getShopContent = () => {
-    if (shop === "A") {
-      return {
-        title: "Exclusive Offers for New Users Claim Now!",
-        subtitle: "Spin to get Beauty Discounts",
-        description: "Beauty coupon bundle waiting!",
-        discount: "Get up to 100% OFF on beauty products!",
-        icon: <Sparkles className="w-6 h-6 lg:w-8 lg:h-8 text-white animate-bounce" />,
-        gradient: "bg-gradient-to-r from-orange-400 via-yellow-400 to-orange-500",
-        textColor: "text-orange-600",
-        hoverColor: "hover:bg-gray-100 border-orange-200"
-      }
-    } else {
-      return {
-        title: "Exclusive Offers for New Users Claim Now!",
-        subtitle: "Spin to get Style Discounts", 
-        description: "Style coupon bundle waiting!",
-        discount: "Get up to 100% OFF on style accessories!",
-        icon: <Zap className="w-6 h-6 lg:w-8 lg:h-8 text-white animate-bounce" />,
-        gradient: "bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700",
-        textColor: "text-purple-600",
-        hoverColor: "hover:bg-gray-100 border-purple-200"
-      }
-    }
+  const shopContent = {
+    title: "Exclusive offers for new users — claim now!",
+    subtitle: "Spin for Motoclub discounts",
+    description: "Coupon bundle waiting on parts & accessories.",
+    discount: "Save on spare parts and riding gear!",
+    icon: <Zap className="w-6 h-6 lg:w-8 lg:h-8 text-white" />,
+    gradient: "bg-zinc-900 border border-zinc-800",
+    textColor: "text-zinc-900",
+    hoverColor: "hover:bg-zinc-100 border-zinc-300",
   }
-
-  const shopContent = getShopContent()
 
   if (hasActiveOffer !== true) {
     return null
@@ -71,7 +51,7 @@ const NewUserSpinnerSection: React.FC = () => {
         <div className="px-4 lg:px-6 mt-4 lg:mt-6">
           <div className="max-w-7xl mx-auto">
             <div
-              className={`rounded-2xl p-6 lg:p-8 text-center relative overflow-hidden shadow-xl border-4 border-white transition-all duration-500 ${shopContent.gradient}`}
+              className={`rounded-lg p-6 lg:p-8 text-center relative overflow-hidden shadow-sm transition-all duration-300 ${shopContent.gradient}`}
             >
               <div className="relative z-10">
                 <div className="flex items-center justify-center gap-2 mb-2">
@@ -89,9 +69,9 @@ const NewUserSpinnerSection: React.FC = () => {
                 </p>
                 <Button
                   onClick={() => setShowSpinner(true)}
-                  className={`bg-white rounded-full px-8 lg:px-16 py-4 lg:py-6 font-bold text-lg lg:text-2xl shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 border-2 ${shopContent.textColor} ${shopContent.hoverColor}`}
+                  className={`bg-white rounded-md px-8 lg:px-12 py-3 lg:py-4 font-semibold text-base lg:text-lg shadow-sm transition-colors border ${shopContent.textColor} ${shopContent.hoverColor}`}
                 >
-                  🎁 SPIN NOW!
+                  Spin for offer
                 </Button>
                 <p className="text-white/80 text-xs lg:text-sm mt-3">
                   {shopContent.discount}

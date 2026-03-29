@@ -17,21 +17,21 @@ function CancellationPolicyContent() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <XCircle className="w-8 h-8 text-red-600" />
+            <XCircle className="w-8 h-8 text-zinc-700" />
             <h1 className="text-3xl font-bold text-gray-900">Cancellation Policy</h1>
           </div>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Need to cancel your order? Learn about our cancellation process and refund timelines.
           </p>
-          <Badge variant="outline" className="mt-4 bg-red-50 text-red-700 border-red-200">
+          <Badge variant="outline" className="mt-4 bg-zinc-50 text-zinc-700 border-zinc-200">
             Last updated: {new Date().toLocaleDateString()}
           </Badge>
         </div>
 
         {/* Quick Info */}
-        <Alert className="mb-8 border-orange-200 bg-orange-50">
-          <AlertCircle className="h-4 w-4 text-orange-600" />
-          <AlertDescription className="text-orange-800">
+        <Alert className="mb-8 border-zinc-200 bg-zinc-50">
+          <AlertCircle className="h-4 w-4 text-zinc-600" />
+          <AlertDescription className="text-zinc-800">
             <strong>Quick Cancellation:</strong> Cancel within 2 hours for instant refund • Partial cancellations available • 24/7 customer support
           </AlertDescription>
         </Alert>
@@ -43,19 +43,19 @@ function CancellationPolicyContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-blue-600" />
+                <Clock className="w-5 h-5 text-zinc-600" />
                 Cancellation Timeline
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-2">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    <h4 className="font-semibold text-green-900">Within 2 Hours of Ordering</h4>
+                    <CheckCircle className="w-5 h-5 text-zinc-600" />
+                    <h4 className="font-semibold text-zinc-900">Within 2 Hours of Ordering</h4>
                   </div>
-                  <p className="text-green-800 text-sm mb-2">Full cancellation with 100% refund</p>
-                  <ul className="text-xs text-green-700 space-y-1">
+                  <p className="text-zinc-700 text-sm mb-2">Full cancellation with 100% refund</p>
+                  <ul className="text-xs text-zinc-600 space-y-1">
                     <li>• Instant cancellation</li>
                     <li>• No cancellation fees</li>
                     <li>• Full refund processed immediately</li>
@@ -63,13 +63,13 @@ function CancellationPolicyContent() {
                   </ul>
                 </div>
 
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="bg-zinc-100 border border-zinc-200 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-2">
-                    <AlertCircle className="w-5 h-5 text-yellow-600" />
-                    <h4 className="font-semibold text-yellow-900">2-24 Hours After Ordering</h4>
+                    <AlertCircle className="w-5 h-5 text-zinc-600" />
+                    <h4 className="font-semibold text-zinc-900">2-24 Hours After Ordering</h4>
                   </div>
-                  <p className="text-yellow-800 text-sm mb-2">Cancellation subject to processing status</p>
-                  <ul className="text-xs text-yellow-700 space-y-1">
+                  <p className="text-zinc-700 text-sm mb-2">Cancellation subject to processing status</p>
+                  <ul className="text-xs text-zinc-600 space-y-1">
                     <li>• 95% refund if not processed</li>
                     <li>• 5% processing fee may apply</li>
                     <li>• Refund within 24-48 hours</li>
@@ -77,13 +77,13 @@ function CancellationPolicyContent() {
                   </ul>
                 </div>
 
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="bg-zinc-50 border border-zinc-300 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-2">
-                    <Ban className="w-5 h-5 text-red-600" />
-                    <h4 className="font-semibold text-red-900">After Order is Shipped</h4>
+                    <Ban className="w-5 h-5 text-zinc-700" />
+                    <h4 className="font-semibold text-zinc-900">After Order is Shipped</h4>
                   </div>
-                  <p className="text-red-800 text-sm mb-2">Cancellation not possible - Return policy applies</p>
-                  <ul className="text-xs text-red-700 space-y-1">
+                  <p className="text-zinc-700 text-sm mb-2">Cancellation not possible - Return policy applies</p>
+                  <ul className="text-xs text-zinc-600 space-y-1">
                     <li>• Order cannot be cancelled</li>
                     <li>• Must follow return policy</li>
                     <li>• 7-day return window available</li>
@@ -112,7 +112,7 @@ function CancellationPolicyContent() {
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="border rounded-lg p-4">
                     <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                      <span className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-sm">1</span>
+                      <span className="bg-zinc-200 text-zinc-800 rounded-full w-6 h-6 flex items-center justify-center text-sm">1</span>
                       Online Cancellation
                     </h4>
                     <ul className="text-sm text-gray-600 space-y-1">
@@ -125,7 +125,7 @@ function CancellationPolicyContent() {
 
                   <div className="border rounded-lg p-4">
                     <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                      <span className="bg-green-100 text-green-600 rounded-full w-6 h-6 flex items-center justify-center text-sm">2</span>
+                      <span className="bg-zinc-200 text-zinc-800 rounded-full w-6 h-6 flex items-center justify-center text-sm">2</span>
                       Customer Service
                     </h4>
                     <ul className="text-sm text-gray-600 space-y-1">
@@ -139,7 +139,7 @@ function CancellationPolicyContent() {
 
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                    <span className="bg-orange-100 text-orange-600 rounded-full w-6 h-6 flex items-center justify-center text-sm">3</span>
+                    <span className="bg-zinc-200 text-zinc-800 rounded-full w-6 h-6 flex items-center justify-center text-sm">3</span>
                     Required Information
                   </h4>
                   <div className="grid md:grid-cols-2 gap-4">
@@ -163,14 +163,14 @@ function CancellationPolicyContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-zinc-600" />
                 Partial Order Cancellation
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-900 mb-2">Cancel Specific Items</h4>
-                <p className="text-green-800 text-sm">
+              <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4">
+                <h4 className="font-semibold text-zinc-900 mb-2">Cancel Specific Items</h4>
+                <p className="text-zinc-700 text-sm">
                   You can cancel individual items from your order if the entire order hasn't been processed yet.
                 </p>
               </div>
@@ -203,7 +203,7 @@ function CancellationPolicyContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-blue-600" />
+                <CreditCard className="w-5 h-5 text-zinc-600" />
                 Refund Process for Cancelled Orders
               </CardTitle>
             </CardHeader>
@@ -213,7 +213,7 @@ function CancellationPolicyContent() {
                   <div className="border rounded-lg p-4">
                     <div className="flex justify-between items-center mb-2">
                       <h4 className="font-semibold text-gray-900">Credit/Debit Card</h4>
-                      <Badge className="bg-blue-100 text-blue-800">3-5 days</Badge>
+                      <Badge className="bg-zinc-100 text-zinc-800 border border-zinc-200">3-5 days</Badge>
                     </div>
                     <p className="text-gray-600 text-sm">Refunds processed back to your original payment method automatically.</p>
                   </div>
@@ -221,7 +221,7 @@ function CancellationPolicyContent() {
                   <div className="border rounded-lg p-4">
                     <div className="flex justify-between items-center mb-2">
                       <h4 className="font-semibold text-gray-900">Cash on Delivery (COD)</h4>
-                      <Badge className="bg-green-100 text-green-800">1-2 days</Badge>
+                      <Badge className="bg-zinc-100 text-zinc-800 border border-zinc-200">1-2 days</Badge>
                     </div>
                     <p className="text-gray-600 text-sm">Bank transfer to your provided account details (account details required).</p>
                   </div>
@@ -242,38 +242,38 @@ function CancellationPolicyContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-amber-600" />
+                <AlertCircle className="w-5 h-5 text-zinc-600" />
                 Special Cancellation Cases
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="border-l-4 border-blue-400 bg-blue-50 p-4">
-                <h4 className="font-medium text-blue-900 mb-2">Pre-Order Items</h4>
-                <p className="text-blue-800 text-sm">
+              <div className="border-l-4 border-zinc-400 bg-zinc-50 p-4">
+                <h4 className="font-medium text-zinc-900 mb-2">Pre-Order Items</h4>
+                <p className="text-zinc-700 text-sm">
                   Pre-order items can be cancelled anytime before the official release date with full refund. 
                   Cancellation fees may apply if cancelled within 24 hours of release.
                 </p>
               </div>
 
-              <div className="border-l-4 border-purple-400 bg-purple-50 p-4">
-                <h4 className="font-medium text-purple-900 mb-2">Custom/Personalized Items</h4>
-                <p className="text-purple-800 text-sm">
+              <div className="border-l-4 border-zinc-400 bg-zinc-50 p-4">
+                <h4 className="font-medium text-zinc-900 mb-2">Custom/Personalized Items</h4>
+                <p className="text-zinc-700 text-sm">
                   Custom items can only be cancelled within 1 hour of ordering. Once production starts, 
                   cancellation is not possible due to the personalized nature.
                 </p>
               </div>
 
-              <div className="border-l-4 border-green-400 bg-green-50 p-4">
-                <h4 className="font-medium text-green-900 mb-2">Sale/Clearance Items</h4>
-                <p className="text-green-800 text-sm">
+              <div className="border-l-4 border-zinc-400 bg-zinc-50 p-4">
+                <h4 className="font-medium text-zinc-900 mb-2">Sale/Clearance Items</h4>
+                <p className="text-zinc-700 text-sm">
                   Sale items follow the same cancellation policy but may have limited availability for re-ordering 
                   if you change your mind later.
                 </p>
               </div>
 
-              <div className="border-l-4 border-red-400 bg-red-50 p-4">
-                <h4 className="font-medium text-red-900 mb-2">International Orders</h4>
-                <p className="text-red-800 text-sm">
+              <div className="border-l-4 border-zinc-500 bg-zinc-100 p-4">
+                <h4 className="font-medium text-zinc-900 mb-2">International Orders</h4>
+                <p className="text-zinc-700 text-sm">
                   International orders can be cancelled within 4 hours due to customs documentation requirements. 
                   Extended processing times apply for refunds.
                 </p>
@@ -282,12 +282,12 @@ function CancellationPolicyContent() {
           </Card>
 
           {/* Customer Rights */}
-          <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+          <Card className="bg-zinc-900 text-white border-0">
             <CardContent className="p-6">
               <div className="text-center">
-                <CheckCircle className="w-12 h-12 mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-2">Your Cancellation Rights</h3>
-                <p className="text-blue-100 mb-4">
+                <CheckCircle className="w-12 h-12 mx-auto mb-4 text-zinc-300" />
+                <h3 className="text-xl font-semibold mb-2">Your cancellation rights</h3>
+                <p className="text-zinc-300 mb-4">
                   We respect your right to change your mind. Our flexible cancellation policy ensures 
                   you can cancel orders easily with minimal fees.
                 </p>
@@ -317,7 +317,7 @@ function CancellationPolicyContent() {
                 Our customer service team is available 24/7 to help you with order cancellations.
               </p>
               <div className="flex flex-wrap justify-center gap-4 text-sm">
-                <span>📧 cancel@sabsonline.com</span>
+                <span>📧 motoclubkottakkal@gmail.com</span>
                 <span>📱 WhatsApp: +971-56666-7178</span>
                 <span>⏰ Available 24/7</span>
               </div>

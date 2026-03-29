@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     const query = searchParams.get('q')?.trim()
     const shop = searchParams.get('shop') // 'A', 'B', or null for both
     const category = searchParams.get('category')
-    const currency = searchParams.get('currency') || 'AED'
+    const currency = searchParams.get('currency') || 'INR'
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50) // Max 50 results
     const sortBy = searchParams.get('sort') || 'relevance' // relevance, price_low, price_high, name, newest
 

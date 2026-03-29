@@ -34,7 +34,7 @@
   }
 
   .gradient-text {
-    @apply bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent;
+    @apply text-zinc-900;
   }
 
   .banner-container {

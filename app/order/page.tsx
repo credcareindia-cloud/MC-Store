@@ -28,6 +28,7 @@ import { Minus, Plus, Trash2, ShoppingCart, MessageSquare, CheckCircle, XCircle,
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import toast from 'react-hot-toast'
+import { SITE_PHONE_PAYMENT_DISPLAY, SITE_WHATSAPP_E164_DIGITS } from "@/lib/site-contact"
 
 const WHATSAPP_ORDER_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_ORDER_NUMBER
 
@@ -106,23 +107,17 @@ export default function OrderPage() {
     city: "",
     pincode: "",
     state: "",
-    country: selectedCurrency === 'AED' ? 'UAE' : 'India'
+    country: 'India'
   })
 
   const [couponCode, setCouponCode] = useState("")
   const [isCouponFieldOpen, setIsCouponFieldOpen] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState(selectedCurrency === 'AED' ? "cod" : "upi")
+  const [paymentMethod, setPaymentMethod] = useState("upi")
   const [userAvailableCoupons, setUserAvailableCoupons] = useState<string[]>([])
 
-  // Update payment method and country when currency changes
   useEffect(() => {
-    if (selectedCurrency === 'AED') {
-      setPaymentMethod('cod')
-      setDetailedAddress(prev => ({ ...prev, country: 'UAE' }))
-    } else {
-      setPaymentMethod('upi')
-      setDetailedAddress(prev => ({ ...prev, country: 'India' }))
-    }
+    setPaymentMethod('upi')
+    setDetailedAddress(prev => ({ ...prev, country: 'India' }))
   }, [selectedCurrency])
 
   // Load user's available coupons on component mount
@@ -303,7 +298,7 @@ export default function OrderPage() {
 
   useEffect(() => {
     if (invalidCartItems.length > 0) {
-      toast.error(`${invalidCartItems.length} item(s) are not available in ${selectedCurrency === 'AED' ? "UAE" : "India"}`, {
+      toast.error(`${invalidCartItems.length} item(s) are not available for delivery in India`, {
         position: 'top-center'
       })
     }
@@ -374,14 +369,6 @@ export default function OrderPage() {
             // Re-validate offer coupon
             const offerData = currentAppliedCoupon.data as OfferCouponData
 
-            let currentShop = localStorage.getItem('currentShop')
-            if (!currentShop) {
-              const isStyleShop = window.location.href.includes('style') ||
-                document.title.includes('Style') ||
-                document.querySelector('title')?.textContent?.includes('Style')
-              currentShop = isStyleShop ? 'B' : 'B'
-            }
-
             const response = await fetch('/api/offers/validate', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -389,7 +376,7 @@ export default function OrderPage() {
                 offerCode: offerData.code,
                 orderTotal,
                 currency: selectedCurrency,
-                shopId: currentShop,
+                shopId: 'A',
                 userType: user?.id ? "returning" : "new",
                 userId: user?.id || "guest",
                 cartItems: validCartItems.map((item: any) => ({
@@ -649,21 +636,13 @@ export default function OrderPage() {
       // Use regular offer validation endpoint
       console.log('Validating as regular offer coupon:', upperCaseCouponCode)
 
-      let currentShop = localStorage.getItem('currentShop')
-      if (!currentShop) {
-        const isStyleShop = window.location.href.includes('style') ||
-          document.title.includes('Style') ||
-          document.querySelector('title')?.textContent?.includes('Style')
-        currentShop = isStyleShop ? 'B' : 'B'
-      }
-
       const response = await fetch('/api/offers/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           offerCode: upperCaseCouponCode,
           orderTotal,
-          shopId: currentShop,
+          shopId: 'A',
           userType: user?.id ? "returning" : "new",
           userId: user?.id || "guest",
           currency: selectedCurrency,
@@ -747,8 +726,8 @@ export default function OrderPage() {
         }
 
         if (result.error) {
-          if (result.error.includes("only valid for Beauty Shop")) {
-            errorMessage = "This offer is only valid for Beauty Shop. Switch to Beauty Shop to use this offer."
+          if (result.error.includes("only valid for shop")) {
+            errorMessage = "This offer does not apply to the items in your cart."
           } else if (result.error.includes("only valid for Style Shop")) {
             errorMessage = "This offer is only valid for Style Shop. Switch to Style Shop to use this offer."
           } else if (result.error.includes("new customers")) {
@@ -1037,7 +1016,7 @@ export default function OrderPage() {
       }
 
       if (requiredFields.some(field => !field)) {
-        const missingField = selectedCurrency === 'INR' ? 'Please complete all required address fields including PIN code' : 'Please complete all required address fields (PIN code is optional for UAE)'
+        const missingField = 'Please complete all required address fields including PIN code'
         toast.error(missingField, { position: 'top-center' })
         return
       }
@@ -1062,7 +1041,7 @@ export default function OrderPage() {
           key: razorpayOrderResult.key,
           amount: razorpayOrderResult.amount,
           currency: razorpayOrderResult.currency,
-          name: "SABS online store",
+          name: "Motoclub",
           description: "Order Payment",
           order_id: razorpayOrderResult.orderId,
           handler: async (response: any) => {
@@ -1096,7 +1075,7 @@ export default function OrderPage() {
             contact: customerInfo.phone,
           },
           theme: {
-            color: "#F59E0B",
+            color: "#18181b",
           },
           modal: {
             ondismiss: () => {
@@ -1169,7 +1148,7 @@ export default function OrderPage() {
       }
 
       if (!detailedAddress.state || detailedAddress.state.trim() === "") {
-        const stateLabel = selectedCurrency === 'AED' ? 'Emirate' : 'State'
+        const stateLabel = 'State'
         toast.error(`Please enter your ${stateLabel}`, { position: 'top-center' })
         return
       }
@@ -1205,7 +1184,7 @@ export default function OrderPage() {
     const totalText = selectedCurrency === 'AED' ? `AED ${finalTotal.toFixed(2)}` : `₹${finalTotal.toFixed(2)}`
     const orderNumber = `#${Date.now().toString().slice(-6)}`
 
-    let message = `*SABS ONLINE ORDER* ${orderNumber}\n`
+    let message = `*MOTOCLUB ORDER* ${orderNumber}\n`
     message += `═════════════════\n\n`
 
     message += `*CUSTOMER INFO*\n`
@@ -1274,7 +1253,7 @@ export default function OrderPage() {
     if (paymentMethod === 'upi') {
       message += `*PAYMENT DETAILS*\n`
       message += `UPI ID: althukp1@okaxis\n`
-      message += `GPay: 9037888193\n`
+      message += `GPay: ${SITE_PHONE_PAYMENT_DISPLAY}\n`
       message += `\n`
       message += `Please send payment screenshot after completing payment\n\n`
     }
@@ -1282,14 +1261,14 @@ export default function OrderPage() {
     message += `Please *CONFIRM* this order\n`
     message += `When will this be dispatched?\n\n`
     message += `Thank you!`
-    const phoneNumber = WHATSAPP_ORDER_NUMBER || "+919037888193"
+    const phoneNumber = WHATSAPP_ORDER_NUMBER || SITE_WHATSAPP_E164_DIGITS
 
     if (!phoneNumber) {
       toast.error('WhatsApp number not configured. Please contact support.', { position: 'top-center' })
       return
     }
 
-    const cleanPhoneNumber = phoneNumber.replace(/[^\d+]/g, '')
+    const cleanPhoneNumber = phoneNumber.replace(/\D/g, "")
     const whatsappUrl = `https://wa.me/${cleanPhoneNumber}`
 
     const url = new URL(whatsappUrl)
@@ -1379,7 +1358,7 @@ export default function OrderPage() {
             <p className="text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base">Add some items from our products to get started!</p>
             <Button
               onClick={() => router.push("/products")}
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-3 text-sm sm:text-base rounded-xl shadow-lg transform hover:scale-105 transition-all"
+              className="bg-zinc-900 hover:bg-zinc-800 text-white px-6 py-3 text-sm sm:text-base rounded-lg shadow-sm transition-colors"
               aria-label="Browse products"
             >
               Browse Products
@@ -1398,25 +1377,25 @@ export default function OrderPage() {
         <div className="flex items-center justify-between mb-6 sm:mb-8 flex-wrap gap-4">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">Your Order</h1>
           <div className="text-sm text-gray-600">
-            Region: <span className="font-semibold text-gray-900">{selectedCurrency === 'AED' ? "UAE" : "India"}</span>
+            Region: <span className="font-semibold text-gray-900">India</span>
           </div>
         </div>
 
         {invalidCartItems.length > 0 && (
-          <Card className="mb-6 border-orange-200 bg-orange-50 rounded-xl shadow-lg">
+          <Card className="mb-6 border-zinc-200 bg-zinc-50 rounded-xl shadow-lg">
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-orange-500 mt-1" />
+                <AlertTriangle className="w-5 h-5 text-zinc-600 mt-1" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-orange-800 text-base sm:text-lg mb-2">
+                  <h3 className="font-semibold text-zinc-900 text-base sm:text-lg mb-2">
                     Currency Availability Notice
                   </h3>
-                  <p className="text-sm sm:text-base text-orange-700 mb-3">
-                    {invalidCartItems.length} item(s) in your cart are not available in {selectedCurrency === 'AED' ? "UAE" : "India"}.
+                  <p className="text-sm sm:text-base text-zinc-700 mb-3">
+                    {invalidCartItems.length} item(s) in your cart are not available for delivery in India.
                   </p>
                   <div className="flex flex-wrap gap-2 mb-4">
                     {invalidCartItems.map((item) => (
-                      <span key={item.menuItem.id} className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs sm:text-sm">
+                      <span key={item.menuItem.id} className="bg-zinc-100 text-zinc-900 px-2 py-1 rounded text-xs sm:text-sm">
                         {item.menuItem.name.includes(' - ') ? item.menuItem.name.split(' - ')[0] : item.menuItem.name}
                       </span>
                     ))}
@@ -1426,7 +1405,7 @@ export default function OrderPage() {
                       onClick={handleRemoveInvalidItems}
                       variant="outline"
                       size="sm"
-                      className="border-orange-300 text-orange-700 hover:bg-orange-100 rounded-lg"
+                      className="border-zinc-300 text-zinc-700 hover:bg-zinc-50 rounded-lg"
                       aria-label="Remove unavailable items"
                     >
                       Remove These Items
@@ -1435,7 +1414,7 @@ export default function OrderPage() {
                       onClick={() => router.push("/products")}
                       variant="outline"
                       size="sm"
-                      className="border-orange-300 text-orange-700 hover:bg-orange-100 rounded-lg"
+                      className="border-zinc-300 text-zinc-700 hover:bg-zinc-50 rounded-lg"
                       aria-label="Browse more products"
                     >
                       Browse More Products
@@ -1497,7 +1476,7 @@ export default function OrderPage() {
                                   </p>
                                 ) : (
                                   <p className="font-bold text-base text-red-600">
-                                    Unavailable in {selectedCurrency === 'AED' ? 'UAE' : 'India'}
+                                    Unavailable in India
                                   </p>
                                 )}
                               </div>
@@ -1534,7 +1513,7 @@ export default function OrderPage() {
 
                             <div className="flex items-center gap-3">
                               <div className="text-right">
-                                <p className="font-bold text-lg text-orange-600">
+                                <p className="font-bold text-lg text-zinc-700">
                                   {formatPriceWithSmallDecimals(itemPrice * item.quantity, itemPrice * item.quantity, selectedCurrency, true, '#000')}
                                 </p>
                                 <p className="text-xs text-gray-500">total</p>
@@ -1552,9 +1531,9 @@ export default function OrderPage() {
                           </div>
 
                           {item.selected_variant && item.selected_variant.stock_quantity <= 5 && (
-                            <div className="flex items-center gap-2 bg-orange-50 p-2 rounded-lg mt-2">
-                              <AlertTriangle className="w-4 h-4 text-orange-500" />
-                              <p className="text-sm text-orange-700 font-medium">
+                            <div className="flex items-center gap-2 bg-zinc-50 p-2 rounded-lg mt-2">
+                              <AlertTriangle className="w-4 h-4 text-zinc-600" />
+                              <p className="text-sm text-zinc-700 font-medium">
                                 {item.selected_variant.stock_quantity === 0 ? 'Out of Stock' : `Only ${item.selected_variant.stock_quantity} left in stock`}
                               </p>
                             </div>
@@ -1598,7 +1577,7 @@ export default function OrderPage() {
                                     <p className="font-bold text-lg text-red-600">
                                       Unavailable
                                     </p>
-                                    <p className="text-sm text-red-500">in {selectedCurrency === 'AED' ? 'UAE' : 'India'}</p>
+                                    <p className="text-sm text-red-500">in India</p>
                                   </>
                                 )}
                               </div>
@@ -1634,7 +1613,7 @@ export default function OrderPage() {
 
                               <div className="flex items-center gap-4">
                                 <div className="text-right">
-                                  <p className="font-bold text-xl text-orange-600">
+                                  <p className="font-bold text-xl text-zinc-700">
                                     {formatPriceWithSmallDecimals(itemPrice * item.quantity, itemPrice * item.quantity, selectedCurrency, true, '#000')}
                                   </p>
                                   <p className="text-sm text-gray-500">total</p>
@@ -1652,9 +1631,9 @@ export default function OrderPage() {
                             </div>
 
                             {item.selected_variant && item.selected_variant.stock_quantity <= 5 && (
-                              <div className="flex items-center gap-2 bg-orange-50 p-2 rounded-lg">
-                                <AlertTriangle className="w-4 h-4 text-orange-500" />
-                                <p className="text-sm text-orange-700 font-medium">
+                              <div className="flex items-center gap-2 bg-zinc-50 p-2 rounded-lg">
+                                <AlertTriangle className="w-4 h-4 text-zinc-600" />
+                                <p className="text-sm text-zinc-700 font-medium">
                                   {item.selected_variant.stock_quantity === 0 ? 'Out of Stock' : `Only ${item.selected_variant.stock_quantity} left in stock`}
                                 </p>
                               </div>
@@ -1680,7 +1659,7 @@ export default function OrderPage() {
                     const itemName = item.menuItem.name
                     const variantName = item.selected_variant?.name || ''
                     return (
-                      <div key={item.menuItem.id} className="flex flex-col sm:flex-row sm:items-center gap-4 p-6 border-2 border-red-200 rounded-xl bg-gradient-to-r from-red-50 to-orange-50">
+                      <div key={item.menuItem.id} className="flex flex-col sm:flex-row sm:items-center gap-4 p-6 border-2 border-red-200 rounded-xl bg-gradient-to-r from-zinc-50 to-zinc-100">
                         <Image
                           src={
                             item.menuItem.image_url ||
@@ -1704,7 +1683,7 @@ export default function OrderPage() {
                           <div className="flex items-center gap-2 mt-2">
                             <span className="inline-flex items-center gap-1 text-sm font-medium text-red-600 bg-red-100 px-3 py-1 rounded-full">
                               <XCircle className="w-4 h-4" />
-                              Unavailable in {selectedCurrency === 'AED' ? "UAE" : "India"}
+                              Unavailable in India
                             </span>
                           </div>
                           <p className="text-xs text-gray-500 mt-1">
@@ -1750,29 +1729,12 @@ export default function OrderPage() {
                       </Label>
                     </div>
                   )}
-                  {selectedCurrency === 'AED' && (
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="cod" id="cod" />
-                      <Label htmlFor="cod" className="text-sm sm:text-base cursor-pointer">
-                        Cash on Delivery
-                      </Label>
-                    </div>
-                  )}
                 </RadioGroup>
-                {selectedCurrency === 'AED' && (
-                  <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-blue-700">
-                      💡 Only Cash on Delivery is available for UAE orders
-                    </p>
-                  </div>
-                )}
-                {selectedCurrency === 'INR' && (
-                  <div className="mt-3 p-3 bg-green-50 rounded-lg">
-                    <p className="text-sm text-green-700">
-                      💳 Only UPI Payment is available for India orders
-                    </p>
-                  </div>
-                )}
+                <div className="mt-3 p-3 bg-green-50 rounded-lg">
+                  <p className="text-sm text-green-700">
+                    UPI payment (Razorpay) for orders in India
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
@@ -1884,11 +1846,11 @@ export default function OrderPage() {
                           }}
                           required
                           className="text-sm rounded-lg"
-                          placeholder={selectedCurrency === 'AED' ? "Dubai, Abu Dhabi, etc." : "Mumbai, Delhi, etc."}
+                          placeholder="Mumbai, Delhi, Bengaluru, etc."
                         />
                       </div>
                       <div>
-                        <Label htmlFor="state" className="text-sm">{selectedCurrency === 'AED' ? 'Emirate' : 'State'} *</Label>
+                        <Label htmlFor="state" className="text-sm">State *</Label>
                         <Input
                           id="state"
                           value={detailedAddress.state}
@@ -1899,13 +1861,11 @@ export default function OrderPage() {
                           }}
                           required
                           className="text-sm rounded-lg"
-                          placeholder={selectedCurrency === 'AED' ? "Dubai, Abu Dhabi, etc." : "Maharashtra, Delhi, etc."}
+                          placeholder="Maharashtra, Karnataka, Delhi, etc."
                         />
                       </div>
                       <div>
-                        <Label htmlFor="pincode" className="text-sm">
-                          {selectedCurrency === 'AED' ? 'Postal Code (Optional)' : 'PIN Code *'}
-                        </Label>
+                        <Label htmlFor="pincode" className="text-sm">PIN Code *</Label>
                         <Input
                           id="pincode"
                           value={detailedAddress.pincode}
@@ -1914,11 +1874,11 @@ export default function OrderPage() {
                             const fullAddress = `${detailedAddress.street}, ${detailedAddress.area}, ${detailedAddress.city}, ${detailedAddress.state}, ${detailedAddress.country} - ${e.target.value}`
                             dispatch(setCustomerInfo({ info: { deliveryAddress: fullAddress.trim() }, userId: user?.id }))
                           }}
-                          required={selectedCurrency === 'INR'}
+                          required
                           className="text-sm rounded-lg"
-                          placeholder={selectedCurrency === 'AED' ? "12345 (Optional)" : "400001"}
-                          pattern={selectedCurrency === 'AED' ? "[0-9]{5}" : "[0-9]{6}"}
-                          maxLength={selectedCurrency === 'AED' ? 5 : 6}
+                          placeholder="400001"
+                          pattern="[0-9]{6}"
+                          maxLength={6}
                         />
                       </div>
                     </div>
@@ -1951,7 +1911,7 @@ export default function OrderPage() {
                           <div key={item.menuItem.id} className="flex justify-between items-start gap-2 p-3 bg-gray-50 rounded-lg">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="bg-orange-100 text-orange-800 text-xs font-bold px-2 py-1 rounded-full">
+                                <span className="bg-zinc-100 text-zinc-900 text-xs font-bold px-2 py-1 rounded-full">
                                   {item.quantity}x
                                 </span>
                                 <span className="font-semibold text-gray-900 text-sm leading-tight">
@@ -1978,10 +1938,10 @@ export default function OrderPage() {
                     </div>
                     <div className="border-t pt-4 space-y-2">
                       {(selectedCurrency === 'AED' && cartTotal < 20) || (selectedCurrency === 'INR' && cartTotal < 100) ? (
-                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
+                        <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3 mb-3">
                           <div className="flex items-center gap-2">
-                            <AlertTriangle className="w-4 h-4 text-amber-600" />
-                            <p className="text-sm text-amber-700">
+                            <AlertTriangle className="w-4 h-4 text-zinc-600" />
+                            <p className="text-sm text-zinc-700">
                               Minimum order: {selectedCurrency === 'AED' ? 'AED 20' : '₹100'}
                             </p>
                           </div>
@@ -2020,7 +1980,7 @@ export default function OrderPage() {
                           ? 'bg-green-50 border border-green-200 text-green-800'
                           : deliveryMessage.type === 'info'
                             ? 'bg-blue-50 border border-blue-200 text-blue-800'
-                            : 'bg-orange-50 border border-orange-200 text-orange-800'
+                            : 'bg-zinc-50 border border-zinc-200 text-zinc-900'
                           }`}>
                           <div className="flex items-start gap-2">
                             <span className="text-lg">{deliveryMessage.icon}</span>
@@ -2124,7 +2084,7 @@ export default function OrderPage() {
                             <Button
                               onClick={() => setIsCouponFieldOpen(!isCouponFieldOpen)}
                               variant="outline"
-                              className="w-full text-amber-600 border-amber-500 hover:bg-amber-50 rounded-lg text-sm sm:text-base"
+                              className="w-full text-zinc-600 border-zinc-400 hover:bg-zinc-50 rounded-lg text-sm sm:text-base"
                               aria-label={isCouponFieldOpen ? "Hide coupon field" : "Show coupon field"}
                             >
                               {isCouponFieldOpen ? "Hide Coupon Field" : "Redeem Offer"}
@@ -2146,7 +2106,7 @@ export default function OrderPage() {
                                   <Button
                                     onClick={handleApplyCoupon}
                                     disabled={!couponCode.trim() || isApplyingCoupon}
-                                    className="bg-amber-500 hover:bg-amber-600 text-black text-sm sm:text-base px-3 sm:px-4 rounded-lg"
+                                    className="bg-zinc-900 hover:bg-zinc-800 text-white text-sm sm:text-base px-3 sm:px-4 rounded-lg"
                                     aria-label="Apply coupon"
                                   >
                                     {isApplyingCoupon ? "Applying..." : "Apply"}
@@ -2159,7 +2119,7 @@ export default function OrderPage() {
                                   </div>
                                 )}
                                 {!isAuthenticated && (
-                                  <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded-lg">
+                                  <div className="text-xs text-zinc-600 bg-zinc-50 p-2 rounded-lg">
                                     💡 Login to use your exclusive coupons and welcome offers!
                                   </div>
                                 )}
@@ -2216,7 +2176,7 @@ export default function OrderPage() {
                         <Button
                           onClick={handleSubmitOrder}
                           disabled={loading || isProcessingPayment}
-                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-sm sm:text-base py-3 rounded-xl shadow-lg transform hover:scale-105 transition-all"
+                          className="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-sm sm:text-base py-3 rounded-lg shadow-sm transition-colors"
                           aria-label="Place order"
                         >
                           {loading ? "Processing..." : isAuthenticated ? "Place Order" : "Login to Place Order"}
@@ -2225,7 +2185,7 @@ export default function OrderPage() {
                         <Button
                           onClick={handleSubmitOrder}
                           disabled={loading || isProcessingPayment}
-                          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-sm sm:text-base py-3 rounded-xl shadow-lg transform hover:scale-105 transition-all"
+                          className="w-full bg-zinc-900 hover:bg-zinc-800 text-white text-sm sm:text-base py-3 rounded-lg shadow-sm transition-colors"
                           aria-label="Pay now"
                         >
                           {isProcessingPayment ? "Processing Payment..." :
@@ -2283,7 +2243,7 @@ export default function OrderPage() {
                     <p className="text-gray-500 mb-4 text-sm sm:text-base">No items available in {selectedCurrency}</p>
                     <Button
                       onClick={() => router.push("/products")}
-                      className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-sm sm:text-base rounded-xl"
+                      className="bg-zinc-900 hover:bg-zinc-800 text-white text-sm sm:text-base rounded-xl"
                       aria-label="Browse products"
                     >
                       Browse Products

@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AlertCircle, Save, SettingsIcon, Store, MapPin, CreditCard, Zap, Timer, ToggleLeft, CheckCircle, ExternalLink } from "lucide-react"
-import { useShop } from "@/lib/contexts/shop-context"
 import ImageUploadSingle from "@/components/ui/ImageUploadSingle"
 
 interface Setting {
@@ -41,7 +40,6 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { shop, setShop } = useShop()
   const [openingHours, setOpeningHours] = useState<OpeningHours>({
     monday: "5:00 PM - 10:00 PM",
     tuesday: "5:00 PM - 10:00 PM",
@@ -808,53 +806,12 @@ export default function AdminSettings() {
                   General Shop Settings
                 </CardTitle>
                 <p className="text-gray-400 text-sm">
-                  Configure default shop behavior and shop switching functionality
+                  Motoclub runs as one storefront for India (INR). Customers always see the full catalog; there is no shop switch on the site.
                 </p>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="default_shop" className="text-white">Default Shop</Label>
-                    <select
-                      id="default_shop"
-                      value={getShopFeaturesSetting("default_shop") || "A"}
-                      onChange={(e) => updateShopFeaturesSetting("default_shop", e.target.value)}
-                      className="w-full bg-gray-700 border-gray-600 text-white h-10 mt-2 rounded-md px-3 focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-                    >
-                      <option value="A">Shop A - Beauty Products</option>
-                      <option value="B">Shop B - Style Accessories</option>
-                    </select>
-                    <p className="text-gray-400 text-xs mt-1">Shop that users see when they first visit the site</p>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="shop_switch_enabled" className="text-white">Enable Shop Switching</Label>
-                    <div className="flex items-center space-x-2 mt-2">
-                      <input
-                        type="checkbox"
-                        id="shop_switch_enabled"
-                        checked={getShopFeaturesSetting("shop_switch_enabled") === "true"}
-                        onChange={(e) => updateShopFeaturesSetting("shop_switch_enabled", e.target.checked.toString())}
-                        className="w-4 h-4 text-cyan-600 bg-gray-700 border-gray-600 rounded focus:ring-cyan-500"
-                      />
-                      <span className="text-gray-300 text-sm">Allow users to switch between shops</span>
-                    </div>
-                    <p className="text-gray-400 text-xs mt-1">Controls the shop switcher in the header</p>
-                  </div>
-                </div>
-
-                <div className="bg-gray-700/50 p-4 rounded-lg">
-                  <h4 className="text-white font-medium mb-2 flex items-center gap-2">
-                    <Store className="w-4 h-4" />
-                    Current Shop Configuration
-                  </h4>
-                  <div className="text-sm text-gray-300 space-y-1">
-                    <p>• Default Shop: <strong>{getShopFeaturesSetting("default_shop") === "B" ? "Shop B - Style Accessories" : "Shop A - Beauty Products"}</strong></p>
-                    <p>• Shop Switching: <span className={getShopFeaturesSetting("shop_switch_enabled") === "true" ? "text-green-400" : "text-red-400"}>
-                      {getShopFeaturesSetting("shop_switch_enabled") === "true" ? "Enabled" : "Disabled"}
-                    </span></p>
-                    <p>• Current Admin Shop: <strong>Shop {shop} - {shop === "A" ? "Beauty Products" : "Style Accessories"}</strong></p>
-                  </div>
+                <div className="bg-gray-700/50 p-4 rounded-lg text-sm text-gray-300 space-y-2">
+                  <p>Legacy <code className="text-cyan-300">shop_category</code> on products may still be used for admin filtering and offers. It does not split the customer-facing catalog.</p>
                 </div>
               </CardContent>
             </Card>
@@ -867,7 +824,7 @@ export default function AdminSettings() {
                   Shop Switch Popup Settings
                 </CardTitle>
                 <p className="text-gray-400 text-sm">
-                  Control when and how often the shop switch popup appears to encourage users to explore both shops
+                  Not used on the Motoclub storefront (single shop). You can still toggle these for legacy tooling if needed.
                 </p>
               </CardHeader>
               <CardContent className="space-y-6">

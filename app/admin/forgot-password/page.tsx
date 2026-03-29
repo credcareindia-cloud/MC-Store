@@ -63,7 +63,7 @@ export default function AdminForgotPassword() {
                   <h3 className="font-medium text-blue-900 mb-2">Next steps:</h3>
                   <ul className="text-blue-800 text-sm space-y-1">
                     <li>• Check your email inbox</li>
-                    <li>• Look for an email from Sabs Online</li>
+                    <li>• Look for an email from Motoclub</li>
                     <li>• Click the reset link (expires in 1 hour)</li>
                     <li>• Create your new password</li>
                   </ul>
@@ -132,7 +132,7 @@ export default function AdminForgotPassword() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@sabsonline.com"
+                    placeholder="admin@motoclub.in"
                     className="pl-10 h-12 border-gray-200 focus:border-red-500 focus:ring-red-500"
                     required
                   />
@@ -179,7 +179,7 @@ export default function AdminForgotPassword() {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            © 2025 Sabs Online. All rights reserved.
+            © 2025 Motoclub. All rights reserved.
           </p>
         </div>
       </div>

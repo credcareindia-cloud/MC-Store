@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Mail, MessageSquare, ArrowLeft, Shield, CheckCircle, Eye, EyeOff, Lock, User } from "lucide-react"
 import { SignInButton, useSignIn } from "@clerk/nextjs"
+import { SITE_WHATSAPP_E164_DIGITS } from "@/lib/site-contact"
 
 interface LoginModalProps {
   isOpen: boolean
@@ -180,9 +181,8 @@ export default function LoginModal({
   }
 
   const handleWhatsApp = () => {
-    const phoneNumber = "+1234567890" // Replace with actual restaurant WhatsApp number
-    const message = encodeURIComponent("Hi! I'd like to make a reservation/order. Can you help me?")
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`
+    const message = encodeURIComponent("Hi! I'd like to place an order. Can you help me?")
+    const whatsappUrl = `https://wa.me/${SITE_WHATSAPP_E164_DIGITS}?text=${message}`
     window.open(whatsappUrl, "_blank")
     onWhatsAppRedirect?.()
     onClose()

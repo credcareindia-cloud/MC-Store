@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const shop = searchParams.get('shop') // 'A', 'B', or null for both
     const category = searchParams.get('category')
-    const currency = searchParams.get('currency') || 'AED' // Default to AED
+    const currency = searchParams.get('currency') || 'INR'
     
     let whereConditions = ['p.is_available = TRUE']
     let queryParams: any[] = []

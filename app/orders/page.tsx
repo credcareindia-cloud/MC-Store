@@ -44,35 +44,35 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
       label: 'Confirmed',
       description: 'Order confirmed',
       icon: CheckCircle,
-      color: 'text-blue-500'
+      color: 'text-zinc-600'
     },
     { 
       status: 'packed', 
       label: 'Packed',
       description: 'Items packed',
       icon: Package,
-      color: 'text-purple-500'
+      color: 'text-zinc-600'
     },
     { 
       status: 'dispatched', 
       label: 'Shipped',
       description: 'Package shipped',
       icon: Send,
-      color: 'text-orange-500'
+      color: 'text-zinc-600'
     },
     { 
       status: 'out for delivery', 
       label: 'Out for Delivery',
       description: 'On the way to you',
       icon: Truck,
-      color: 'text-indigo-500'
+      color: 'text-zinc-600'
     },
     { 
       status: 'delivered', 
       label: 'Delivered',
       description: 'Order delivered',
       icon: CheckCircle,
-      color: 'text-green-500'
+      color: 'text-zinc-700'
     }
   ]
 
@@ -101,8 +101,8 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
   const currentStepIndex = getCurrentStepIndex()
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-4">
-      <h4 className="font-semibold text-gray-800 mb-3 text-sm">Order Progress</h4>
+    <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4 mb-4">
+      <h4 className="font-semibold text-zinc-900 mb-3 text-sm">Order progress</h4>
       
       {/* Mobile Timeline - Vertical */}
       <div className="md:hidden">
@@ -117,30 +117,30 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
                 <div className={`
                   w-8 h-8 rounded-full flex items-center justify-center border-2
                   ${isCompleted 
-                    ? 'bg-green-100 border-green-300 text-green-600' 
+                    ? 'bg-zinc-200 border-zinc-400 text-zinc-900' 
                     : isCurrent 
-                    ? 'bg-blue-100 border-blue-300 text-blue-600 animate-pulse'
-                    : 'bg-gray-100 border-gray-300 text-gray-400'
+                    ? 'bg-white border-zinc-900 text-zinc-900'
+                    : 'bg-zinc-50 border-zinc-200 text-zinc-400'
                   }
                 `}>
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
                   <p className={`text-sm font-medium ${
-                    isCompleted ? 'text-green-800' :
-                    isCurrent ? 'text-blue-800' : 'text-gray-500'
+                    isCompleted ? 'text-zinc-900' :
+                    isCurrent ? 'text-zinc-900' : 'text-zinc-500'
                   }`}>
                     {step.label}
                   </p>
                   <p className={`text-xs ${
-                    isCompleted ? 'text-green-600' :
-                    isCurrent ? 'text-blue-600' : 'text-gray-400'
+                    isCompleted ? 'text-zinc-600' :
+                    isCurrent ? 'text-zinc-600' : 'text-zinc-400'
                   }`}>
                     {step.description}
                   </p>
                 </div>
                 {isCompleted && (
-                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <CheckCircle className="w-4 h-4 text-zinc-600" />
                 )}
               </div>
             )
@@ -154,7 +154,7 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
           {/* Progress Bar */}
           <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 rounded-full">
             <div 
-              className="h-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full transition-all duration-500"
+              className="h-full bg-zinc-800 rounded-full transition-all duration-500"
               style={{ width: `${(currentStepIndex / (timelineSteps.length - 1)) * 100}%` }}
             />
           </div>
@@ -167,26 +167,26 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
             return (
               <div key={step.status} className="flex flex-col items-center relative z-10">
                 <div className={`
-                  w-8 h-8 rounded-full flex items-center justify-center border-3 bg-white
+                  w-8 h-8 rounded-full flex items-center justify-center border-2 bg-white
                   ${isCompleted 
-                    ? 'border-green-400 text-green-600 shadow-lg' 
+                    ? 'border-zinc-500 text-zinc-800 shadow-sm' 
                     : isCurrent 
-                    ? 'border-blue-400 text-blue-600 shadow-lg animate-pulse'
-                    : 'border-gray-300 text-gray-400'
+                    ? 'border-zinc-900 text-zinc-900 shadow-sm'
+                    : 'border-zinc-200 text-zinc-400'
                   }
                 `}>
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="text-center mt-2">
                   <p className={`text-xs font-medium ${
-                    isCompleted ? 'text-green-800' :
-                    isCurrent ? 'text-blue-800' : 'text-gray-500'
+                    isCompleted ? 'text-zinc-900' :
+                    isCurrent ? 'text-zinc-900' : 'text-zinc-500'
                   }`}>
                     {step.label}
                   </p>
                   <p className={`text-xs ${
-                    isCompleted ? 'text-green-600' :
-                    isCurrent ? 'text-blue-600' : 'text-gray-400'
+                    isCompleted ? 'text-zinc-600' :
+                    isCurrent ? 'text-zinc-600' : 'text-zinc-400'
                   }`}>
                     {step.description}
                   </p>
@@ -198,8 +198,8 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
       </div>
 
       {/* Current Status Description */}
-      <div className="mt-3 pt-3 border-t border-blue-200">
-        <p className="text-sm text-center text-blue-700">
+      <div className="mt-3 pt-3 border-t border-zinc-200">
+        <p className="text-sm text-center text-zinc-700">
           <span className="font-medium">Current Status:</span> {
             timelineSteps[currentStepIndex]?.description || 'Processing your order'
           }
@@ -335,83 +335,56 @@ export default function OrdersPage() {
   }
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "pending":
-        return "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 hover:from-emerald-200 hover:to-green-200 transition-all duration-300 shadow-lg hover:shadow-xl border border-emerald-200"
-      case "confirmed":
-        return "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 hover:from-blue-200 hover:to-cyan-200 transition-all duration-300 shadow-md hover:shadow-lg border border-blue-200"
-      case "packed":
-        return "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-800 hover:from-purple-200 hover:to-indigo-200 transition-all duration-300 shadow-md hover:shadow-lg border border-purple-200"
-      case "dispatched":
-        return "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 hover:from-amber-200 hover:to-yellow-200 transition-all duration-300 shadow-md hover:shadow-lg border border-amber-200"
-      case "out for delivery":
-        return "bg-gradient-to-r from-orange-100 to-red-100 text-orange-800 hover:from-orange-200 hover:to-red-200 transition-all duration-300 shadow-md hover:shadow-lg border border-orange-200"
-      case "delivered":
-      case "completed":
-        return "bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 hover:from-green-200 hover:to-emerald-200 transition-all duration-300 shadow-md hover:shadow-lg border border-green-200"
-      case "cancelled":
-      case "cancel":
-        return "bg-gradient-to-r from-red-100 to-pink-100 text-red-800 hover:from-red-200 hover:to-pink-200 transition-all duration-300 shadow-md hover:shadow-lg border border-red-200"
-      // case "preparing":
-      //   return "bg-gradient-to-r from-sky-100 to-blue-100 text-sky-800 hover:from-sky-200 hover:to-blue-200 transition-all duration-300 shadow-md hover:shadow-lg border border-sky-200"
-      // case "ready":
-      //   return "bg-gradient-to-r from-teal-100 to-cyan-100 text-teal-800 hover:from-teal-200 hover:to-cyan-200 transition-all duration-300 shadow-md hover:shadow-lg border border-teal-200"
-      default:
-        return "bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 hover:from-gray-200 hover:to-slate-200 transition-all duration-300 shadow-md hover:shadow-lg border border-gray-200"
+    const s = status.toLowerCase()
+    if (s === "cancelled" || s === "cancel") {
+      return "bg-zinc-200 text-zinc-800 border border-zinc-300"
     }
+    return "bg-zinc-100 text-zinc-800 border border-zinc-200"
   }
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
-        return <CheckCircle className="w-4 h-4 text-emerald-600 drop-shadow-sm" />
+        return <CheckCircle className="w-4 h-4 text-zinc-600" />
       case "confirmed":
-        return <Zap className="w-4 h-4 text-blue-600 drop-shadow-sm" />
+        return <Zap className="w-4 h-4 text-zinc-600" />
       case "packed":
-        return <PackageCheck className="w-4 h-4 text-purple-600 drop-shadow-sm" />
+        return <PackageCheck className="w-4 h-4 text-zinc-600" />
       case "dispatched":
-        return <Send className="w-4 h-4 text-amber-600 drop-shadow-sm" />
+        return <Send className="w-4 h-4 text-zinc-600" />
       case "out for delivery":
-        return <Truck className="w-4 h-4 text-orange-600 drop-shadow-sm" />
+        return <Truck className="w-4 h-4 text-zinc-600" />
       case "delivered":
       case "completed":
-        return <Home className="w-4 h-4 text-green-600 drop-shadow-sm" />
+        return <Home className="w-4 h-4 text-zinc-700" />
       case "cancelled":
       case "cancel":
-        return <XCircle className="w-4 h-4 text-red-600 drop-shadow-sm" />
-      // case "preparing":
-      //   return <ChefHat className="w-4 h-4 text-sky-600 drop-shadow-sm" />
-      // case "ready":
-      //   return <Clock className="w-4 h-4 text-teal-600 drop-shadow-sm" />
+        return <XCircle className="w-4 h-4 text-zinc-600" />
       default:
-        return <Clock className="w-4 h-4 text-gray-600 drop-shadow-sm" />
+        return <Clock className="w-4 h-4 text-zinc-500" />
     }
   }
 
   const getStatusDescription = (status: string) => {
     switch (status.toLowerCase()) {
       case "pending":
-        return "✅ We've received your order and it's being processed"
+        return "We have received your order and it is being processed."
       case "confirmed":
-        return "⚡ Your order has been confirmed and is moving forward"
+        return "Your order has been confirmed and is moving forward."
       case "packed":
-        return "📦 Your order has been carefully packed and sealed"
+        return "Your order has been packed and sealed."
       case "dispatched":
-        return "🚀 Your order has been dispatched from our facility"
+        return "Your order has left our facility."
       case "out for delivery":
-        return "🚛 Your order is on its way to you"
+        return "Your order is on the way to you."
       case "delivered":
       case "completed":
-        return "🏠 Your order has been delivered. Enjoy!"
+        return "Your order has been delivered."
       case "cancelled":
       case "cancel":
-        return "❌ This order has been cancelled"
-      // case "preparing":
-      //   return "👨‍🍳 Our team is preparing your order with care"
-      // case "ready":
-      //   return "⏰ Your order is ready for pickup/delivery"
+        return "This order has been cancelled."
       default:
-        return "📋 Order status update"
+        return "Order status update."
     }
   }
 
@@ -504,7 +477,7 @@ export default function OrdersPage() {
               <p className="text-gray-600 mb-4">You haven't placed any orders yet</p>
               <button
                 onClick={() => router.push("/products")}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                className="bg-zinc-900 hover:bg-zinc-800 text-white px-6 py-3 rounded-lg font-medium transition-colors"
               >
                 Start Shopping
               </button>
@@ -585,13 +558,13 @@ export default function OrdersPage() {
 
                   {/* Tracking Information */}
                   {(order.tracking_url || order.tracking_id) && order.status !== 'cancel' && (
-                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-3 sm:p-4 mb-4">
+                    <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3 sm:p-4 mb-4">
                       <div className="flex flex-col gap-3">
                         <div className="flex items-start sm:items-center gap-3">
-                          <Package className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 mt-0.5 sm:mt-0 flex-shrink-0" />
+                          <Package className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600 mt-0.5 sm:mt-0 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-semibold text-blue-800 text-sm sm:text-base">Track Your Order</h4>
-                            <p className="text-xs sm:text-sm text-blue-600">Follow your order's journey in real-time</p>
+                            <h4 className="font-semibold text-zinc-900 text-sm sm:text-base">Track shipment</h4>
+                            <p className="text-xs sm:text-sm text-zinc-600">Use your carrier link or tracking ID below</p>
                           </div>
                         </div>
 
@@ -599,8 +572,8 @@ export default function OrdersPage() {
                         <div className="space-y-2 pl-7 sm:pl-8">
                           {order.tracking_id && (
                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
-                              <span className="text-xs sm:text-sm font-medium text-blue-700">Tracking ID:</span>
-                              <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded font-mono text-xs sm:text-sm font-semibold">
+                              <span className="text-xs sm:text-sm font-medium text-zinc-700">Tracking ID</span>
+                              <div className="bg-white text-zinc-900 border border-zinc-200 px-2 py-1 rounded font-mono text-xs sm:text-sm font-semibold">
                                 {order.tracking_id}
                               </div>
                             </div>
@@ -608,12 +581,12 @@ export default function OrdersPage() {
 
                           {order.tracking_url && (
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                              <span className="text-xs sm:text-sm font-medium text-blue-700">Track Online:</span>
+                              <span className="text-xs sm:text-sm font-medium text-zinc-700">Carrier link</span>
                               <a
                                 href={order.tracking_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg transition-colors font-medium text-xs sm:text-sm w-fit"
+                                className="inline-flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 text-white px-3 py-1.5 rounded-lg transition-colors font-medium text-xs sm:text-sm w-fit"
                               >
                                 <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
                                 <span className="whitespace-nowrap">Track Package</span>
@@ -642,8 +615,8 @@ export default function OrdersPage() {
                                 className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 object-cover rounded-lg shadow-sm"
                               />
                             ) : (
-                              <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-orange-100 to-red-100 rounded-lg flex items-center justify-center">
-                                <Box className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-orange-600" />
+                              <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-zinc-100 border border-zinc-200 rounded-lg flex items-center justify-center">
+                                <Box className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-zinc-500" />
                               </div>
                             )}
                           </div>
@@ -660,7 +633,7 @@ export default function OrdersPage() {
                                   </p>
                                 )}
                                 <div className="flex flex-wrap items-center gap-2 mt-2">
-                                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                                  <span className="bg-zinc-100 text-zinc-800 border border-zinc-200 text-xs font-medium px-2 py-1 rounded-full">
                                     Qty: {item.quantity}
                                   </span>
                                   <span className="text-xs sm:text-sm text-gray-600">
@@ -669,7 +642,7 @@ export default function OrdersPage() {
                                 </div>
                               </div>
                               <div className="text-left sm:text-right sm:ml-4 mt-2 sm:mt-0 flex-shrink-0">
-                                <p className="font-bold text-base sm:text-lg lg:text-xl text-orange-600">
+                                <p className="font-semibold text-base sm:text-lg lg:text-xl text-zinc-900">
                                   {formatCurrency(item.total_price, order.currency)}
                                 </p>
                                 <p className="text-xs text-gray-500">total</p>
@@ -683,7 +656,7 @@ export default function OrdersPage() {
 
                   {/* Order Summary */}
                   <div className="border-t pt-3 sm:pt-4">
-                    <div className="bg-gradient-to-r from-gray-50 to-orange-50 rounded-lg p-3 sm:p-4">
+                    <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3 sm:p-4">
                       <h5 className="font-semibold text-gray-800 mb-3 text-sm sm:text-base">Order Summary</h5>
                       <div className="space-y-2 text-xs sm:text-sm">
                         <div className="flex justify-between">
@@ -696,18 +669,18 @@ export default function OrdersPage() {
                             <span>{formatCurrency(order.delivery_fee, order.currency)}</span>
                           </div>
                         ) : order.order_type === 'delivery' && (
-                          <div className="flex justify-between text-green-600">
+                          <div className="flex justify-between text-zinc-700">
                             <span>Delivery Fee</span>
-                            <span className="font-medium">FREE! 🎉</span>
+                            <span className="font-medium">Free</span>
                           </div>
                         )}
                         {(order as any).discount_amount && Number((order as any).discount_amount) > 0 && (
-                          <div className="flex justify-between text-green-600">
-                            <span>🎉 Coupon Discount {(order as any).coupon_code ? `(${(order as any).coupon_code})` : ''}</span>
-                            <span className="font-bold">-{formatCurrency((order as any).discount_amount, order.currency)}</span>
+                          <div className="flex justify-between text-zinc-700">
+                            <span>Coupon discount {(order as any).coupon_code ? `(${(order as any).coupon_code})` : ""}</span>
+                            <span className="font-semibold">-{formatCurrency((order as any).discount_amount, order.currency)}</span>
                           </div>
                         )}
-                        <div className="flex justify-between font-bold text-sm sm:text-base border-t pt-2 text-orange-600">
+                        <div className="flex justify-between font-semibold text-sm sm:text-base border-t border-zinc-200 pt-2 text-zinc-900">
                           <span>Total Amount</span>
                           <span>{formatCurrency(order.final_total || order.total_amount, order.currency)}</span>
                         </div>

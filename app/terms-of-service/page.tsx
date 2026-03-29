@@ -17,21 +17,21 @@ function TermsOfServiceContent() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <FileText className="w-8 h-8 text-blue-600" />
+            <FileText className="w-8 h-8 text-zinc-600" />
             <h1 className="text-3xl font-bold text-gray-900">Terms of Service</h1>
           </div>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Please read these terms carefully before using our services. By using our website, you agree to these terms.
           </p>
-          <Badge variant="outline" className="mt-4 bg-blue-50 text-blue-700 border-blue-200">
+          <Badge variant="outline" className="mt-4 bg-zinc-50 text-zinc-700 border-zinc-200">
             Last updated: {new Date().toLocaleDateString()}
           </Badge>
         </div>
 
         {/* Important Notice */}
-        <Alert className="mb-8 border-amber-200 bg-amber-50">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="text-amber-800">
+        <Alert className="mb-8 border-zinc-200 bg-zinc-50">
+          <AlertTriangle className="h-4 w-4 text-zinc-600" />
+          <AlertDescription className="text-zinc-800">
             <strong>Important:</strong> By accessing or using our services, you agree to be bound by these terms. If you disagree with any part, please discontinue use.
           </AlertDescription>
         </Alert>
@@ -43,20 +43,20 @@ function TermsOfServiceContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-600" />
+                <FileText className="w-5 h-5 text-zinc-600" />
                 Agreement Overview
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-600">
-                This Terms of Service agreement ("Terms") governs your access to and use of SabsOnline's website, 
+                This Terms of Service agreement ("Terms") governs your access to and use of Motoclub's website, 
                 mobile application, and services (collectively, the "Services").
               </p>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-900 mb-2">Key Points</h4>
-                <ul className="text-blue-800 text-sm space-y-1">
-                  <li>• These terms form a legally binding agreement between you and SabsOnline</li>
+              <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4">
+                <h4 className="font-semibold text-zinc-900 mb-2">Key Points</h4>
+                <ul className="text-zinc-700 text-sm space-y-1">
+                  <li>• These terms form a legally binding agreement between you and Motoclub</li>
                   <li>• By using our services, you accept these terms in full</li>
                   <li>• We may update these terms from time to time</li>
                   <li>• Continued use after changes means you accept the new terms</li>
@@ -67,10 +67,10 @@ function TermsOfServiceContent() {
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium text-gray-900 mb-2">Who We Are</h4>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• SabsOnline LLC</li>
-                    <li>• Registered in UAE</li>
-                    <li>• E-commerce platform</li>
-                    <li>• Beauty & Style products</li>
+                    <li>• Motoclub</li>
+                    <li>• Operating in India</li>
+                    <li>• E-commerce — motorcycle parts & accessories</li>
+                    <li>• Prices in INR; delivery within India</li>
                   </ul>
                 </div>
 
@@ -79,7 +79,7 @@ function TermsOfServiceContent() {
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• Age 18 or older</li>
                     <li>• Legal capacity to contract</li>
-                    <li>• Residents of UAE & India</li>
+                    <li>• Customers ordering for delivery in India</li>
                     <li>• Accept these terms</li>
                   </ul>
                 </div>
@@ -91,7 +91,7 @@ function TermsOfServiceContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-green-600" />
+                <Users className="w-5 h-5 text-zinc-600" />
                 Account Registration & Use
               </CardTitle>
             </CardHeader>
@@ -99,7 +99,7 @@ function TermsOfServiceContent() {
               <div className="space-y-4">
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <CheckCircle className="w-4 h-4 text-zinc-600" />
                     Account Creation
                   </h4>
                   <ul className="text-sm text-gray-600 space-y-1">
@@ -113,7 +113,7 @@ function TermsOfServiceContent() {
 
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                    <Ban className="w-4 h-4 text-red-600" />
+                    <Ban className="w-4 h-4 text-zinc-600" />
                     Prohibited Uses
                   </h4>
                   <ul className="text-sm text-gray-600 space-y-1">
@@ -127,7 +127,7 @@ function TermsOfServiceContent() {
 
                 <div className="border rounded-lg p-4">
                   <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-blue-600" />
+                    <Shield className="w-4 h-4 text-zinc-600" />
                     Account Security
                   </h4>
                   <ul className="text-sm text-gray-600 space-y-1">
@@ -200,7 +200,7 @@ function TermsOfServiceContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-zinc-600" />
                 Shipping, Delivery & Risk Transfer
               </CardTitle>
             </CardHeader>
@@ -231,9 +231,9 @@ function TermsOfServiceContent() {
                 </div>
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <h4 className="font-medium text-amber-900 mb-2">Risk of Loss</h4>
-                <p className="text-amber-800 text-sm">
+              <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4">
+                <h4 className="font-medium text-zinc-900 mb-2">Risk of Loss</h4>
+                <p className="text-zinc-700 text-sm">
                   Risk of loss and title for items pass to you upon delivery to the carrier. 
                   We're not responsible for lost or stolen packages after delivery confirmation.
                 </p>
@@ -245,16 +245,16 @@ function TermsOfServiceContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Scale className="w-5 h-5 text-blue-600" />
+                <Scale className="w-5 h-5 text-zinc-600" />
                 Intellectual Property Rights
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-900 mb-2">Our Content</h4>
-                <p className="text-blue-800 text-sm">
+              <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4">
+                <h4 className="font-semibold text-zinc-900 mb-2">Our Content</h4>
+                <p className="text-zinc-700 text-sm">
                   All content on our website, including text, images, logos, and software, 
-                  is owned by or licensed to SabsOnline and protected by copyright laws.
+                  is owned by or licensed to Motoclub and protected by copyright laws.
                 </p>
               </div>
 
@@ -299,14 +299,14 @@ function TermsOfServiceContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-red-600" />
+                <AlertTriangle className="w-5 h-5 text-zinc-600" />
                 Limitation of Liability & Disclaimers
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h4 className="font-semibold text-red-900 mb-2">Important Legal Notice</h4>
-                <p className="text-red-800 text-sm">
+              <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4">
+                <h4 className="font-semibold text-zinc-900 mb-2">Important Legal Notice</h4>
+                <p className="text-zinc-700 text-sm">
                   Please read this section carefully as it limits our liability and contains important disclaimers.
                 </p>
               </div>
@@ -363,26 +363,13 @@ function TermsOfServiceContent() {
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-2">UAE Customers</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Governed by UAE laws</li>
-                    <li>• Dubai courts have jurisdiction</li>
-                    <li>• Consumer protection laws apply</li>
-                    <li>• Mediation preferred</li>
-                  </ul>
-                </div>
-
-                <div className="border rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-2">Indian Customers</h4>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Governed by Indian laws</li>
-                    <li>• Local jurisdiction applies</li>
-                    <li>• Consumer forums available</li>
-                    <li>• Alternative dispute resolution</li>
-                  </ul>
-                </div>
+              <div className="border rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-2">India</h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• These terms are governed by the laws of India</li>
+                  <li>• Courts at Malappuram, Kerala shall have exclusive jurisdiction (subject to applicable consumer law)</li>
+                  <li>• Consumer protection and e-commerce rules apply where relevant</li>
+                </ul>
               </div>
             </CardContent>
           </Card>
@@ -391,7 +378,7 @@ function TermsOfServiceContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Ban className="w-5 h-5 text-red-600" />
+                <Ban className="w-5 h-5 text-zinc-600" />
                 Account Termination
               </CardTitle>
             </CardHeader>
@@ -422,9 +409,9 @@ function TermsOfServiceContent() {
                 </div>
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <h4 className="font-medium text-amber-900 mb-2">Effect of Termination</h4>
-                <ul className="text-amber-800 text-sm space-y-1">
+              <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4">
+                <h4 className="font-medium text-zinc-900 mb-2">Effect of Termination</h4>
+                <ul className="text-zinc-700 text-sm space-y-1">
                   <li>• Outstanding orders will be fulfilled</li>
                   <li>• Refunds processed per our policies</li>
                   <li>• Account data may be retained per privacy policy</li>
@@ -449,9 +436,9 @@ function TermsOfServiceContent() {
                 <div>
                   <h4 className="font-semibold mb-2">Legal Contact</h4>
                   <ul className="text-gray-300 space-y-1">
-                    <li>📧 legal@sabsonline.com</li>
-                    <li>📱 Customer Service</li>
-                    <li>⏰ Business Hours</li>
+                    <li>📧 motoclubkottakkal@gmail.com</li>
+                    <li>📱 +91 99954 42239 (call / WhatsApp)</li>
+                    <li>⏰ Business hours as listed on our site</li>
                   </ul>
                 </div>
                 <div>

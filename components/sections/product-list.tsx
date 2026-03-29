@@ -5,7 +5,6 @@ import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "@/lib/store"
 import { fetchProducts, fetchCategories, setSelectedCategory } from "@/lib/store/slices/productSlice"
 import { addToCart } from "@/lib/store/slices/orderSlice"
-import { useShop } from "@/lib/contexts/shop-context"
 import { useCurrency } from "@/lib/contexts/currency-context"
 import { Button } from "@/components/ui/button"
 import { useLoginModal } from '@/lib/stores/useLoginModal'
@@ -17,10 +16,6 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/contexts/auth-context"
 import { addToWishlistAPI, removeFromWishlistAPI } from '@/lib/store/slices/wishlistSlice'
 import SearchFilters from "@/components/ui/search-filters"
-import ShopSwitchPopup from "@/components/ui/shop-switch-popup"
-import { useShopSwitchPopup } from "@/lib/hooks/useShopSwitchPopup"
-import FloatingShopAd from "@/components/ui/floating-shop-ad"
-import { useFloatingShopAd } from "@/lib/hooks/useFloatingShopAd"
 
 interface ProductListProps {
   showSpinner?: boolean
@@ -46,22 +41,6 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
   const { selectedCurrency, formatPrice, formatPriceWithSmallDecimals } = useCurrency()
   const searchParams = useSearchParams()
   const categoryFromUrl = searchParams.get("category")
-  const { shop } = useShop()
-
-  // Shop switching popup
-  const { isPopupOpen, closePopup, switchShop } = useShopSwitchPopup({
-    intervalMinutes: 3, // Show every 3 minutes
-    initialDelayMinutes: 1, // Wait 1 minute before first show
-    maxShowsPerSession: 4 // Max 4 times per session
-  })
-
-  // Floating shop ad
-  const { isAdVisible, closeAd, switchShop: switchShopFromAd } = useFloatingShopAd({
-    showAfterScrollPixels: 400, // Show after scrolling 400px
-    displayDurationMinutes: 2, // Show for 2 minutes
-    cooldownMinutes: 4, // 4 minute cooldown
-    maxShowsPerSession: 3 // Max 3 times per session
-  })
   const router = useRouter()
 
   const isInWishlist = (productId: number) => {
@@ -189,9 +168,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
     triggerBlurAnimation('cart')
   }
 
-  const shopFilteredItems = items.filter((item: any) => {
-    return item.shop_category === shop || item.shop_category === 'Both'
-  })
+  const shopFilteredItems = items
 
   const currencyFilteredItems = shopFilteredItems.filter((item: any) => {
     return hasSelectedCurrencyPrice(item)
@@ -282,14 +259,13 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
       setCurrentSearchQuery("")
       setIsSearchLoading(false)
     }
-  }, [searchParams, shop, selectedCurrency, searchSortBy, dispatch])
+  }, [searchParams, selectedCurrency, searchSortBy, dispatch])
 
   const fetchSearchResults = async (query: string, sort: string = 'relevance') => {
     try {
       setIsSearchLoading(true)
       const searchUrl = new URL('/api/products/search', window.location.origin)
       searchUrl.searchParams.set('q', query)
-      searchUrl.searchParams.set('shop', shop)
       searchUrl.searchParams.set('currency', selectedCurrency)
       if (selectedCategory) {
         searchUrl.searchParams.set('category', selectedCategory.toString())
@@ -449,11 +425,11 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
   const getCurrentCategoryName = () => {
     const searchFromUrl = searchParams.get("search")
     if (searchFromUrl) {
-      return `Search results for "${searchFromUrl}" in SHOP ${shop} (${selectedCurrency})`
+      return `Search results for "${searchFromUrl}" (${selectedCurrency})`
     }
-    if (selectedCategory === null) return `SHOP ${shop} (${selectedCurrency})`
+    if (selectedCategory === null) return `All products (${selectedCurrency})`
     const category = categories.find((cat) => cat.id === selectedCategory)
-    return `Shop ${shop} - ${category?.name || "Products"} (${selectedCurrency})`
+    return `${category?.name || "Products"} (${selectedCurrency})`
   }
 
   const lightningDeals = filteredItems.filter((item) => item.is_featured).slice(0, 4)
@@ -491,25 +467,22 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
           <div className="relative z-10">
             {animationType === 'wishlist' && (
               <div className="animate-in zoom-in duration-500 animate-out zoom-out fade-out delay-1000 duration-1000">
-                <div className="bg-red-500 rounded-full p-8 shadow-2xl animate-bounce">
+                <div className="bg-zinc-900 rounded-full p-8 shadow-lg">
                   <Heart 
-                    className="w-16 h-16 text-white fill-white animate-pulse" 
+                    className="w-16 h-16 text-white fill-white" 
                   />
                 </div>
-                {/* Floating effect */}
-                <div className="absolute inset-0 bg-red-500 rounded-full p-8 opacity-30 animate-ping" />
               </div>
             )}
             
             {animationType === 'cart' && (
               <div className="animate-in zoom-in duration-500 animate-out zoom-out fade-out delay-1000 duration-1000">
-                <div className="bg-orange-500 rounded-full p-8 shadow-2xl animate-bounce">
+                <div className="bg-zinc-900 rounded-full p-8 shadow-lg">
                   <ShoppingCart 
-                    className="w-16 h-16 text-white animate-pulse" 
+                    className="w-16 h-16 text-white" 
                   />
                 </div>
                 {/* Floating effect */}
-                <div className="absolute inset-0 bg-orange-500 rounded-full p-8 opacity-30 animate-ping" />
               </div>
             )}
           </div>
@@ -526,7 +499,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
               {/* <h3 className="text-xl font-bold text-gray-900">{`Lightning deals in ${getCurrentCategoryName() === 'shop A' ? 'Beauty' : 'Accessories'}`}</h3> */}
             
               {currencyFilteredItems.length !== shopFilteredItems.length && (
-                <Badge variant="outline" className="text-orange-600 border-orange-300">
+                <Badge variant="outline" className="text-zinc-700 border-zinc-300">
                   Filtered by {selectedCurrency} availability
                 </Badge>
               )}
@@ -541,7 +514,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
     
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-orange-500" />
+          <Zap className="w-5 h-5 text-zinc-600" />
           <h3 className="text-xl font-bold text-gray-900">Lightning deals</h3>
           <span className="text-gray-500">({lightningDeals.length} items)</span>
         </div>
@@ -573,7 +546,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
             return (
               <Card
                 key={item.id}
-                className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group border hover:border-orange-200 flex-shrink-0 w-44 lg:w-52"
+                className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group border border-zinc-200 hover:border-zinc-300 flex-shrink-0 w-44 lg:w-52"
               >
                 <div className="relative">
                   <Image
@@ -590,19 +563,19 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
                   />
                   
                   {/* Ranking Badge */}
-                  <div className="absolute top-2 left-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center text-xs lg:text-sm font-bold shadow-lg">
+                  <div className="absolute top-2 left-2 bg-zinc-900 text-white rounded w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center text-xs lg:text-sm font-semibold">
                     #{index + 1}
                   </div>
 
                   {/* TOP SELLING Badge - only show if featured */}
                   {item.is_featured && (
-                    <Badge className="absolute top-2 right-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xs px-2 py-1 rounded-full shadow-lg animate-pulse font-semibold">
-                      ⭐ TOP SELLING
+                    <Badge className="absolute top-2 right-2 bg-white text-zinc-900 text-xs px-2 py-1 rounded border border-zinc-200 font-medium">
+                      Featured
                     </Badge>
                   )}
 
                   {/* Feature Badge */}
-                  <Badge className="absolute bottom-2 left-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs px-2 py-1 rounded-full shadow-lg">
+                  <Badge className="absolute bottom-2 left-2 bg-zinc-100 text-zinc-800 text-xs px-2 py-1 rounded border border-zinc-200">
                     {item.features?.[0]
                       ? item.features[0].length > 7
                         ? item.features[0].slice(0, 7) + "..."
@@ -612,7 +585,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
 
                   {/* Discount Percentage Badge */}
                   {discountPercent > 0 && (
-                    <Badge className="absolute bottom-2 right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs px-2 py-1 rounded-full shadow-lg font-bold animate-pulse">
+                    <Badge className="absolute bottom-2 right-2 bg-zinc-900 text-white text-xs px-2 py-1 rounded font-medium">
                       -{discountPercent}% 
                     </Badge>
                   )}
@@ -629,19 +602,19 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
                           (selectedCurrency === "INR" && !availableVariant.available_inr)
                         ) ? (
                           // Show "Not Available" in red if unavailable
-                          <span className="text-red-600 font-bold text-sm lg:text-base">
+                          <span className="text-zinc-500 font-medium text-sm lg:text-base">
                             Not Available
                           </span>
                         ) : (
                           <>
                             {/* Discounted Price with smaller decimal */}
-                            <span className="text-red-500 font-bold text-sm lg:text-base">
+                            <span className="text-zinc-900 font-semibold text-sm lg:text-base">
                               {formatPriceWithSmallDecimals(
                                 availableVariant.discount_aed,
                                 availableVariant.discount_inr,
                                 "AED",
-                                true,             // show symbol
-                                "#ef4444"    // color applied
+                                true,
+                                "#18181b"
                               )}
                             </span>
 
@@ -667,17 +640,17 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
 
                   <Button
                     onClick={() => router.push(`/product/${item.id}`)}
-                    className="w-full mt-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-full py-2 text-xs lg:text-sm font-medium transform transition-all duration-200 hover:scale-105 active:scale-95 shadow-md"
+                    className="w-full mt-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-md py-2 text-xs lg:text-sm font-medium transition-colors"
                   >
                     Buy Now
                   </Button>
                   
                   <Button
                     onClick={() => handleToggleWishlist(item)}
-                    className={`w-full mt-2 rounded-full py-2 text-xs lg:text-sm font-medium transform transition-all duration-200 hover:scale-105 active:scale-95 ${
+                    className={`w-full mt-2 rounded-md py-2 text-xs lg:text-sm font-medium transition-colors ${
                       isInWishlist(item.id)
-                        ? 'bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-md'
-                        : 'bg-gradient-to-r from-gray-200 to-gray-300 hover:from-gray-300 hover:to-gray-400 text-gray-700'
+                        ? 'bg-zinc-900 text-white hover:bg-zinc-800'
+                        : 'bg-zinc-100 text-zinc-800 border border-zinc-200 hover:bg-zinc-200'
                     }`}
                   >
                     <div className="flex items-center justify-center gap-1">
@@ -702,7 +675,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
             {!isSearchActive && (
               <div className="flex items-center justify-between mb-4 lg:mb-6">
                 <div className="flex items-center gap-2">
-                  <Tag className="w-5 h-5 text-green-500" />
+                  <Tag className="w-5 h-5 text-zinc-600" />
                   <span className="font-bold text-lg lg:text-xl">Fast Selling Products</span>
                 </div>
                 <ChevronDown className="w-5 h-5 text-gray-400" />
@@ -713,7 +686,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
             {isSearchActive && (
               <div className="flex items-center justify-between mb-4 lg:mb-6">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                  <div className="w-2 h-2 bg-zinc-400 rounded-full" />
                   <span className="font-bold text-lg lg:text-xl">Search Results</span>
                   <span className="text-gray-500">({filteredItems.length} products)</span>
                 </div>
@@ -779,11 +752,11 @@ const conditionLabels = {
 
 // Badge background color mapping
 const conditionColors = {
-  master: "bg-green-600",
-  "first-copy": "bg-yellow-600",
-  "second-copy": "bg-purple-600",
-  hot: "bg-red-600",
-  sale: "bg-blue-600"
+  master: "bg-zinc-800",
+  "first-copy": "bg-zinc-700",
+  "second-copy": "bg-zinc-600",
+  hot: "bg-zinc-700",
+  sale: "bg-zinc-600"
 };
 
 const conditionLabel = conditionLabels[item.condition_type as keyof typeof conditionLabels] || "";
@@ -818,7 +791,7 @@ const badgeColor = conditionColors[item.condition_type as keyof typeof condition
           />
 
           {item.is_new && (
-            <Badge className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+            <Badge className="absolute top-2 left-2 bg-zinc-900 text-white text-xs px-2 py-1 rounded font-medium">
               NEW
             </Badge>
           )}
@@ -831,7 +804,7 @@ const badgeColor = conditionColors[item.condition_type as keyof typeof condition
   </Badge>
 )}
   {discountPercent > 0 && (
-                    <Badge className="absolute bottom-2 right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs px-2 py-1 rounded-full shadow-lg font-bold animate-pulse">
+                    <Badge className="absolute bottom-2 right-2 bg-zinc-900 text-white text-xs px-2 py-1 rounded font-medium">
                       {discountPercent}% off
                     </Badge>
                   )}
@@ -843,28 +816,25 @@ const badgeColor = conditionColors[item.condition_type as keyof typeof condition
         >
           <div className="flex items-center justify-between mb-2">
             {/* Price */}
-            <p className="text-red-500 font-bold text-sm lg:text-lg">
+            <p className="text-zinc-900 font-semibold text-sm lg:text-lg">
              {availableVariant && (
     <div className="flex items-center gap-2 flex-wrap">
       {(
-        // Check currency availability
         (selectedCurrency === "AED" && !availableVariant.available_aed) ||
         (selectedCurrency === "INR" && !availableVariant.available_inr)
       ) ? (
-        // Show "Not Available" in red if unavailable
-        <span className="text-red-600 font-bold text-sm lg:text-base">
+        <span className="text-zinc-500 font-medium text-sm lg:text-base">
           Not Available
         </span>
       ) : (
         <>
-          {/* Discounted Price with smaller decimal */}
-          <span className="text-red-500 font-bold text-sm lg:text-base">
+          <span className="text-zinc-900 font-semibold text-sm lg:text-base">
             {formatPriceWithSmallDecimals(
               availableVariant.discount_aed,
               availableVariant.discount_inr,
               "AED",
-              true,             // show symbol
-              "#ef4444"    // ✅ color applied
+              true,
+              "#18181b"
             )}
           </span>
 
@@ -919,11 +889,7 @@ const badgeColor = conditionColors[item.condition_type as keyof typeof condition
 <div className="flex gap-2">
   <Button
     onClick={() => router.push(`/product/${item.id}`)}
-    className={`flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full py-2 lg:py-3 text-sm lg:text-base font-medium shadow-lg transform transition-all duration-200 flex items-center justify-center gap-2 ${
-      viewMode === "list" 
-        ? "hover:from-orange-600 hover:to-red-600 hover:scale-102" 
-        : "hover:from-orange-600 hover:to-red-600 hover:scale-105"
-    } active:scale-95`}
+    className="flex-1 bg-zinc-900 hover:bg-zinc-800 text-white rounded-md py-2 lg:py-3 text-sm lg:text-base font-medium transition-colors flex items-center justify-center gap-2"
     disabled={!item.is_available}
   >
     {item.is_available ? (
@@ -938,10 +904,10 @@ const badgeColor = conditionColors[item.condition_type as keyof typeof condition
 
   <Button
     onClick={() => handleToggleWishlist(item)}
-    className={`px-3 lg:px-4 rounded-full py-2 text-sm font-medium transform transition-all duration-200 hover:scale-105 active:scale-95 ${
+    className={`px-3 lg:px-4 rounded-md py-2 text-sm font-medium transition-colors border ${
       isInWishlist(item.id)
-        ? "bg-red-500 hover:bg-red-600 text-white"
-        : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+        ? "bg-zinc-900 hover:bg-zinc-800 text-white border-zinc-900"
+        : "bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-300"
     }`}
   >
     <Heart
@@ -962,7 +928,7 @@ const badgeColor = conditionColors[item.condition_type as keyof typeof condition
             {isSearchLoading && (
               <div className="text-center py-16">
                 <div className="flex justify-center mb-4">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                  <Loader2 className="w-8 h-8 animate-spin text-zinc-500" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   Searching for "{searchParams.get("search")}"...
@@ -990,16 +956,16 @@ const badgeColor = conditionColors[item.condition_type as keyof typeof condition
                         setSearchTerm("")
                         router.push("/products")
                       }}
-                      className="bg-orange-500 hover:bg-orange-600 text-white"
+                      className="bg-zinc-900 hover:bg-zinc-800 text-white rounded-md"
                     >
                       Clear Search
                     </Button>
                   </>
                 ) : (
                   <>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found in Shop {shop === "A" ? "Beauty" : "Style"}</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
                     <p className="text-gray-500">
-                      No products available with {selectedCurrency} pricing. Try switching currency or check the other shop.
+                      No products match your filters or search. Try adjusting filters or search terms.
                     </p>
                   </>
                 )}
@@ -1009,19 +975,6 @@ const badgeColor = conditionColors[item.condition_type as keyof typeof condition
         </div>
       </div>
 
-      {/* Shop Switch Popup */}
-      <ShopSwitchPopup
-        isOpen={isPopupOpen}
-        onClose={closePopup}
-        onSwitchShop={switchShop}
-      />
-
-      {/* Floating Shop Ad */}
-      <FloatingShopAd
-        isVisible={isAdVisible}
-        onClose={closeAd}
-        onSwitchShop={switchShopFromAd}
-      />
     </div>
     
   )

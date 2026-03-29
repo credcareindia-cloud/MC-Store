@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/database"
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
+import { ADMIN_CONFIG } from "@/lib/admin-config"
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key"
 
@@ -34,10 +35,41 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find admin user by email
-    const adminUsers = await sql`
-      SELECT * FROM admin_users WHERE email = ${email}
+    const normalizedEmail = String(email).trim().toLowerCase()
+
+    const [{ count: adminCountRaw }] = await sql`SELECT COUNT(*)::int as count FROM admin_users`
+    const adminCount = Number(adminCountRaw ?? 0)
+
+    let adminUsers = await sql`
+      SELECT * FROM admin_users WHERE LOWER(TRIM(email)) = ${normalizedEmail}
     `
+
+    // First-time setup: no admins in DB yet — create super_admin from env (SUPER_ADMIN_EMAIL / SUPER_ADMIN_PASSWORD)
+    if (adminUsers.length === 0 && adminCount === 0) {
+      const expectedEmail = ADMIN_CONFIG.SUPER_ADMIN_EMAIL.trim().toLowerCase()
+      if (
+        normalizedEmail === expectedEmail &&
+        password === ADMIN_CONFIG.SUPER_ADMIN_PASSWORD
+      ) {
+        const hashed = await bcrypt.hash(password, 10)
+        await sql`
+          INSERT INTO admin_users (email, password, name, role, is_verified)
+          VALUES (
+            ${normalizedEmail},
+            ${hashed},
+            'Super Admin',
+            ${ADMIN_CONFIG.ROLES.SUPER_ADMIN},
+            true
+          )
+        `
+        adminUsers = await sql`
+          SELECT * FROM admin_users WHERE LOWER(TRIM(email)) = ${normalizedEmail}
+        `
+        console.warn(
+          "[admin/auth/login] Created initial super_admin from SUPER_ADMIN_EMAIL / SUPER_ADMIN_PASSWORD. Change these in production."
+        )
+      }
+    }
 
     if (adminUsers.length === 0) {
       return NextResponse.json(

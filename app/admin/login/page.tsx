@@ -43,7 +43,7 @@ export default function AdminLogin() {
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Login</h1>
-          <p className="text-gray-600">Access your Sabs Online admin panel</p>
+          <p className="text-gray-600">Access your Motoclub admin panel</p>
         </div>
 
         {/* Login Form */}
@@ -67,7 +67,7 @@ export default function AdminLogin() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@sabsonline.com"
+                    placeholder="admin@motoclub.in"
                     className="pl-10 h-12 border-gray-200 focus:border-red-500 focus:ring-red-500"
                     required
                   />
@@ -144,7 +144,7 @@ export default function AdminLogin() {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-sm text-gray-500">
-            © 2025 Sabs Online. All rights reserved.
+            © 2025 Motoclub. All rights reserved.
           </p>
         </div>
       </div>

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useCurrency } from "@/lib/contexts/currency-context"
-import { useShop } from "@/lib/contexts/shop-context"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -41,18 +40,15 @@ interface Product {
 interface RecommendedProductsProps {
   currentProductId: number
   categoryId: number
-  shopCategory: string
 }
 
 export default function RecommendedProducts({ 
   currentProductId, 
   categoryId, 
-  shopCategory 
 }: RecommendedProductsProps) {
   const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const { selectedCurrency, getCurrencySymbol } = useCurrency()
-  const { shop } = useShop()
   const router = useRouter()
 
   useEffect(() => {
@@ -60,8 +56,7 @@ export default function RecommendedProducts({
       try {
         setLoading(true)
         
-        // Fetch products from the same category, excluding current product
-        const response = await fetch(`/api/products/recommended?categoryId=${categoryId}&excludeId=${currentProductId}&shop=${shopCategory}&limit=8`)
+        const response = await fetch(`/api/products/recommended?categoryId=${categoryId}&excludeId=${currentProductId}&limit=8`)
         
         if (response.ok) {
           const data = await response.json()
@@ -75,7 +70,7 @@ export default function RecommendedProducts({
     }
 
     fetchRecommendedProducts()
-  }, [currentProductId, categoryId, shopCategory])
+  }, [currentProductId, categoryId])
 
   const getProductPrice = (product: Product) => {
     if (!product.variants || product.variants.length === 0) {
@@ -174,7 +169,7 @@ export default function RecommendedProducts({
                         </Badge>
                       )}
                       {product.is_featured && (
-                        <Badge className="bg-orange-500 text-white text-xs px-2 py-1">
+                        <Badge className="bg-zinc-900 text-white text-xs px-2 py-1 font-medium">
                           Featured
                         </Badge>
                       )}
@@ -204,7 +199,7 @@ export default function RecommendedProducts({
                   {/* Product Info */}
                   <div className="p-3">
                     <div className="mb-2">
-                      <h3 className="font-medium text-sm text-gray-900 line-clamp-2 group-hover:text-orange-600 transition-colors">
+                      <h3 className="font-medium text-sm text-gray-900 line-clamp-2 group-hover:text-zinc-700 transition-colors">
                         {product.name}
                       </h3>
                       {product.brand && (
@@ -216,7 +211,7 @@ export default function RecommendedProducts({
                     <div className="flex items-center gap-2 mb-2">
                       {price > 0 ? (
                         <>
-                          <span className="text-sm font-bold text-orange-600">
+                          <span className="text-sm font-semibold text-zinc-900">
                             {currencySymbol}{price}
                           </span>
                           {hasDiscount && (
@@ -236,7 +231,7 @@ export default function RecommendedProducts({
                         {product.category_name}
                       </span>
                       <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                        <Star className="w-3 h-3 fill-zinc-300 text-zinc-300" />
                         <span className="text-xs text-gray-600">4.5</span>
                       </div>
                     </div>
@@ -279,7 +274,7 @@ export default function RecommendedProducts({
                             </Badge>
                           )}
                           {product.is_featured && (
-                            <Badge className="bg-orange-500 text-white text-xs px-1.5 py-0.5">
+                            <Badge className="bg-zinc-900 text-white text-xs px-1.5 py-0.5 font-medium">
                               Featured
                             </Badge>
                           )}
@@ -294,7 +289,7 @@ export default function RecommendedProducts({
                       {/* Product Info */}
                       <div className="p-2">
                         <div className="mb-1">
-                          <h3 className="font-medium text-xs text-gray-900 line-clamp-2 group-hover:text-orange-600 transition-colors">
+                          <h3 className="font-medium text-xs text-gray-900 line-clamp-2 group-hover:text-zinc-700 transition-colors">
                             {product.name}
                           </h3>
                         </div>
@@ -303,7 +298,7 @@ export default function RecommendedProducts({
                         <div className="flex items-center gap-1 mb-1">
                           {price > 0 ? (
                             <>
-                              <span className="text-xs font-bold text-orange-600">
+                              <span className="text-xs font-semibold text-zinc-900">
                                 {currencySymbol}{price}
                               </span>
                               {hasDiscount && (
@@ -323,7 +318,7 @@ export default function RecommendedProducts({
                             {product.category_name}
                           </span>
                           <div className="flex items-center gap-0.5">
-                            <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
+                            <Star className="w-2.5 h-2.5 fill-zinc-300 text-zinc-300" />
                             <span className="text-xs text-gray-600">4.5</span>
                           </div>
                         </div>
@@ -341,7 +336,7 @@ export default function RecommendedProducts({
           <Button
             onClick={() => router.push(`/products?category=${categoryId}`)}
             variant="outline"
-            className="px-6 py-2 text-sm text-orange-600 border-orange-600 hover:bg-orange-50 hover:border-orange-700"
+            className="px-6 py-2 text-sm text-zinc-800 border-zinc-300 hover:bg-zinc-50"
           >
             View More Similar Products
           </Button>

@@ -835,8 +835,8 @@ const OfferPage = () => {
                     className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all duration-200 text-gray-800 bg-white"
                   >
                     <option value="">Both Shops (No Restriction)</option>
-                    <option value="A">Beauty Shop Only</option>
-                    <option value="B">Style Shop Only</option>
+                    <option value="A">Shop A Only</option>
+                    <option value="B">Shop B Only</option>
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -889,7 +889,7 @@ const OfferPage = () => {
                     Allowed Categories
                     {shopRestriction && (
                       <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                        {shopRestriction === 'A' ? 'Beauty Shop' : 'Style Shop'} Categories Only
+                        {shopRestriction === 'A' ? 'Shop A' : 'Shop B'} Categories Only
                       </span>
                     )}
                   </label>
@@ -914,13 +914,13 @@ const OfferPage = () => {
                       ))
                     ) : (
                       <p className="text-gray-500 text-sm">
-                        {shopRestriction ? `Loading ${shopRestriction === 'A' ? 'Beauty Shop' : 'Style Shop'} categories...` : 'Loading categories...'}
+                        {shopRestriction ? `Loading ${shopRestriction === 'A' ? 'Shop A' : 'Shop B'} categories...` : 'Loading categories...'}
                       </p>
                     )}
                   </div>
                   <p className="text-xs text-gray-500">
                     {shopRestriction
-                      ? `Select categories from ${shopRestriction === 'A' ? 'Beauty Shop' : 'Style Shop'}. If none selected, offer applies to all categories in this shop.`
+                      ? `Select categories from ${shopRestriction === 'A' ? 'Shop A' : 'Shop B'}. If none selected, offer applies to all categories in this shop.`
                       : 'Select specific categories for this offer. If none selected, offer applies to all categories.'
                     }
                   </p>

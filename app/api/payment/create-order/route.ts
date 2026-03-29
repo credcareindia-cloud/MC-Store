@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       notes: {
         order_id: receipt,
         created_at: new Date().toISOString(),
-        source: 'sabs-online'
+        source: 'motoclub'
       },
     })
 

@@ -76,11 +76,11 @@ export default function Product({ product, viewMode = "grid", showShopBadge = tr
           )}
         </div>
 
-        {product.is_featured && <Badge className="absolute top-2 right-2 bg-orange-500 text-white text-xs">HOT</Badge>}
+        {product.is_featured && <Badge className="absolute top-2 right-2 bg-zinc-900 text-white text-xs font-medium">Featured</Badge>}
 
         {/* Rating overlay */}
         <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded-full text-xs flex items-center">
-          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400 mr-1" />
+          <Star className="w-3 h-3 fill-zinc-300 text-zinc-300 mr-1" />
           4.8
         </div>
 
@@ -130,7 +130,7 @@ export default function Product({ product, viewMode = "grid", showShopBadge = tr
         {/* Rating */}
         <div className="flex items-center gap-1 mb-3">
           {[...Array(5)].map((_, i) => (
-            <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+            <Star key={i} className="w-3 h-3 fill-zinc-300 text-zinc-300" />
           ))}
           <span className="text-xs text-gray-500 ml-1">(4.8) • 2.1k sold</span>
         </div>
@@ -138,7 +138,7 @@ export default function Product({ product, viewMode = "grid", showShopBadge = tr
         {/* Add to cart button */}
         <Button
           onClick={handleAddToCart}
-          className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-full py-2 lg:py-3 text-sm lg:text-base font-medium shadow-lg"
+          className="w-full bg-zinc-900 hover:bg-zinc-800 text-white rounded-md py-2 lg:py-3 text-sm lg:text-base font-medium shadow-sm"
           disabled={!product.is_available}
         >
           <ShoppingCart className="w-4 h-4 mr-2" />

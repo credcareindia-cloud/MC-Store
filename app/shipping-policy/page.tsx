@@ -16,38 +16,38 @@ function ShippingPolicyContent() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Truck className="w-8 h-8 text-blue-600" />
+            <Truck className="w-8 h-8 text-zinc-600" />
             <h1 className="text-3xl font-bold text-gray-900">Shipping Policy</h1>
           </div>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Learn about our shipping methods, delivery times, and policies for both domestic and international orders.
+            Shipping within India — processing times, couriers, and delivery expectations.
           </p>
-          <Badge variant="outline" className="mt-4 bg-blue-50 text-blue-700 border-blue-200">
+          <Badge variant="outline" className="mt-4 bg-zinc-50 text-zinc-700 border-zinc-200">
             Last updated: {new Date().toLocaleDateString()}
           </Badge>
         </div>
 
         {/* Quick Info Cards */}
         <div className="grid md:grid-cols-3 gap-4 mb-8">
-          <Card className="border-blue-200 bg-blue-50">
+          <Card className="border-zinc-200 bg-zinc-50">
             <CardContent className="p-4 text-center">
-              <Clock className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-              <p className="font-semibold text-blue-900">Processing Time</p>
-              <p className="text-sm text-blue-700">1-2 business days in UAE, 3-6 business days in India</p>
+              <Clock className="w-6 h-6 text-zinc-600 mx-auto mb-2" />
+              <p className="font-semibold text-zinc-900">Processing Time</p>
+              <p className="text-sm text-zinc-700">Typically 1–2 business days to dispatch; 3–7 days to most PIN codes</p>
             </CardContent>
           </Card>
           <Card className="border-green-200 bg-green-50">
             <CardContent className="p-4 text-center">
               <Package className="w-6 h-6 text-green-600 mx-auto mb-2" />
               <p className="font-semibold text-green-900">Free Shipping</p>
-              <p className="text-sm text-green-700">Orders over AED 200 or ₹3000</p>
+              <p className="text-sm text-green-700">On eligible orders over ₹3000 (when offered)</p>
             </CardContent>
           </Card>
-          <Card className="border-orange-200 bg-orange-50">
+          <Card className="border-zinc-200 bg-zinc-50">
             <CardContent className="p-4 text-center">
-              <MapPin className="w-6 h-6 text-orange-600 mx-auto mb-2" />
-              <p className="font-semibold text-orange-900">Delivery</p>
-              <p className="text-sm text-orange-700">UAE & India</p>
+              <MapPin className="w-6 h-6 text-zinc-600 mx-auto mb-2" />
+              <p className="font-semibold text-zinc-900">Delivery</p>
+              <p className="text-sm text-zinc-700">India only</p>
             </CardContent>
           </Card>
         </div>
@@ -59,17 +59,17 @@ function ShippingPolicyContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-blue-600" />
+                <Clock className="w-5 h-5 text-zinc-600" />
                 Order Processing
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <CheckCircle className="w-5 h-5 text-zinc-600 mt-0.5" />
                   <div>
-                    <p className="font-medium text-blue-900">Standard Processing</p>
-                    <p className="text-blue-700 text-sm">All orders are processed within 1-2 business days in UAE, 3-6 business days in India (Monday to Friday, excluding holidays).</p>
+                    <p className="font-medium text-zinc-900">Standard Processing</p>
+                    <p className="text-zinc-700 text-sm">Orders are processed within 1–2 business days (Monday to Friday, excluding public holidays), then handed to our courier partners for delivery across India.</p>
                   </div>
                 </div>
               </div>
@@ -82,34 +82,11 @@ function ShippingPolicyContent() {
             </CardContent>
           </Card>
 
-          {/* Shipping Methods UAE */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-green-600" />
-                UAE Shipping Options
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-
-                <div className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-semibold text-gray-900">Express Delivery</h4>
-                    <Badge className="bg-green-100 text-blue-800">AED 10</Badge>
-                  </div>
-                  <p className="text-gray-600 text-sm mb-2">Next Working day delivery in all over UAE</p>
-                  <p className="text-xs text-gray-500">Same day delivery available for orders placed before 11:00 AM</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Shipping Methods India */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-orange-600" />
+                <MapPin className="w-5 h-5 text-zinc-600" />
                 India Shipping Options
               </CardTitle>
             </CardHeader>
@@ -119,7 +96,7 @@ function ShippingPolicyContent() {
                 <div className="border rounded-lg p-4">
                   <div className="flex justify-between items-start mb-2">
                     <h4 className="font-semibold text-gray-900">Express Delivery</h4>
-                    <Badge className="bg-orange-100 text-blue-800">₹ 70</Badge>
+                    <Badge className="bg-zinc-100 text-zinc-800 border border-zinc-200">₹ 70</Badge>
                   </div>
                   <p className="text-gray-600 text-sm mb-2">Delivery within 2-5 business days</p>
                   <p className="text-xs text-gray-500">All India Delivery Available</p>
@@ -134,14 +111,14 @@ function ShippingPolicyContent() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-amber-600" />
+                <AlertCircle className="w-5 h-5 text-zinc-600" />
                 Important Information
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <h4 className="font-semibold text-amber-900 mb-2">Delivery Delays</h4>
-                <p className="text-amber-800 text-sm">
+              <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4">
+                <h4 className="font-semibold text-zinc-900 mb-2">Delivery Delays</h4>
+                <p className="text-zinc-700 text-sm">
                   During peak seasons (Ramadan, Eid, Diwali) or adverse weather conditions, 
                   deliveries may take longer than usual. We appreciate your patience.
                 </p>
@@ -184,15 +161,9 @@ function ShippingPolicyContent() {
                 Once your order is shipped, you will receive a tracking number via email and SMS. 
                 You can track your package using:
               </p>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <h4 className="font-medium text-purple-900">UAE Tracking</h4>
-                  <p className="text-sm text-purple-700">Emirates Post, Aramex, or local courier partners</p>
-                </div>
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <h4 className="font-medium text-purple-900">India Tracking</h4>
-                  <p className="text-sm text-purple-700">DTDC, or India Post tracking</p>
-                </div>
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <h4 className="font-medium text-purple-900">Tracking in India</h4>
+                <p className="text-sm text-purple-700">You will receive tracking details by SMS or email from our courier partners (e.g. DTDC, Delhivery, or India Post) where applicable.</p>
               </div>
             </CardContent>
           </Card>
@@ -205,7 +176,7 @@ function ShippingPolicyContent() {
                 Our customer service team is here to help with any shipping questions or concerns.
               </p>
               <div className="flex flex-wrap justify-center gap-4 text-sm">
-                <span>📧 support@sabsonline.com</span>
+                <span>📧 motoclubkottakkal@gmail.com</span>
                 <span>📱 WhatsApp: +971-56666-7178</span>
                 <span>⏰ Sun-Thu: 9AM-6PM GST</span>
               </div>
