@@ -80,6 +80,8 @@ export default function ProductManagement() {
   const [selectedShop, setSelectedShop] = useState<string>("all")
   const [expandedProducts, setExpandedProducts] = useState<Set<number>>(new Set())
   const [categorySearchTerm, setCategorySearchTerm] = useState("")
+  /** Category search inside add/edit product dialog (separate from table filter) */
+  const [formCategorySearchTerm, setFormCategorySearchTerm] = useState("")
 
   // Available shops
 const shops: Shop[] = [
@@ -571,6 +573,10 @@ const formatPrice = (product: Product) => {
     category.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
   )
 
+  const formFilteredCategories = categories.filter((category) =>
+    category.name.toLowerCase().includes(formCategorySearchTerm.toLowerCase().trim())
+  )
+
   const filteredItems = products.filter((item) => {
     const matchesSearch =
       item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -698,18 +704,49 @@ const formatPrice = (product: Product) => {
                     onValueChange={(value: string) => {
                       setFormData(prev => ({ ...prev, category_id: Number(value) }));
                     }}
+                    onOpenChange={(open) => {
+                      if (!open) setFormCategorySearchTerm("");
+                    }}
                     required
                     disabled={categories.length === 0}
                   >
                     <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                       <SelectValue placeholder={categories.length === 0 ? "Loading categories..." : "Select a category (required)"} />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-700 border-gray-600" style={{ zIndex: 99999 }} position="popper">
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id.toString()} className="text-white hover:bg-gray-600">
-                          {category.name}
-                        </SelectItem>
-                      ))}
+                    <SelectContent className="bg-gray-700 border-gray-600 p-0" style={{ zIndex: 99999 }} position="popper">
+                      <div
+                        className="sticky top-0 z-10 border-b border-gray-600 bg-gray-700 p-2"
+                        onPointerDown={(e) => e.stopPropagation()}
+                      >
+                        <div className="relative">
+                          <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                          <Input
+                            id="form-category-search"
+                            placeholder="Search categories..."
+                            value={formCategorySearchTerm}
+                            onChange={(e) => setFormCategorySearchTerm(e.target.value)}
+                            className="h-8 border-gray-500 bg-gray-600 pl-8 text-sm text-white placeholder:text-gray-500"
+                            onKeyDown={(e) => e.stopPropagation()}
+                            onClick={(e) => e.stopPropagation()}
+                            autoComplete="off"
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-[min(280px,50vh)] overflow-y-auto p-1">
+                        {formFilteredCategories.length === 0 ? (
+                          <p className="px-2 py-3 text-center text-sm text-gray-400">No categories match</p>
+                        ) : (
+                          formFilteredCategories.map((category) => (
+                            <SelectItem
+                              key={category.id}
+                              value={category.id.toString()}
+                              className="text-white hover:bg-gray-600 focus:bg-gray-600"
+                            >
+                              {category.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </div>
                     </SelectContent>
                   </Select>
                 </div>
