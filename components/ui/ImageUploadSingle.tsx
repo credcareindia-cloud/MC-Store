@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState, useRef } from "react"
+import { upload } from "@vercel/blob/client"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Upload, X, ImageIcon } from "lucide-react"
@@ -30,9 +31,8 @@ export default function ImageUploadSingle({ value, onChange, label = "Image", cl
       return
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError("File size must be less than 5MB")
+    if (file.size > 50 * 1024 * 1024) {
+      setError("File size must be less than 50MB")
       return
     }
 
@@ -40,19 +40,16 @@ export default function ImageUploadSingle({ value, onChange, label = "Image", cl
     setError(null)
 
     try {
-      const filename = `${Date.now()}-${file.name}`
-      const response = await fetch(`/api/upload?filename=${encodeURIComponent(filename)}`, {
-        method: "POST",
-        body: file,
+      const safeName = file.name.replace(/[^\w.-]/g, "_").slice(0, 180) || "image"
+      const pathname = `uploads/${Date.now()}-${safeName}`
+
+      const blob = await upload(pathname, file, {
+        access: "public",
+        handleUploadUrl: "/api/blob/client-upload",
+        multipart: file.size > 4 * 1024 * 1024,
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Upload failed")
-      }
-
-      const { url } = await response.json()
-      onChange(url)
+      onChange(blob.url)
     } catch (error) {
       setError(error instanceof Error ? error.message : "Upload failed")
     } finally {
@@ -122,7 +119,7 @@ export default function ImageUploadSingle({ value, onChange, label = "Image", cl
 
       {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
 
-      <p className="text-gray-500 text-xs mt-1">Supports: JPG, PNG, GIF (max 5MB)</p>
+      <p className="text-gray-500 text-xs mt-1">Supports: JPG, PNG, GIF, WebP (max 50MB)</p>
     </div>
   )
 }

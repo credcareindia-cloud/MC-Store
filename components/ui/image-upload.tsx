@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState, useRef } from "react"
+import { upload } from "@vercel/blob/client"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Upload, X, ImageIcon, Loader2 } from "lucide-react"
@@ -46,22 +47,18 @@ export default function MultipleImageUpload({
     setErrors(prev => ({ ...prev, [index]: "" }))
 
     try {
-      const filename = `product-${Date.now()}-${index}-${file.name}`
-      const response = await fetch(`/api/upload?filename=${encodeURIComponent(filename)}`, {
-        method: "POST",
-        body: file,
+      const safeName = file.name.replace(/[^\w.-]/g, "_").slice(0, 180) || "image"
+      const pathname = `products/${Date.now()}-${index}-${safeName}`
+
+      // Direct browser → Vercel Blob (avoids ~4.5MB serverless body limit on Vercel)
+      const blob = await upload(pathname, file, {
+        access: "public",
+        handleUploadUrl: "/api/blob/client-upload",
+        multipart: file.size > 4 * 1024 * 1024,
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Upload failed")
-      }
-
-      const { url } = await response.json()
-      
-      // Update the images array
       const newImages = [...value]
-      newImages[index] = url
+      newImages[index] = blob.url
       onChange(newImages)
 
     } catch (error) {
@@ -188,7 +185,7 @@ export default function MultipleImageUpload({
 
       <div className="mt-3 space-y-1">
         <p className="text-gray-500 text-xs">
-          Upload up to {maxImages} images for this product. Images will be automatically compressed.
+          Upload up to {maxImages} images. Files upload directly to storage (works on Vercel for large images).
         </p>
         <p className="text-gray-500 text-xs">
           The first image will be used as the main product image in listings.
