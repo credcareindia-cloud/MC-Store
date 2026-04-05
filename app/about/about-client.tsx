@@ -12,7 +12,7 @@ export default function AboutPageClient() {
     "@type": "Organization",
     name: settings.restaurant_name || "Motoclub",
     description:
-      "Motorcycle spare parts and riding accessories retailer serving customers across India.",
+      "Automobile spare parts and riding accessories retailer serving customers across India.",
     url: "https://motoclub.in",
     logo: settings.restaurant_logo || "https://motoclub.in/logo.png",
     address: {
@@ -33,7 +33,7 @@ export default function AboutPageClient() {
     sameAs: [settings.social_facebook, settings.social_instagram, settings.social_twitter].filter(Boolean),
     slogan: "Parts and accessories for riders across India",
     knowsAbout: [
-      "Motorcycle spare parts",
+      "Automobile spare parts",
       "Bike accessories",
       "Helmets and riding gear",
       "Two-wheeler maintenance",
@@ -73,7 +73,7 @@ export default function AboutPageClient() {
                   About {settings.restaurant_name}
                 </h1>
                 <p className="text-zinc-600 text-lg max-w-2xl">
-                  Motorcycle spare parts and accessories — quality listings and delivery across India.
+                  Automobile spare parts and accessories — quality listings and delivery across India.
                 </p>
               </div>
             </header>
@@ -161,7 +161,7 @@ export default function AboutPageClient() {
                 </div>
               </div>
               <footer className="mt-8 text-center text-zinc-500 text-xs">
-                © {new Date().getFullYear()} {settings.restaurant_name}. All rights reserved. Motorcycle parts and
+                © {new Date().getFullYear()} {settings.restaurant_name}. All rights reserved. Automobile parts and
                 accessories.
               </footer>
             </section>

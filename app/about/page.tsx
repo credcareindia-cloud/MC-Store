@@ -2,15 +2,15 @@ import { Metadata } from 'next'
 import AboutPageClient from './about-client'
 
 export const metadata: Metadata = {
-  title: 'About Us - Motoclub | Motorcycle parts & accessories',
+  title: 'About Us - Motoclub | Automobile parts & accessories',
   description:
-    'Motoclub supplies motorcycle spare parts and riding accessories with reliable quality and nationwide delivery across India.',
+    'Motoclub supplies Automobile spare parts and riding accessories with reliable quality and nationwide delivery across India.',
   keywords: [
     'motoclub',
-    'motorcycle parts India',
+    'Automobile parts India',
     'bike spare parts',
     'riding accessories',
-    'motorcycle accessories online',
+    'Automobile accessories online',
   ].join(', '),
   authors: [{ name: 'Motoclub Team' }],
   creator: 'Motoclub',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'About Motoclub',
     description:
-      'Motorcycle spare parts and accessories, delivered across India.',
+      'Automobile spare parts and accessories, delivered across India.',
     type: 'website',
     url: 'https://motoclub.in/about',
     siteName: 'Motoclub',
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'About Motoclub',
-    description: 'Motorcycle spare parts and accessories, delivered across India.',
+    description: 'Automobile spare parts and accessories, delivered across India.',
     images: ['/og-about.jpg'],
     creator: '@motoclub',
   },

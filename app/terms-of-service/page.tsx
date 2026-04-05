@@ -69,7 +69,7 @@ function TermsOfServiceContent() {
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>• Motoclub</li>
                     <li>• Operating in India</li>
-                    <li>• E-commerce — motorcycle parts & accessories</li>
+                    <li>• E-commerce — Automobile parts & accessories</li>
                     <li>• Prices in INR; delivery within India</li>
                   </ul>
                 </div>

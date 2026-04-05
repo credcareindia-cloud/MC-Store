@@ -90,7 +90,7 @@ export default function Footer() {
             </Link>
 
             <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-md">
-              Motorcycle spare parts and accessories, reliable quality and service, shipping across India.
+              Automobile spare parts and accessories, reliable quality and service, shipping across India.
             </p>
 
             <div className="flex flex-wrap gap-2">

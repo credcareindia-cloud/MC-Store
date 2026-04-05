@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     // Get the first image or fallback
     const productImage = product.image_urls?.[0] || '/logo.png'
     const productName = product.name || 'Product'
-    const productDescription = product.description || 'Motorcycle parts and accessories from Motoclub'
+    const productDescription = product.description || 'Automobile parts and accessories from Motoclub'
     
     // Format price for display
     const formatPrice = (price: number, currency: string) => {
@@ -90,7 +90,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     console.error('Error generating metadata:', error)
     return {
       title: 'Motoclub',
-      description: 'Motorcycle spare parts and accessories, delivered across India.',
+      description: 'Automobile spare parts and accessories, delivered across India.',
     }
   }
 }

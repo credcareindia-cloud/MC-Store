@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CalendarDays, ShoppingBag, Clock, CheckCircle, XCircle, User, Mail, Edit3, Settings, ChefHat, Truck } from "lucide-react"
 import Link from "next/link"
-import Image from "next/image"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useUser } from "@clerk/nextjs"
 
 interface OrderItem {
@@ -156,14 +156,13 @@ export default function DashboardPage() {
               {/* Profile Picture */}
               <div className="flex-shrink-0">
                 <div className="w-24 h-24 bg-gradient-to-br from-orange-400 to-yellow-500 rounded-full flex items-center justify-center shadow-lg">
-                  {user?.isClerkUser && clerkUser?.imageUrl ? (
-                    <Image
-                      src={clerkUser.imageUrl}
-                      alt="Profile"
-                      width={96}
-                      height={96}
-                      className="rounded-full"
-                    />
+                  {user?.isClerkUser ? (
+                    <Avatar className="h-24 w-24">
+                      {clerkUser?.imageUrl ? <AvatarImage src={clerkUser.imageUrl} alt="Profile" /> : null}
+                      <AvatarFallback className="bg-gradient-to-br from-orange-400 to-yellow-500 text-white">
+                        <User className="w-12 h-12 text-white" />
+                      </AvatarFallback>
+                    </Avatar>
                   ) : (
                     <User className="w-12 h-12 text-white" />
                   )}

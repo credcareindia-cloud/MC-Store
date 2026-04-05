@@ -13,10 +13,7 @@ const OfferPage = () => {
   const [initialLoading, setInitialLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // New restriction states - separate for each currency
-  const [minOrderValueAED, setMinOrderValueAED] = useState("")
   const [minOrderValueINR, setMinOrderValueINR] = useState("")
-  const [maxOrderValueAED, setMaxOrderValueAED] = useState("")
   const [maxOrderValueINR, setMaxOrderValueINR] = useState("")
   const [usageLimitPerUser, setUsageLimitPerUser] = useState("")
   const [totalUsageLimit, setTotalUsageLimit] = useState("")
@@ -36,10 +33,7 @@ const OfferPage = () => {
       endDate: string
       offers: { value: string; type: string }[]
       offerType: string
-      // Restriction fields - separate for each currency
-      minOrderValueAED?: string
       minOrderValueINR?: string
-      maxOrderValueAED?: string
       maxOrderValueINR?: string
       usageLimitPerUser?: string
       totalUsageLimit?: string
@@ -109,9 +103,7 @@ const OfferPage = () => {
     setEndDate("")
     setOffers([{ value: "" }])
     setOfferType("percentage")
-    setMinOrderValueAED("")
     setMinOrderValueINR("")
-    setMaxOrderValueAED("")
     setMaxOrderValueINR("")
     setUsageLimitPerUser("")
     setTotalUsageLimit("")
@@ -175,9 +167,9 @@ const OfferPage = () => {
           offers: offersWithType,
           priority: priority ? parseInt(priority) : null,
           restrictions: {
-            minOrderValueAED: minOrderValueAED.length > 0 ? parseFloat(minOrderValueAED) : null,
+            minOrderValueAED: null,
             minOrderValueINR: minOrderValueINR.length > 0 ? parseFloat(minOrderValueINR) : null,
-            maxOrderValueAED: maxOrderValueAED.length > 0 ? parseFloat(maxOrderValueAED) : null,
+            maxOrderValueAED: null,
             maxOrderValueINR: maxOrderValueINR.length > 0 ? parseFloat(maxOrderValueINR) : null,
             usageLimitPerUser: usageLimitPerUser ? parseInt(usageLimitPerUser) : null,
             totalUsageLimit: totalUsageLimit ? parseInt(totalUsageLimit) : null,
@@ -200,10 +192,7 @@ const OfferPage = () => {
         endDate: data.end_date,
         offers: typeof data.offers === "string" ? JSON.parse(data.offers) : data.offers,
         offerType: data.offer_type || offerType,
-        // Include all restriction fields - separate for each currency
-        minOrderValueAED: data.minimum_order_value_aed ? data.minimum_order_value_aed.toString() : "",
         minOrderValueINR: data.minimum_order_value_inr ? data.minimum_order_value_inr.toString() : "",
-        maxOrderValueAED: data.maximum_order_value_aed ? data.maximum_order_value_aed.toString() : "",
         maxOrderValueINR: data.maximum_order_value_inr ? data.maximum_order_value_inr.toString() : "",
         usageLimitPerUser: data.usage_limit_per_user ? data.usage_limit_per_user.toString() : "",
         totalUsageLimit: data.total_usage_limit ? data.total_usage_limit.toString() : "",
@@ -256,9 +245,7 @@ const OfferPage = () => {
     setOffers(offerValues)
 
     // Set restriction values
-    setMinOrderValueAED(offer.minOrderValueAED || "")
     setMinOrderValueINR(offer.minOrderValueINR || "")
-    setMaxOrderValueAED(offer.maxOrderValueAED || "")
     setMaxOrderValueINR(offer.maxOrderValueINR || "")
     setUsageLimitPerUser(offer.usageLimitPerUser || "")
     setTotalUsageLimit(offer.totalUsageLimit || "")
@@ -317,10 +304,7 @@ const OfferPage = () => {
           endDate: offer.end_date,
           offers: typeof offer.offers === "string" ? JSON.parse(offer.offers) : offer.offers || [],
           offerType: offer.offer_type || "percentage",
-          // Include restriction fields - separate for each currency
-          minOrderValueAED: offer.minimum_order_value_aed ? offer.minimum_order_value_aed.toString() : "",
           minOrderValueINR: offer.minimum_order_value_inr ? offer.minimum_order_value_inr.toString() : "",
-          maxOrderValueAED: offer.maximum_order_value_aed ? offer.maximum_order_value_aed.toString() : "",
           maxOrderValueINR: offer.maximum_order_value_inr ? offer.maximum_order_value_inr.toString() : "",
           usageLimitPerUser: offer.usage_limit_per_user ? offer.usage_limit_per_user.toString() : "",
           totalUsageLimit: offer.total_usage_limit ? offer.total_usage_limit.toString() : "",
@@ -430,7 +414,7 @@ const OfferPage = () => {
                       {offer.offerType === 'cash' ? (
                         <>
                           <DollarSign size={14} />
-                          Cash (AED)
+                          Cash (₹)
                         </>
                       ) : (
                         <>
@@ -480,7 +464,7 @@ const OfferPage = () => {
                     <div key={index} className={`text-white px-3 py-2 rounded text-center ${offerDiscount.type === 'cash' ? 'bg-orange-600' : 'bg-green-600'
                       }`}>
                       {offerDiscount.type === 'cash'
-                        ? `${offerDiscount.value} AED OFF`
+                        ? `₹${offerDiscount.value} OFF`
                         : `${offerDiscount.value}% OFF`
                       }
                     </div>
@@ -605,7 +589,7 @@ const OfferPage = () => {
                     />
                     <span className="flex items-center gap-1 text-gray-700">
                       <DollarSign size={16} className="text-orange-600" />
-                      Cash Discount (AED)
+                      Cash Discount (₹)
                     </span>
                   </label>
                 </div>
@@ -617,7 +601,7 @@ const OfferPage = () => {
                   {offerType === 'cash' ? (
                     <>
                       <DollarSign size={16} className="text-orange-600" />
-                      Cash Amounts (AED) *
+                      Cash Amounts (₹) *
                     </>
                   ) : (
                     <>
@@ -633,7 +617,7 @@ const OfferPage = () => {
                       <div className="flex-1 relative">
                         <input
                           type="number"
-                          placeholder={offerType === 'cash' ? `Amount in AED (e.g., 50)` : `Percentage (1-100)`}
+                          placeholder={offerType === 'cash' ? `Amount in ₹ (e.g., 50)` : `Percentage (1-100)`}
                           value={offer.value}
                           onChange={(e) => handleOfferChange(index, e.target.value)}
                           className={`w-full border-2 border-gray-200 px-4 py-3 pr-16 rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 text-gray-800 placeholder-gray-400 ${offerType === 'cash'
@@ -646,7 +630,7 @@ const OfferPage = () => {
                         />
                         <div className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-sm font-medium ${offerType === 'cash' ? 'text-orange-600' : 'text-green-600'
                           }`}>
-                          {offerType === 'cash' ? 'AED' : '%'}
+                          {offerType === 'cash' ? '₹' : '%'}
                         </div>
                       </div>
 
@@ -693,7 +677,7 @@ const OfferPage = () => {
                             }`}
                         >
                           {offerType === 'cash'
-                            ? `${offer.value} AED OFF`
+                            ? `₹${offer.value} OFF`
                             : `${offer.value}% OFF`
                           }
                         </span>
@@ -701,80 +685,39 @@ const OfferPage = () => {
                   </div>
                 </div>
               )}
-              {/* Order Value Restrictions - Separate for AED and INR */}
+              {/* Order Value Restrictions */}
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
                   <DollarSign size={18} className="text-blue-600" />
                   Order Value Restrictions
                 </h3>
 
-                {/* Minimum Order Values */}
-                <div className="space-y-4">
-                  <h4 className="text-md font-semibold text-gray-700">Minimum Order Value</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                        <DollarSign size={16} className="text-green-600" />
-                        Minimum Order Value (AED)
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="e.g., 100"
-                        value={minOrderValueAED}
-                        onChange={(e) => setMinOrderValueAED(e.target.value)}
-                        className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 text-gray-800 placeholder-gray-400"
-                      />
-                      <p className="text-xs text-gray-500">For UAE customers (AED)</p>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                        <DollarSign size={16} className="text-green-600" />
-                        Minimum Order Value (₹)
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="e.g., 2200"
-                        value={minOrderValueINR}
-                        onChange={(e) => setMinOrderValueINR(e.target.value)}
-                        className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 text-gray-800 placeholder-gray-400"
-                      />
-                      <p className="text-xs text-gray-500">For India customers (INR)</p>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <DollarSign size={16} className="text-green-600" />
+                      Minimum Order Value (₹)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="e.g., 500"
+                      value={minOrderValueINR}
+                      onChange={(e) => setMinOrderValueINR(e.target.value)}
+                      className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-200 text-gray-800 placeholder-gray-400"
+                    />
                   </div>
-                </div>
-
-                {/* Maximum Order Values */}
-                <div className="space-y-4">
-                  <h4 className="text-md font-semibold text-gray-700">Maximum Order Value</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                        <AlertCircle size={16} className="text-red-600" />
-                        Maximum Order Value (AED)
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="e.g., 500"
-                        value={maxOrderValueAED}
-                        onChange={(e) => setMaxOrderValueAED(e.target.value)}
-                        className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-200 text-gray-800 placeholder-gray-400"
-                      />
-                      <p className="text-xs text-gray-500">For UAE customers (AED)</p>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                        <AlertCircle size={16} className="text-red-600" />
-                        Maximum Order Value (₹)
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="e.g., 11000"
-                        value={maxOrderValueINR}
-                        onChange={(e) => setMaxOrderValueINR(e.target.value)}
-                        className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-200 text-gray-800 placeholder-gray-400"
-                      />
-                      <p className="text-xs text-gray-500">For India customers (INR)</p>
-                    </div>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                      <AlertCircle size={16} className="text-red-600" />
+                      Maximum Order Value (₹)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="e.g., 11000"
+                      value={maxOrderValueINR}
+                      onChange={(e) => setMaxOrderValueINR(e.target.value)}
+                      className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all duration-200 text-gray-800 placeholder-gray-400"
+                    />
                   </div>
                 </div>
               </div>
@@ -937,13 +880,11 @@ const OfferPage = () => {
                         100% Off Detected - Protection Recommended
                       </h4>
                       <p className="text-red-700 text-xs sm:text-sm mt-1">
-                        You have a 100% off offer. Consider setting <strong>Maximum Order Values</strong> for both currencies to prevent abuse of high-value free orders.
+                        You have a 100% off offer. Consider setting a <strong>Maximum Order Value</strong> to prevent abuse of high-value free orders.
                       </p>
                       <div className="text-red-600 text-xs mt-2 space-y-1">
-                        <p><strong>Recommended Maximum Values:</strong></p>
-                        <p>• AED: 200-500 (for UAE customers)</p>
-                        <p>• INR: 4,400-11,000 (for India customers)</p>
-                        <p className="text-red-500 mt-1">Set both values to ensure proper protection across all markets!</p>
+                        <p><strong>Recommended Maximum Value:</strong></p>
+                        <p>• ₹4,400 - ₹11,000</p>
                       </div>
                     </div>
                   </div>

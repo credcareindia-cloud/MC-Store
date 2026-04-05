@@ -18,8 +18,8 @@ const logos: TrustLogo[] = [
 const pillars = [
   {
     icon: Truck,
-    title: "Free Shipping",
-    desc: "Pan-India delivery with tracking via DHL, Speed Post & more.",
+    title: "Fast Shipping",
+    desc: "Tracked delivery via trusted courier partners.",
   },
   {
     icon: Store,
@@ -74,12 +74,6 @@ const Services = () => {
               unoptimized
             />
           ))}
-          <span
-            className="inline-flex h-6 items-center rounded border border-red-200 bg-red-50 px-2 text-[10px] font-semibold text-red-800 sm:text-xs"
-            title="India Post Speed Post"
-          >
-            India Post
-          </span>
         </div>
       </div>
     </section>

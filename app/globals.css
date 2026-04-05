@@ -208,7 +208,7 @@
   }
 }
 
-/* Navbar logo: 3D “speed + smoke” on hover */
+/* Navbar logo: 3D “speed + silver flash” on hover */
 .nav-logo-link {
   perspective: 960px;
   perspective-origin: 40% 50%;
@@ -224,220 +224,186 @@
   transform: translate3d(14px, -3px, 32px) rotateY(-20deg) rotateX(4deg) scale(1.06);
 }
 
-/* Layered exhaust: hot core → cooling billow → loose wisps (all behind logo) */
+/* Layered flash/shimmer elements above the logo */
 .nav-logo-exhaust {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 1;
   pointer-events: none;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .nav-logo-smoke {
   position: absolute;
   pointer-events: none;
   opacity: 0;
-  border-radius: 50%;
-  transform-origin: 85% 55%;
+  border-radius: 9999px;
+  transform-origin: 20% 50%;
+  mix-blend-mode: normal;
+  will-change: transform, opacity, filter;
 }
 
-/* Bright, dense “just left the pipe” core */
+/* Primary specular flash */
 .nav-logo-smoke--core {
-  left: 1%;
-  bottom: 14%;
-  width: 32%;
-  height: 42%;
-  background: radial-gradient(
-    ellipse 88% 80% at 72% 48%,
-    rgba(255, 255, 255, 0.92) 0%,
-    rgba(238, 242, 248, 0.45) 38%,
-    rgba(195, 202, 214, 0.18) 62%,
-    transparent 78%
+  left: -14%;
+  top: 12%;
+  width: 24%;
+  height: 72%;
+  background: linear-gradient(
+    92deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 26%,
+    rgba(255, 255, 255, 0.72) 50%,
+    rgba(225, 233, 248, 0.34) 64%,
+    transparent 88%
   );
+  filter: blur(3px);
 }
 
 .nav-logo-link.group:hover .nav-logo-smoke--core {
-  animation: navSmokeCore 1.35s ease-out infinite;
+  animation: navSmokeCore 2.2s ease-out infinite;
 }
 
-/* Large cooling plume: multi-lobe, reads like turbulent exhaust */
+/* Broad silver sheen sweep */
 .nav-logo-smoke--billow {
-  left: -12%;
-  bottom: 0%;
-  width: 78%;
-  height: 95%;
-  background:
-    radial-gradient(ellipse 58% 42% at 68% 32%, rgba(255, 255, 255, 0.28) 0%, transparent 58%),
-    radial-gradient(ellipse 52% 48% at 42% 58%, rgba(155, 165, 180, 0.22) 0%, transparent 62%),
-    radial-gradient(ellipse 45% 38% at 55% 44%, rgba(210, 216, 226, 0.2) 0%, transparent 55%);
-  filter: blur(18px);
+  display: none;
 }
 
 .nav-logo-link.group:hover .nav-logo-smoke--billow {
-  animation: navSmokeBillow 2.05s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  animation-delay: 0.12s;
+  animation: none;
 }
 
-/* Secondary billow, cooler / bluer gray */
+/* Soft halo that makes silver read brighter */
 .nav-logo-smoke--haze {
-  left: -18%;
-  bottom: -8%;
-  width: 88%;
-  height: 108%;
-  background:
-    radial-gradient(ellipse 70% 50% at 48% 55%, rgba(130, 138, 152, 0.16) 0%, transparent 68%),
-    radial-gradient(ellipse 55% 45% at 62% 38%, rgba(200, 206, 216, 0.12) 0%, transparent 65%);
-  filter: blur(26px);
+  display: none;
 }
 
 .nav-logo-link.group:hover .nav-logo-smoke--haze {
-  animation: navSmokeHaze 2.45s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-  animation-delay: 0.28s;
+  animation: none;
 }
 
-/* Small wisps break off the plume */
+/* Small sparkle pulses */
 .nav-logo-smoke--wisp-1 {
-  left: 6%;
-  bottom: 22%;
-  width: 38%;
-  height: 35%;
-  background: radial-gradient(
-    ellipse 75% 65% at 60% 50%,
-    rgba(230, 234, 242, 0.35) 0%,
-    rgba(170, 178, 192, 0.12) 50%,
-    transparent 72%
-  );
-  filter: blur(10px);
+  display: none;
 }
 
 .nav-logo-link.group:hover .nav-logo-smoke--wisp-1 {
-  animation: navSmokeWisp1 1.65s ease-in-out infinite;
-  animation-delay: 0.4s;
+  animation: none;
 }
 
 .nav-logo-smoke--wisp-2 {
-  left: -2%;
-  bottom: 35%;
-  width: 44%;
-  height: 28%;
-  background: radial-gradient(
-    ellipse 80% 70% at 55% 45%,
-    rgba(210, 216, 226, 0.28) 0%,
-    transparent 70%
-  );
-  filter: blur(14px);
+  display: none;
 }
 
 .nav-logo-link.group:hover .nav-logo-smoke--wisp-2 {
-  animation: navSmokeWisp2 1.85s ease-in-out infinite;
-  animation-delay: 0.65s;
+  animation: none;
 }
 
 .nav-logo-streak {
   position: absolute;
-  left: 4%;
-  top: 50%;
+  left: 8%;
+  top: 14%;
   width: 2px;
-  height: 45%;
-  margin-top: -22%;
+  height: 72%;
+  margin-top: 0;
   border-radius: 9999px;
   background: linear-gradient(
     to bottom,
     transparent,
-    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0.72),
     transparent
   );
   opacity: 0;
   pointer-events: none;
-  z-index: 2;
-  filter: blur(0.5px);
+  z-index: 3;
+  filter: blur(0.4px);
 }
 
 .nav-logo-link.group:hover .nav-logo-streak {
-  animation: navLogoStreak 0.55s ease-out infinite;
+  animation: navLogoStreak 2.2s ease-out infinite;
 }
 
 .nav-logo-streak--2 {
-  left: 9%;
-  height: 32%;
-  margin-top: -14%;
-  animation-delay: 0.12s !important;
+  left: 16%;
+  height: 50%;
+  margin-top: 0;
+  animation-delay: 0.16s !important;
   opacity: 0;
 }
 
 @keyframes navSmokeCore {
   0% {
     opacity: 0;
-    transform: translate(0, 6px) scale(0.45, 0.55);
+    transform: translateX(-10px) skewX(-10deg) scaleX(0.75);
     filter: blur(3px);
   }
-  10% {
-    opacity: 0.95;
+  24% {
+    opacity: 0.8;
   }
   100% {
     opacity: 0;
-    transform: translate(-14px, -22px) scale(1.35, 1.15);
-    filter: blur(20px);
+    transform: translateX(110px) skewX(-10deg) scaleX(1.05);
+    filter: blur(5px);
   }
 }
 
 @keyframes navSmokeBillow {
   0% {
     opacity: 0;
-    transform: translate(0, 4px) scale(0.88, 0.92) rotate(-3deg);
-    filter: blur(14px);
+    transform: translateX(-16px) rotate(-10deg) scaleX(0.9);
+    filter: blur(8px);
   }
-  22% {
-    opacity: 0.72;
+  28% {
+    opacity: 0.7;
   }
   100% {
     opacity: 0;
-    transform: translate(-48px, -36px) scale(1.22, 1.08) rotate(5deg);
-    filter: blur(38px);
+    transform: translateX(126px) rotate(-10deg) scaleX(1.15);
+    filter: blur(12px);
   }
 }
 
 @keyframes navSmokeHaze {
   0% {
     opacity: 0;
-    transform: translate(8px, 0) scale(0.92);
-    filter: blur(20px);
+    transform: translateX(0) scale(0.92);
+    filter: blur(16px);
   }
-  30% {
-    opacity: 0.5;
+  32% {
+    opacity: 0.55;
   }
   100% {
     opacity: 0;
-    transform: translate(-40px, -44px) scale(1.35);
-    filter: blur(48px);
+    transform: translateX(62px) scale(1.08);
+    filter: blur(22px);
   }
 }
 
 @keyframes navSmokeWisp1 {
   0% {
     opacity: 0;
-    transform: translate(0, 0) scale(0.7) rotate(0deg);
+    transform: translate(-2px, 3px) scale(0.5);
   }
-  18% {
-    opacity: 0.55;
+  30% {
+    opacity: 0.95;
   }
   100% {
     opacity: 0;
-    transform: translate(-32px, -26px) scale(1.5, 1.25) rotate(-8deg);
+    transform: translate(34px, -10px) scale(1.25);
   }
 }
 
 @keyframes navSmokeWisp2 {
   0% {
     opacity: 0;
-    transform: translate(0, 0) scale(0.65, 0.8);
+    transform: translate(-4px, 2px) scale(0.6);
   }
-  25% {
-    opacity: 0.45;
+  35% {
+    opacity: 0.85;
   }
   100% {
     opacity: 0;
-    transform: translate(-38px, -18px) scale(1.65, 1.1) rotate(10deg);
+    transform: translate(44px, -14px) scale(1.15);
   }
 }
 
@@ -447,11 +413,11 @@
     transform: translateX(0) scaleY(0.4);
   }
   35% {
-    opacity: 0.75;
+    opacity: 1;
   }
   100% {
     opacity: 0;
-    transform: translateX(-28px) scaleY(1.1);
+    transform: translateX(108px) scaleY(1.04);
   }
 }
 

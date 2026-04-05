@@ -23,7 +23,7 @@ const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfa
 
 export const metadata: Metadata = {
   title: "Motoclub — Spare Parts & Accessories",
-  description: "Motorcycle spare parts and riding accessories, delivered across India.",
+  description: "Automobile spare parts and riding accessories, delivered across India.",
   generator: "Shah",
   icons: {
     icon: [

@@ -40,7 +40,7 @@ function ShippingPolicyContent() {
             <CardContent className="p-4 text-center">
               <Package className="w-6 h-6 text-green-600 mx-auto mb-2" />
               <p className="font-semibold text-green-900">Free Shipping</p>
-              <p className="text-sm text-green-700">On eligible orders over ₹3000 (when offered)</p>
+              <p className="text-sm text-green-700">On orders above ₹10,000</p>
             </CardContent>
           </Card>
           <Card className="border-zinc-200 bg-zinc-50">
@@ -95,11 +95,29 @@ function ShippingPolicyContent() {
 
                 <div className="border rounded-lg p-4">
                   <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-semibold text-gray-900">Express Delivery</h4>
+                    <h4 className="font-semibold text-gray-900">Kerala Delivery</h4>
                     <Badge className="bg-zinc-100 text-zinc-800 border border-zinc-200">₹ 70</Badge>
                   </div>
                   <p className="text-gray-600 text-sm mb-2">Delivery within 2-5 business days</p>
-                  <p className="text-xs text-gray-500">All India Delivery Available</p>
+                  <p className="text-xs text-gray-500">Within Kerala</p>
+                </div>
+
+                <div className="border rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-semibold text-gray-900">Rest of India Delivery</h4>
+                    <Badge className="bg-zinc-100 text-zinc-800 border border-zinc-200">₹ 140</Badge>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-2">Delivery within 3-7 business days</p>
+                  <p className="text-xs text-gray-500">Outside Kerala — All India</p>
+                </div>
+
+                <div className="border border-green-200 bg-green-50 rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-semibold text-green-900">Free Delivery</h4>
+                    <Badge className="bg-green-100 text-green-800 border border-green-200">FREE</Badge>
+                  </div>
+                  <p className="text-green-700 text-sm mb-2">On all orders above ₹10,000</p>
+                  <p className="text-xs text-green-600">Applicable across India</p>
                 </div>
 
                 

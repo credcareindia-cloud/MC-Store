@@ -1,8 +1,23 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Users, Mail, Phone, Calendar, ShoppingBag, DollarSign, UserCheck, UserX, Loader2 } from "lucide-react"
+import { Users, Mail, Phone, Calendar, ShoppingBag, DollarSign, UserCheck, UserX, Loader2, MapPin, ChevronDown, ChevronUp, Home, Briefcase, Tag } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+interface SavedAddress {
+  id: number
+  user_id: string
+  label: string
+  street: string
+  landmark: string
+  area: string
+  city: string
+  state: string
+  pincode: string
+  country: string
+  is_default: boolean
+  created_at: string
+}
 
 interface Customer {
   id: number | null
@@ -12,19 +27,15 @@ interface Customer {
   created_at: string
   customer_type: 'registered' | 'guest'
   total_orders: number
-  total_spent_aed: number
   total_spent_inr: number
-  total_spent_display: {
-    aed: number
-    inr: number
-  }
+  clerk_user_id?: string
+  user_id?: string
 }
 
 interface CustomerSummary {
   total_customers: number
   registered_users: number
   guest_customers: number
-  total_revenue_aed: number
   total_revenue_inr: number
 }
 
@@ -34,6 +45,9 @@ const CustomersPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>("")
   const [filter, setFilter] = useState<'all' | 'registered' | 'guest'>('all')
+  const [expandedCustomer, setExpandedCustomer] = useState<string | null>(null)
+  const [customerAddresses, setCustomerAddresses] = useState<Record<string, SavedAddress[]>>({})
+  const [loadingAddresses, setLoadingAddresses] = useState<string | null>(null)
 
   useEffect(() => {
     fetchCustomers()
@@ -56,17 +70,48 @@ const CustomersPage = () => {
     }
   }
 
+  const toggleCustomerAddresses = async (customer: Customer) => {
+    const customerId = customer.clerk_user_id || customer.user_id || customer.id?.toString()
+    if (!customerId) return
+
+    if (expandedCustomer === customerId) {
+      setExpandedCustomer(null)
+      return
+    }
+
+    setExpandedCustomer(customerId)
+
+    if (customerAddresses[customerId]) return
+
+    setLoadingAddresses(customerId)
+    try {
+      const res = await fetch(`/api/admin/addresses?userId=${customerId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setCustomerAddresses(prev => ({ ...prev, [customerId]: data }))
+      }
+    } catch (err) {
+      console.error("Failed to fetch addresses:", err)
+    } finally {
+      setLoadingAddresses(null)
+    }
+  }
+
+  const getLabelIcon = (label: string) => {
+    switch (label?.toLowerCase()) {
+      case 'home': return <Home className="w-3.5 h-3.5" />
+      case 'work': return <Briefcase className="w-3.5 h-3.5" />
+      default: return <Tag className="w-3.5 h-3.5" />
+    }
+  }
+
   const filteredCustomers = customers.filter(customer => {
     if (filter === 'all') return true
     return customer.customer_type === filter
   })
 
-  const formatCurrency = (amount: number, currency: 'AED' | 'INR') => {
-    if (currency === 'AED') {
-      return `${amount.toFixed(2)} AED`
-    } else {
-      return `₹${amount.toFixed(2)}`
-    }
+  const formatCurrency = (amount: number) => {
+    return `₹${amount.toFixed(2)}`
   }
 
   const getCustomerTypeIcon = (type: 'registered' | 'guest') => {
@@ -90,8 +135,8 @@ const CustomersPage = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          {[...Array(5)].map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
             <Card key={i} className="bg-gray-800/50 border-gray-700 animate-pulse">
               <CardContent className="p-6">
                 <div className="h-4 bg-gray-700 rounded mb-2"></div>
@@ -123,7 +168,7 @@ const CustomersPage = () => {
           
       {/* Summary Cards */}
       {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="bg-gradient-to-br from-purple-500/10 to-purple-600/10 border-purple-500/20 hover:border-purple-500/40 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-300">Total Customers</CardTitle>
@@ -157,25 +202,14 @@ const CustomersPage = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-cyan-500/10 to-cyan-600/10 border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300">
+          <Card className="bg-gradient-to-br from-green-500/10 to-green-600/10 border-green-500/20 hover:border-green-500/40 transition-all duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300">AED Revenue</CardTitle>
-              <div className="text-cyan-400 font-bold text-sm">AED</div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-white">AED {summary.total_revenue_aed?.toLocaleString() || "0"}</div>
-              <p className="text-xs text-cyan-400 mt-1">UAE Dirham</p>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 border-orange-500/20 hover:border-orange-500/40 transition-all duration-300">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-300">INR Revenue</CardTitle>
-              <div className="text-orange-400 font-bold text-sm">₹</div>
+              <CardTitle className="text-sm font-medium text-gray-300">Total Revenue</CardTitle>
+              <div className="text-green-400 font-bold text-sm">₹</div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">₹{summary.total_revenue_inr?.toLocaleString() || "0"}</div>
-              <p className="text-xs text-orange-400 mt-1">Indian Rupee</p>
+              <p className="text-xs text-green-400 mt-1">Indian Rupee</p>
             </CardContent>
           </Card>
         </div>
@@ -240,10 +274,7 @@ const CustomersPage = () => {
                     Orders
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Spent (AED)
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Spent (INR)
+                    Total Spent
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                     Joined
@@ -251,61 +282,128 @@ const CustomersPage = () => {
                 </tr>
               </thead>
               <tbody className="bg-gray-800/30 divide-y divide-gray-700">
-                {filteredCustomers.map((customer, index) => (
-                  <tr key={`${customer.email}-${index}`} className="hover:bg-gray-700/50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {getCustomerTypeIcon(customer.customer_type)}
-                        <div className="ml-3">
-                          <div className="text-sm font-medium text-white">
-                            {customer.name}
+                {filteredCustomers.map((customer, index) => {
+                  const customerId = customer.clerk_user_id || customer.user_id || customer.id?.toString() || ''
+                  const isExpanded = expandedCustomer === customerId
+                  const addresses = customerAddresses[customerId] || []
+                  const isLoadingAddr = loadingAddresses === customerId
+
+                  return (
+                    <>
+                      <tr 
+                        key={`${customer.email}-${index}`} 
+                        className="hover:bg-gray-700/50 cursor-pointer"
+                        onClick={() => toggleCustomerAddresses(customer)}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            {getCustomerTypeIcon(customer.customer_type)}
+                            <div className="ml-3">
+                              <div className="text-sm font-medium text-white">
+                                {customer.name}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-300">
-                        <div className="flex items-center gap-1 mb-1">
-                          <Mail size={12} className="text-gray-400" />
-                          {customer.email}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Phone size={12} className="text-gray-400" />
-                          {customer.phone}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getCustomerTypeBadge(customer.customer_type)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        <ShoppingBag size={14} className="text-gray-400" />
-                        <span className="text-sm font-medium text-white">
-                          {customer.total_orders}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-cyan-400">
-                        AED {customer.total_spent_aed?.toLocaleString() || "0"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-orange-400">
-                        ₹{customer.total_spent_inr?.toLocaleString() || "0"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        <Calendar size={12} className="text-gray-400" />
-                        <span className="text-sm text-gray-300">
-                          {new Date(customer.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-300">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Mail size={12} className="text-gray-400" />
+                              {customer.email}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Phone size={12} className="text-gray-400" />
+                              {customer.phone}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getCustomerTypeBadge(customer.customer_type)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-1">
+                            <ShoppingBag size={14} className="text-gray-400" />
+                            <span className="text-sm font-medium text-white">
+                              {customer.total_orders}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-green-400">
+                            ₹{customer.total_spent_inr?.toLocaleString() || "0"}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1">
+                              <Calendar size={12} className="text-gray-400" />
+                              <span className="text-sm text-gray-300">
+                                {new Date(customer.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 text-gray-400">
+                              <MapPin size={14} />
+                              {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* Expandable Address Row */}
+                      {isExpanded && (
+                        <tr key={`addr-${customer.email}-${index}`}>
+                          <td colSpan={6} className="px-6 py-4 bg-gray-900/40">
+                            <div className="flex items-center gap-2 mb-3">
+                              <MapPin className="w-4 h-4 text-cyan-400" />
+                              <span className="text-sm font-semibold text-cyan-400">Saved Addresses</span>
+                            </div>
+                            {isLoadingAddr ? (
+                              <div className="flex items-center gap-2 text-gray-400 py-2">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span className="text-sm">Loading addresses...</span>
+                              </div>
+                            ) : addresses.length === 0 ? (
+                              <p className="text-sm text-gray-500 py-2">No saved addresses</p>
+                            ) : (
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {addresses.map((addr) => (
+                                  <div
+                                    key={addr.id}
+                                    className="bg-gray-800/60 border border-gray-700 rounded-lg p-3"
+                                  >
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="flex items-center gap-1 text-xs font-semibold bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
+                                        {getLabelIcon(addr.label)}
+                                        {addr.label}
+                                      </span>
+                                      {addr.is_default && (
+                                        <span className="text-xs text-green-400 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20">
+                                          Default
+                                        </span>
+                                      )}
+                                      {addr.state?.toLowerCase() === 'kerala' && (
+                                        <span className="text-xs text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                                          Kerala
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-gray-200">{addr.street}</p>
+                                    {addr.landmark && (
+                                      <p className="text-xs text-gray-400">Near: {addr.landmark}</p>
+                                    )}
+                                    <p className="text-xs text-gray-400 mt-1">
+                                      {addr.area}, {addr.city}, {addr.state} - {addr.pincode}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  )
+                })}
               </tbody>
             </table>
           </div>

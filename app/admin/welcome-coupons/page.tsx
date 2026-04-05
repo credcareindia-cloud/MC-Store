@@ -64,11 +64,8 @@ export default function WelcomeCouponsPage() {
     description: "",
     discountType: "flat" as "flat" | "percent",
     discountValueInr: "",
-    discountValueAed: "",
     maxPurchaseInr: "",
-    maxPurchaseAed: "",
     minimumPurchaseInr: "",
-    minimumPurchaseAed: "",
     userTypeRestriction: "all" as "all" | "new" | "returning",
     validFrom: "",
     validTo: "",
@@ -100,11 +97,8 @@ export default function WelcomeCouponsPage() {
       description: coupon.description || "",
       discountType: coupon.discount_type || "flat",
       discountValueInr: coupon.discount_value_inr?.toString() || "",
-      discountValueAed: coupon.discount_value_aed?.toString() || "",
       maxPurchaseInr: coupon.max_purchase_inr?.toString() || "",
-      maxPurchaseAed: coupon.max_purchase_aed?.toString() || "",
       minimumPurchaseInr: coupon.minimum_purchase_inr?.toString() || "",
-      minimumPurchaseAed: coupon.minimum_purchase_aed?.toString() || "",
       userTypeRestriction: coupon.user_type_restriction || "all",
       validFrom: formatDateForInput(coupon.valid_from),
       validTo: formatDateForInput(coupon.valid_to),
@@ -136,26 +130,15 @@ export default function WelcomeCouponsPage() {
           return;
         }
       }
-      if (form.discountValueAed) {
-        const aedValue = Number(form.discountValueAed);
-        if (aedValue < 1 || aedValue > 100) {
-          alert("AED percentage discount must be between 1 and 100");
-          return;
-        }
-      }
     } else if (form.discountType === "flat") {
       if (form.discountValueInr && Number(form.discountValueInr) <= 0) {
-        alert("INR flat discount must be a positive number");
-        return;
-      }
-      if (form.discountValueAed && Number(form.discountValueAed) <= 0) {
-        alert("AED flat discount must be a positive number");
+        alert("Flat discount must be a positive number");
         return;
       }
     }
     
-    if (!form.discountValueInr && !form.discountValueAed) {
-      alert("Please provide at least one discount value (INR or AED)");
+    if (!form.discountValueInr) {
+      alert("Please provide a discount value");
       return;
     }
     
@@ -177,11 +160,11 @@ export default function WelcomeCouponsPage() {
       description: form.description || null,
       discountType: form.discountType,
       discountValueInr: form.discountValueInr ? Number(form.discountValueInr) : null,
-      discountValueAed: form.discountValueAed ? Number(form.discountValueAed) : null,
+      discountValueAed: null,
       maxPurchaseInr: form.maxPurchaseInr ? Number(form.maxPurchaseInr) : null,
-      maxPurchaseAed: form.maxPurchaseAed ? Number(form.maxPurchaseAed) : null,
+      maxPurchaseAed: null,
       minimumPurchaseInr: Number(form.minimumPurchaseInr) || 0,
-      minimumPurchaseAed: Number(form.minimumPurchaseAed) || 0,
+      minimumPurchaseAed: 0,
       userTypeRestriction: form.userTypeRestriction,
       validFrom: form.validFrom,
       validTo: form.validTo,
@@ -238,15 +221,9 @@ export default function WelcomeCouponsPage() {
 
   const getDiscountDisplay = (coupon: any) => {
     if (coupon.discount_type === "flat") {
-      const parts = [];
-      if (coupon.discount_value_inr) parts.push(`₹${coupon.discount_value_inr}`);
-      if (coupon.discount_value_aed) parts.push(`${coupon.discount_value_aed} AED`);
-      return parts.join(" / ");
+      return coupon.discount_value_inr ? `₹${coupon.discount_value_inr}` : "";
     } else {
-      const parts = [];
-      if (coupon.discount_value_inr) parts.push(`${coupon.discount_value_inr}%`);
-      if (coupon.discount_value_aed) parts.push(`${coupon.discount_value_aed}%`);
-      return parts.join(" / ");
+      return coupon.discount_value_inr ? `${coupon.discount_value_inr}%` : "";
     }
   };
 
@@ -260,25 +237,11 @@ export default function WelcomeCouponsPage() {
           </div>
         );
       }
-      if (coupon.discount_value_aed) {
-        badges.push(
-          <div key="aed" className="bg-orange-500 text-white px-4 py-2 rounded text-center font-medium">
-            {coupon.discount_value_aed} AED OFF
-          </div>
-        );
-      }
     } else {
       if (coupon.discount_value_inr) {
         badges.push(
           <div key="inr" className="bg-green-500 text-white px-4 py-2 rounded text-center font-medium">
             {coupon.discount_value_inr}% OFF
-          </div>
-        );
-      }
-      if (coupon.discount_value_aed) {
-        badges.push(
-          <div key="aed" className="bg-green-500 text-white px-4 py-2 rounded text-center font-medium">
-            {coupon.discount_value_aed}% OFF
           </div>
         );
       }
@@ -502,7 +465,7 @@ export default function WelcomeCouponsPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="discountValueInr" className="text-white">
-                  {form.discountType === "flat" ? "Discount Amount (INR)" : "Discount Percentage (INR)"}
+                  {form.discountType === "flat" ? "Discount Amount (₹)" : "Discount Percentage (%)"}
                 </Label>
                 <Input
                   id="discountValueInr"
@@ -515,21 +478,7 @@ export default function WelcomeCouponsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="discountValueAed" className="text-white">
-                  {form.discountType === "flat" ? "Discount Amount (AED)" : "Discount Percentage (AED)"}
-                </Label>
-                <Input
-                  id="discountValueAed"
-                  type="number"
-                  placeholder={form.discountType === "flat" ? "50" : "10"}
-                  value={form.discountValueAed}
-                  onChange={(e) => updateForm("discountValueAed", e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="minInr" className="text-white">Min Purchase (INR)</Label>
+                <Label htmlFor="minInr" className="text-white">Minimum Purchase (₹)</Label>
                 <Input
                   id="minInr"
                   type="number"
@@ -541,37 +490,13 @@ export default function WelcomeCouponsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="minAed" className="text-white">Min Purchase (AED)</Label>
-                <Input
-                  id="minAed"
-                  type="number"
-                  placeholder="0"
-                  value={form.minimumPurchaseAed}
-                  onChange={(e) => updateForm("minimumPurchaseAed", e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="maxInr" className="text-white">Max Purchase (INR)</Label>
+                <Label htmlFor="maxInr" className="text-white">Max Purchase (₹)</Label>
                 <Input
                   id="maxInr"
                   type="number"
                   placeholder="No limit"
                   value={form.maxPurchaseInr}
                   onChange={(e) => updateForm("maxPurchaseInr", e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="maxAed" className="text-white">Max Purchase (AED)</Label>
-                <Input
-                  id="maxAed"
-                  type="number"
-                  placeholder="No limit"
-                  value={form.maxPurchaseAed}
-                  onChange={(e) => updateForm("maxPurchaseAed", e.target.value)}
                   className="bg-slate-700 border-slate-600 text-white"
                 />
               </div>

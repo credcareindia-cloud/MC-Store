@@ -682,8 +682,8 @@ const badgeColor = conditionColors[item.condition_type as keyof typeof condition
   return (
     <div key={item.id} className="cursor-pointer">
       <Card
-        className={`bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group ${
-          viewMode === "list" ? "flex items-center" : ""
+        className={`bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group h-full ${
+          viewMode === "list" ? "flex items-center" : "flex flex-col"
         }`}
       >
         <div
@@ -729,9 +729,9 @@ const badgeColor = conditionColors[item.condition_type as keyof typeof condition
         </div>
 
         <CardContent
-          className={`p-3 lg:p-4 ${viewMode === "list" ? "flex-1" : ""}`}
+          className={`p-3 lg:p-4 ${viewMode === "list" ? "flex-1" : "flex-1 flex flex-col"}`}
         >
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2 min-h-[1.75rem]">
             {/* Price */}
             <p className="text-zinc-900 font-semibold text-sm lg:text-lg">
              {availableVariant && (
@@ -791,9 +791,9 @@ const badgeColor = conditionColors[item.condition_type as keyof typeof condition
           <h3 className={`font-medium text-gray-900 mb-2 ${
             viewMode === "list" 
               ? "text-base lg:text-lg line-clamp-2" 
-              : "text-sm lg:text-base line-clamp-2"
+              : "text-sm lg:text-base line-clamp-2 min-h-[2.5rem]"
           }`}>
-            {viewMode === "list" ? item.name : (item.name.length > 15 ? item.name.slice(0, 17) + "..." : item.name)}
+            {item.name}
           </h3>
 
           {viewMode === "list" && (
@@ -803,7 +803,7 @@ const badgeColor = conditionColors[item.condition_type as keyof typeof condition
           )}
 
 
-<div className="flex gap-2">
+<div className="flex gap-2 mt-auto">
   <Button
     onClick={() => router.push(`/product/${item.id}`)}
     className="flex-1 bg-zinc-900 hover:bg-zinc-800 text-white rounded-md py-2 lg:py-3 text-sm lg:text-base font-medium transition-colors flex items-center justify-center gap-2"

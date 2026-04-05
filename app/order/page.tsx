@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Minus, Plus, Trash2, ShoppingCart, MessageSquare, CheckCircle, XCircle, AlertTriangle, Tag } from "lucide-react"
+import { Minus, Plus, Trash2, ShoppingCart, MessageSquare, CheckCircle, XCircle, AlertTriangle, Tag, MapPin, BookmarkPlus, ChevronDown } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import toast from 'react-hot-toast'
@@ -110,6 +110,23 @@ export default function OrderPage() {
     country: 'India'
   })
 
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([])
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null)
+  const [saveAddress, setSaveAddress] = useState(false)
+  const [addressLabel, setAddressLabel] = useState("Home")
+  const [loadingAddresses, setLoadingAddresses] = useState(false)
+
+  const INDIAN_STATES = [
+    "Kerala", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar",
+    "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh",
+    "Jharkhand", "Karnataka", "Madhya Pradesh", "Maharashtra", "Manipur",
+    "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan",
+    "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
+    "Uttarakhand", "West Bengal", "Delhi", "Jammu and Kashmir", "Ladakh",
+    "Chandigarh", "Puducherry", "Lakshadweep",
+    "Dadra and Nagar Haveli and Daman and Diu", "Andaman and Nicobar Islands"
+  ]
+
   const [couponCode, setCouponCode] = useState("")
   const [isCouponFieldOpen, setIsCouponFieldOpen] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState("upi")
@@ -119,6 +136,104 @@ export default function OrderPage() {
     setPaymentMethod('upi')
     setDetailedAddress(prev => ({ ...prev, country: 'India' }))
   }, [selectedCurrency])
+
+  // Load saved addresses on mount
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      const fetchAddresses = async () => {
+        setLoadingAddresses(true)
+        try {
+          const res = await fetch("/api/user/addresses", { credentials: "include" })
+          if (res.ok) {
+            const data = await res.json()
+            setSavedAddresses(data)
+            const defaultAddr = data.find((a: any) => a.is_default)
+            if (defaultAddr && !detailedAddress.street) {
+              selectSavedAddress(defaultAddr)
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching addresses:", error)
+        } finally {
+          setLoadingAddresses(false)
+        }
+      }
+      fetchAddresses()
+    }
+  }, [isAuthenticated, user?.id])
+
+  const selectSavedAddress = (addr: any) => {
+    setSelectedAddressId(addr.id)
+    const newAddress = {
+      street: addr.street,
+      landmark: addr.landmark || "",
+      area: addr.area,
+      city: addr.city,
+      state: addr.state,
+      pincode: addr.pincode,
+      country: addr.country || "India"
+    }
+    setDetailedAddress(newAddress)
+    const fullAddress = `${addr.street}, ${addr.area}, ${addr.city}, ${addr.state}, ${addr.country || 'India'} - ${addr.pincode}`
+    dispatch(setCustomerInfo({ info: { deliveryAddress: fullAddress.trim() }, userId: user?.id }))
+  }
+
+  const isAddressComplete = () => {
+    return !!(detailedAddress.street && detailedAddress.area && detailedAddress.city && detailedAddress.state && detailedAddress.pincode)
+  }
+
+  const handleSaveAddress = async () => {
+    if (!isAddressComplete()) {
+      toast.error("Please fill all address fields before saving", { position: "top-center" })
+      return
+    }
+    try {
+      const res = await fetch("/api/user/addresses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          label: addressLabel,
+          street: detailedAddress.street,
+          landmark: detailedAddress.landmark,
+          area: detailedAddress.area,
+          city: detailedAddress.city,
+          state: detailedAddress.state,
+          pincode: detailedAddress.pincode,
+          country: detailedAddress.country,
+          is_default: savedAddresses.length === 0
+        })
+      })
+      if (res.ok) {
+        const saved = await res.json()
+        setSavedAddresses(prev => [...prev, saved])
+        setSelectedAddressId(saved.id)
+        setSaveAddress(false)
+        toast.success("Address saved!", { position: "top-center" })
+      }
+    } catch (error) {
+      console.error("Error saving address:", error)
+      toast.error("Failed to save address", { position: "top-center" })
+    }
+  }
+
+  const handleDeleteAddress = async (id: number) => {
+    try {
+      const res = await fetch(`/api/user/addresses?id=${id}`, {
+        method: "DELETE",
+        credentials: "include"
+      })
+      if (res.ok) {
+        setSavedAddresses(prev => prev.filter(a => a.id !== id))
+        if (selectedAddressId === id) {
+          setSelectedAddressId(null)
+        }
+        toast.success("Address removed", { position: "top-center" })
+      }
+    } catch (error) {
+      toast.error("Failed to delete address", { position: "top-center" })
+    }
+  }
 
   // Load user's available coupons on component mount
   useEffect(() => {
@@ -892,6 +1007,7 @@ export default function OrderPage() {
       paymentStatus: razorpayDetails ? 'completed' : (paymentMethod === 'cod' ? 'pending' : 'failed'),
       tableNumber: customerInfo.tableNumber,
       deliveryAddress: customerInfo.deliveryAddress,
+      deliveryState: detailedAddress.state,
       totalAmount: finalTotal,
       originalAmount: cartTotal + deliveryFee,
       discountAmount: discountAmount,
@@ -969,6 +1085,30 @@ export default function OrderPage() {
         localStorage.removeItem("appliedCoupon")
 
         console.log(`Cleared ${removedCouponType} coupon: ${removedCouponCode} after successful order`)
+      }
+
+      // Auto-save address if checkbox was checked and it's a new address
+      if (saveAddress && !selectedAddressId && isAddressComplete()) {
+        try {
+          await fetch("/api/user/addresses", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              label: addressLabel,
+              street: detailedAddress.street,
+              landmark: detailedAddress.landmark,
+              area: detailedAddress.area,
+              city: detailedAddress.city,
+              state: detailedAddress.state,
+              pincode: detailedAddress.pincode,
+              country: detailedAddress.country,
+              is_default: savedAddresses.length === 0
+            })
+          })
+        } catch (e) {
+          console.error("Failed to auto-save address:", e)
+        }
       }
 
       await clearCartAfterOrder()
@@ -1252,7 +1392,7 @@ export default function OrderPage() {
 
     if (paymentMethod === 'upi') {
       message += `*PAYMENT DETAILS*\n`
-      message += `UPI ID: althukp1@okaxis\n`
+      message += `UPI ID: murshidkallen-2@okaxis\n`
       message += `GPay: ${SITE_PHONE_PAYMENT_DISPLAY}\n`
       message += `\n`
       message += `Please send payment screenshot after completing payment\n\n`
@@ -1289,6 +1429,8 @@ export default function OrderPage() {
     }
   }
 
+  const isKerala = detailedAddress.state.toLowerCase() === 'kerala'
+
   const calculateDeliveryFee = () => {
     if (orderType !== "delivery") return 0
 
@@ -1302,7 +1444,8 @@ export default function OrderPage() {
         return 20
       }
     } else {
-      return cartTotal >= 3000 ? 0 : 70
+      if (cartTotal >= 10000) return 0
+      return isKerala ? 70 : 140
     }
   }
 
@@ -1332,10 +1475,10 @@ export default function OrderPage() {
         }
       }
     } else {
-      const amountNeeded = 3000 - cartTotal
+      const amountNeeded = 10000 - cartTotal
       return {
         type: 'info',
-        message: `Shop for ₹${amountNeeded.toFixed(2)} more to get FREE delivery!`,
+        message: `Shop for ₹${amountNeeded.toFixed(0)} more to get FREE delivery! ${!isKerala ? '(Outside Kerala: ₹140)' : '(Kerala: ₹70)'}`,
         icon: '🚚'
       }
     }
@@ -1792,102 +1935,244 @@ export default function OrderPage() {
                 </div>
                 {orderType === "delivery" && (
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-lg">Delivery Address *</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-lg flex items-center gap-2">
+                        <MapPin className="w-5 h-5" />
+                        Delivery Address *
+                      </h3>
+                    </div>
+
+                    {/* Saved Addresses */}
+                    {isAuthenticated && savedAddresses.length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium text-gray-700">Saved Addresses</Label>
+                        <div className="grid grid-cols-1 gap-2">
+                          {savedAddresses.map((addr) => (
+                            <div
+                              key={addr.id}
+                              onClick={() => selectSavedAddress(addr)}
+                              className={`relative p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                                selectedAddressId === addr.id
+                                  ? "border-zinc-900 bg-zinc-50"
+                                  : "border-gray-200 hover:border-gray-300 bg-white"
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="text-xs font-semibold bg-zinc-100 text-zinc-700 px-2 py-0.5 rounded">
+                                      {addr.label}
+                                    </span>
+                                    {addr.is_default && (
+                                      <span className="text-xs text-green-700 bg-green-50 px-2 py-0.5 rounded">Default</span>
+                                    )}
+                                    {addr.state?.toLowerCase() === 'kerala' && (
+                                      <span className="text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded">Kerala - ₹70</span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-gray-800 truncate">
+                                    {addr.street}, {addr.area}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {addr.city}, {addr.state} - {addr.pincode}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteAddress(addr.id) }}
+                                  className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => {
+                              setSelectedAddressId(null)
+                              setDetailedAddress({ street: "", landmark: "", area: "", city: "", pincode: "", state: "", country: "India" })
+                              dispatch(setCustomerInfo({ info: { deliveryAddress: "" }, userId: user?.id }))
+                            }}
+                            className="text-sm text-zinc-600 hover:text-zinc-900 font-medium py-2 flex items-center gap-1"
+                          >
+                            <Plus className="w-4 h-4" /> Use a new address
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Address Form */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="street" className="text-sm">Street Address *</Label>
+                        <Label htmlFor="street" className="text-sm font-medium text-gray-700">
+                          Street Address <span className="text-red-500">*</span>
+                        </Label>
                         <Input
                           id="street"
                           value={detailedAddress.street}
                           onChange={(e) => {
+                            setSelectedAddressId(null)
                             setDetailedAddress(prev => ({ ...prev, street: e.target.value }))
                             const fullAddress = `${e.target.value}, ${detailedAddress.area}, ${detailedAddress.city}, ${detailedAddress.state}, ${detailedAddress.country} - ${detailedAddress.pincode}`
                             dispatch(setCustomerInfo({ info: { deliveryAddress: fullAddress.trim() }, userId: user?.id }))
                           }}
                           required
-                          className="text-sm rounded-lg"
-                          placeholder="House/Flat No, Building, Street"
+                          className={`text-sm rounded-lg placeholder:text-gray-300 placeholder:italic ${detailedAddress.street ? 'border-green-300 bg-green-50/30' : 'border-gray-200'}`}
+                          placeholder="e.g. 12/A, Rose Apartments, MG Road"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="landmark" className="text-sm">Landmark (Optional)</Label>
+                        <Label htmlFor="landmark" className="text-sm font-medium text-gray-400">
+                          Landmark <span className="text-xs font-normal">(optional)</span>
+                        </Label>
                         <Input
                           id="landmark"
                           value={detailedAddress.landmark}
                           onChange={(e) => setDetailedAddress(prev => ({ ...prev, landmark: e.target.value }))}
-                          className="text-sm rounded-lg"
-                          placeholder="Near landmark/reference point"
+                          className={`text-sm rounded-lg placeholder:text-gray-300 placeholder:italic ${detailedAddress.landmark ? 'border-green-300 bg-green-50/30' : 'border-gray-200'}`}
+                          placeholder="e.g. Near City Mall"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="area" className="text-sm">Area/Locality *</Label>
+                        <Label htmlFor="area" className="text-sm font-medium text-gray-700">
+                          Area / Locality <span className="text-red-500">*</span>
+                        </Label>
                         <Input
                           id="area"
                           value={detailedAddress.area}
                           onChange={(e) => {
+                            setSelectedAddressId(null)
                             setDetailedAddress(prev => ({ ...prev, area: e.target.value }))
                             const fullAddress = `${detailedAddress.street}, ${e.target.value}, ${detailedAddress.city}, ${detailedAddress.state}, ${detailedAddress.country} - ${detailedAddress.pincode}`
                             dispatch(setCustomerInfo({ info: { deliveryAddress: fullAddress.trim() }, userId: user?.id }))
                           }}
                           required
-                          className="text-sm rounded-lg"
-                          placeholder="Area, Locality, Neighborhood"
+                          className={`text-sm rounded-lg placeholder:text-gray-300 placeholder:italic ${detailedAddress.area ? 'border-green-300 bg-green-50/30' : 'border-gray-200'}`}
+                          placeholder="e.g. Edappally, Andheri West"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="city" className="text-sm">City *</Label>
+                        <Label htmlFor="city" className="text-sm font-medium text-gray-700">
+                          City <span className="text-red-500">*</span>
+                        </Label>
                         <Input
                           id="city"
                           value={detailedAddress.city}
                           onChange={(e) => {
+                            setSelectedAddressId(null)
                             setDetailedAddress(prev => ({ ...prev, city: e.target.value }))
                             const fullAddress = `${detailedAddress.street}, ${detailedAddress.area}, ${e.target.value}, ${detailedAddress.state}, ${detailedAddress.country} - ${detailedAddress.pincode}`
                             dispatch(setCustomerInfo({ info: { deliveryAddress: fullAddress.trim() }, userId: user?.id }))
                           }}
                           required
-                          className="text-sm rounded-lg"
-                          placeholder="Mumbai, Delhi, Bengaluru, etc."
+                          className={`text-sm rounded-lg placeholder:text-gray-300 placeholder:italic ${detailedAddress.city ? 'border-green-300 bg-green-50/30' : 'border-gray-200'}`}
+                          placeholder="e.g. Kochi"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="state" className="text-sm">State *</Label>
-                        <Input
-                          id="state"
-                          value={detailedAddress.state}
-                          onChange={(e) => {
-                            setDetailedAddress(prev => ({ ...prev, state: e.target.value }))
-                            const fullAddress = `${detailedAddress.street}, ${detailedAddress.area}, ${detailedAddress.city}, ${e.target.value}, ${detailedAddress.country} - ${detailedAddress.pincode}`
-                            dispatch(setCustomerInfo({ info: { deliveryAddress: fullAddress.trim() }, userId: user?.id }))
-                          }}
-                          required
-                          className="text-sm rounded-lg"
-                          placeholder="Maharashtra, Karnataka, Delhi, etc."
-                        />
+                        <Label htmlFor="state" className="text-sm font-medium text-gray-700">
+                          State <span className="text-red-500">*</span>
+                        </Label>
+                        <div className="relative">
+                          <select
+                            id="state"
+                            value={detailedAddress.state}
+                            onChange={(e) => {
+                              setSelectedAddressId(null)
+                              setDetailedAddress(prev => ({ ...prev, state: e.target.value }))
+                              const fullAddress = `${detailedAddress.street}, ${detailedAddress.area}, ${detailedAddress.city}, ${e.target.value}, ${detailedAddress.country} - ${detailedAddress.pincode}`
+                              dispatch(setCustomerInfo({ info: { deliveryAddress: fullAddress.trim() }, userId: user?.id }))
+                            }}
+                            required
+                            className={`w-full h-10 px-3 text-sm rounded-lg border appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                              detailedAddress.state
+                                ? 'border-green-300 bg-green-50/30 text-gray-900'
+                                : 'border-gray-200 bg-background text-gray-400 italic'
+                            }`}
+                          >
+                            <option value="" className="text-gray-400 italic">Select your state</option>
+                            {INDIAN_STATES.map((s) => (
+                              <option key={s} value={s} className="text-gray-900 not-italic">{s}</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                        </div>
+                        {detailedAddress.state && (
+                          <p className={`text-xs mt-1 ${detailedAddress.state.toLowerCase() === 'kerala' ? 'text-green-600' : 'text-amber-600'}`}>
+                            {detailedAddress.state.toLowerCase() === 'kerala'
+                              ? 'Delivery: ₹70 (Kerala) — Free above ₹10,000'
+                              : 'Delivery: ₹140 (Outside Kerala) — Free above ₹10,000'}
+                          </p>
+                        )}
                       </div>
                       <div>
-                        <Label htmlFor="pincode" className="text-sm">PIN Code *</Label>
+                        <Label htmlFor="pincode" className="text-sm font-medium text-gray-700">
+                          PIN Code <span className="text-red-500">*</span>
+                        </Label>
                         <Input
                           id="pincode"
                           value={detailedAddress.pincode}
                           onChange={(e) => {
+                            setSelectedAddressId(null)
                             setDetailedAddress(prev => ({ ...prev, pincode: e.target.value }))
                             const fullAddress = `${detailedAddress.street}, ${detailedAddress.area}, ${detailedAddress.city}, ${detailedAddress.state}, ${detailedAddress.country} - ${e.target.value}`
                             dispatch(setCustomerInfo({ info: { deliveryAddress: fullAddress.trim() }, userId: user?.id }))
                           }}
                           required
-                          className="text-sm rounded-lg"
-                          placeholder="400001"
+                          className={`text-sm rounded-lg placeholder:text-gray-300 placeholder:italic ${detailedAddress.pincode ? 'border-green-300 bg-green-50/30' : 'border-gray-200'}`}
+                          placeholder="e.g. 682024"
                           pattern="[0-9]{6}"
                           maxLength={6}
                         />
                       </div>
                     </div>
-                    <div>
-                      <Label className="text-sm text-gray-600">Complete Address Preview:</Label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700 mt-1">
-                        {customerInfo.deliveryAddress || "Address will appear here as you type..."}
+
+                    {/* Address Preview */}
+                    {isAddressComplete() && (
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <Label className="text-sm font-medium text-green-800">Delivery Address</Label>
+                        </div>
+                        <p className="text-sm text-green-700">{customerInfo.deliveryAddress}</p>
                       </div>
-                    </div>
+                    )}
+
+                    {/* Save Address Option */}
+                    {isAuthenticated && !selectedAddressId && detailedAddress.street && detailedAddress.state && (
+                      <div className="flex items-center justify-between p-3 bg-zinc-50 rounded-lg border border-zinc-200">
+                        <label className="flex items-center gap-2 cursor-pointer text-sm">
+                          <input
+                            type="checkbox"
+                            checked={saveAddress}
+                            onChange={(e) => setSaveAddress(e.target.checked)}
+                            className="rounded border-gray-300 text-zinc-900 focus:ring-zinc-500"
+                          />
+                          <BookmarkPlus className="w-4 h-4 text-zinc-600" />
+                          Save this address for next time
+                        </label>
+                        {saveAddress && (
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={addressLabel}
+                              onChange={(e) => setAddressLabel(e.target.value)}
+                              className="text-xs px-2 py-1 rounded border border-zinc-300 bg-white"
+                            >
+                              <option value="Home">Home</option>
+                              <option value="Work">Work</option>
+                              <option value="Other">Other</option>
+                            </select>
+                            <Button
+                              type="button"
+                              onClick={handleSaveAddress}
+                              size="sm"
+                              className="bg-zinc-900 hover:bg-zinc-800 text-white text-xs px-3 py-1 h-7"
+                            >
+                              Save
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>

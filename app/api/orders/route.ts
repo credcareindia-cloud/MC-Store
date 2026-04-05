@@ -418,6 +418,9 @@ async function ensureOrdersTableExists() {
           payment_method VARCHAR(20) DEFAULT 'cod',
           payment_id VARCHAR(255),
           payment_status VARCHAR(20) DEFAULT 'pending',
+          razorpay_order_id VARCHAR(255),
+          razorpay_payment_id VARCHAR(255),
+          razorpay_signature VARCHAR(255),
           table_number INTEGER,
           delivery_address TEXT,
           subtotal DECIMAL(10,2) DEFAULT 0,
@@ -451,7 +454,10 @@ async function ensureOrdersTableExists() {
         { name: 'coupon_code', definition: 'VARCHAR(50)', check: 'coupon_code' },
         { name: 'currency', definition: 'VARCHAR(3) DEFAULT \'AED\'', check: 'currency' },
         { name: 'tracking_url', definition: 'TEXT', check: 'tracking_url' },
-        { name: 'tracking_id', definition: 'VARCHAR(100)', check: 'tracking_id' }
+        { name: 'tracking_id', definition: 'VARCHAR(100)', check: 'tracking_id' },
+        { name: 'razorpay_order_id', definition: 'VARCHAR(255)', check: 'razorpay_order_id' },
+        { name: 'razorpay_payment_id', definition: 'VARCHAR(255)', check: 'razorpay_payment_id' },
+        { name: 'razorpay_signature', definition: 'VARCHAR(255)', check: 'razorpay_signature' }
       ]
 
       for (const column of columnsToAdd) {
@@ -654,11 +660,10 @@ export async function POST(request: Request) {
       subtotal += unitPrice * item.quantity
     }
 
-    // Calculate delivery fee based on currency, order type, and subtotal
+    // Calculate delivery fee based on currency, order type, subtotal, and state
     let deliveryFee = 0
     if (orderData.orderType === "delivery") {
       if (orderData.currency === "AED") {
-        // AED: free delivery above 200, 10 AED for 50-199, 20 AED for under 50
         if (subtotal >= 200) {
           deliveryFee = 0
         } else if (subtotal >= 50) {
@@ -667,8 +672,12 @@ export async function POST(request: Request) {
           deliveryFee = 20
         }
       } else {
-        // INR: free delivery above 3000, otherwise 70 INR
-        deliveryFee = subtotal >= 3000 ? 0 : 70
+        if (subtotal >= 10000) {
+          deliveryFee = 0
+        } else {
+          const isKerala = (orderData.deliveryState || '').toLowerCase() === 'kerala'
+          deliveryFee = isKerala ? 70 : 140
+        }
       }
     }
 
@@ -712,6 +721,7 @@ export async function POST(request: Request) {
         order_number,
         user_id, clerk_user_id, customer_name, customer_email, customer_phone, 
         order_type, payment_method, payment_id, payment_status,
+        razorpay_order_id, razorpay_payment_id, razorpay_signature,
         table_number, delivery_address, 
         subtotal, delivery_fee, tax_amount, discount_amount, 
         total_amount, final_total,
@@ -727,6 +737,9 @@ export async function POST(request: Request) {
         ${orderData.paymentMethod || "cod"},
         ${orderData.paymentId || null},
         ${paymentStatus},
+        ${orderData.razorpayOrderId || null},
+        ${orderData.razorpayPaymentId || null},
+        ${orderData.razorpaySignature || null},
         ${orderData.tableNumber || null}, 
         ${orderData.deliveryAddress || null},
         ${subtotal}, 

@@ -21,7 +21,7 @@ async function sendStatusUpdateEmail(order: any, newStatus: string, trackingUrl?
       return
     }
 
-    const currency = order.currency || 'AED'
+    const currency = order.currency || 'INR'
     const currencySymbol = currency === 'AED' ? 'AED' : '₹'
 
     // Only send emails for specific status changes
@@ -263,6 +263,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         COALESCE(payment_method, 'cod') as payment_method,
         payment_status,
         payment_id,
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        bank_reference_num,
+        bank_transaction_id,
+        payment_method_type,
+        payment_card_id,
+        payment_bank,
+        payment_vpa,
         delivery_address,
         special_instructions,
         COALESCE(subtotal, 0) as total_amount,
@@ -314,6 +323,15 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       payment_method: order.payment_method,
       payment_status: order.payment_status,
       payment_id: order.payment_id,
+      razorpay_order_id: order.razorpay_order_id,
+      razorpay_payment_id: order.razorpay_payment_id,
+      razorpay_signature: order.razorpay_signature,
+      bank_reference_num: order.bank_reference_num,
+      bank_transaction_id: order.bank_transaction_id,
+      payment_method_type: order.payment_method_type,
+      payment_card_id: order.payment_card_id,
+      payment_bank: order.payment_bank,
+      payment_vpa: order.payment_vpa,
       delivery_address: order.delivery_address,
       special_instructions: order.special_instructions,
       total_amount: parseFloat(order.total_amount || '0'),

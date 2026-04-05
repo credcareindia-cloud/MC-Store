@@ -20,8 +20,8 @@ export async function GET() {
         SELECT
           customer_email,
           COUNT(*) as total_orders,
-          SUM(CASE WHEN COALESCE(currency, 'AED') = 'AED' THEN final_total ELSE 0 END) as total_spent_aed,
-          SUM(CASE WHEN COALESCE(currency, 'AED') = 'INR' THEN final_total ELSE 0 END) as total_spent_inr
+          SUM(CASE WHEN COALESCE(currency, 'INR') = 'AED' THEN final_total ELSE 0 END) as total_spent_aed,
+          SUM(CASE WHEN COALESCE(currency, 'INR') = 'INR' THEN final_total ELSE 0 END) as total_spent_inr
         FROM orders
         WHERE (status = 'completed' OR status = 'delivered') 
           AND customer_email IS NOT NULL
@@ -40,8 +40,8 @@ export async function GET() {
         MIN(created_at) as created_at,
         'guest' as customer_type,
         COUNT(*) as total_orders,
-        SUM(CASE WHEN COALESCE(currency, 'AED') = 'AED' THEN final_total ELSE 0 END) as total_spent_aed,
-        SUM(CASE WHEN COALESCE(currency, 'AED') = 'INR' THEN final_total ELSE 0 END) as total_spent_inr
+        SUM(CASE WHEN COALESCE(currency, 'INR') = 'AED' THEN final_total ELSE 0 END) as total_spent_aed,
+        SUM(CASE WHEN COALESCE(currency, 'INR') = 'INR' THEN final_total ELSE 0 END) as total_spent_inr
       FROM orders
       WHERE (status = 'completed' OR status = 'delivered')
         AND (customer_email IS NULL OR customer_email NOT IN (
@@ -51,10 +51,27 @@ export async function GET() {
       ORDER BY MIN(created_at) DESC
     `
 
+    // Fetch clerk_user_id mapping from orders for registered users
+    let clerkIdMap: Record<string, string> = {}
+    try {
+      const clerkMappings = await sql`
+        SELECT DISTINCT customer_email, clerk_user_id 
+        FROM orders 
+        WHERE clerk_user_id IS NOT NULL AND customer_email IS NOT NULL
+      `
+      for (const row of clerkMappings) {
+        if (row.customer_email && row.clerk_user_id) {
+          clerkIdMap[row.customer_email] = row.clerk_user_id
+        }
+      }
+    } catch (e) { /* clerk_user_id column may not exist yet */ }
+
     // Combine and sort all customers
     const allCustomers = [
       ...registeredUsers.map(user => ({
         id: user.id || null,
+        user_id: user.id?.toString() || null,
+        clerk_user_id: clerkIdMap[user.email] || null,
         name: user.name,
         email: user.email || 'No email',
         phone: user.phone || 'No phone',

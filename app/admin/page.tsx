@@ -8,7 +8,6 @@ import { ShoppingBag, TrendingUp, Clock, CheckCircle, AlertCircle, Calendar, Use
 import { useAdminAuth } from "@/lib/contexts/admin-auth-context"
 
 interface DashboardStats {
-  totalRevenueAED: number
   totalRevenueINR: number
   totalOrders: number
   pendingOrders: number
@@ -162,26 +161,15 @@ export default function AdminDashboard() {
       <h1 className="text-3xl font-bold text-white">Dashboard</h1>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-        <Card className="bg-gradient-to-br from-cyan-500/10 to-cyan-600/10 border-cyan-500/20 hover:border-cyan-500/40 transition-all duration-300">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="bg-gradient-to-br from-green-500/10 to-green-600/10 border-green-500/20 hover:border-green-500/40 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">AED Revenue</CardTitle>
-            <div className="text-cyan-400 font-bold text-sm">AED</div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-white">AED {stats.totalRevenueAED?.toLocaleString() || "0"}</div>
-            <p className="text-xs text-cyan-400 mt-1">UAE Dirham</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 border-orange-500/20 hover:border-orange-500/40 transition-all duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">INR Revenue</CardTitle>
-            <div className="text-orange-400 font-bold text-sm">₹</div>
+            <CardTitle className="text-sm font-medium text-gray-300">Total Revenue</CardTitle>
+            <div className="text-green-400 font-bold text-sm">₹</div>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-white">₹ {stats.totalRevenueINR?.toLocaleString() || "0"}</div>
-            <p className="text-xs text-orange-400 mt-1">Indian Rupee</p>
+            <p className="text-xs text-green-400 mt-1">Indian Rupee</p>
           </CardContent>
         </Card>
 

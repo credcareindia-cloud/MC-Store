@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: ProductMetadataProps): Promis
     
     const productImage = product.image_urls?.[0] || '/logo.png'
     const productName = product.name || 'Product'
-    const productDescription = product.description || 'Motorcycle parts and accessories from Motoclub'
+    const productDescription = product.description || 'Automobile parts and accessories from Motoclub'
 
     const title = `${productName} | Motoclub`
     const description = `${productDescription} | Buy at Motoclub — spare parts & accessories with delivery across India.`
@@ -67,7 +67,7 @@ export async function generateMetadata({ params }: ProductMetadataProps): Promis
     console.error('Error generating metadata:', error)
     return {
       title: 'Motoclub',
-      description: 'Motorcycle spare parts and accessories, delivered across India.',
+      description: 'Automobile spare parts and accessories, delivered across India.',
     }
   }
 }

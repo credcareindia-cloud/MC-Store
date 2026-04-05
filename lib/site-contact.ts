@@ -13,8 +13,8 @@ export const SITE_PHONE_E164 = "+919995442239"
 /** Digits only for wa.me (no +) */
 export const SITE_WHATSAPP_E164_DIGITS = "919995442239"
 
-/** UPI / GPay style display */
-export const SITE_PHONE_PAYMENT_DISPLAY = "99954 42239"
+/** UPI / GPay payment number */
+export const SITE_PHONE_PAYMENT_DISPLAY = "85473 15581"
 
 export const SITE_ADDRESS_LINES = [
   "Moto club Kottakkal",

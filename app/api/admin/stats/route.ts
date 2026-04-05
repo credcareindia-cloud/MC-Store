@@ -21,7 +21,7 @@ async function ensureSchema() {
       tax_amount        DECIMAL(10,2) DEFAULT 0,
       delivery_fee      DECIMAL(10,2) DEFAULT 0,
       final_total       DECIMAL(10,2) NOT NULL,
-      currency          VARCHAR(10)  DEFAULT 'AED',
+      currency          VARCHAR(10)  DEFAULT 'INR',
       status            VARCHAR(50)  DEFAULT 'pending',
       special_instructions TEXT,
       estimated_completion_time TIMESTAMP,
@@ -32,7 +32,7 @@ async function ensureSchema() {
 
   // Add currency column if it doesn't exist (for existing tables)
   await sql`
-    ALTER TABLE orders ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'AED';
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'INR';
   `
 
   // Add order_number column if it doesn't exist
@@ -92,13 +92,13 @@ export async function GET() {
     const [{ total_revenue_aed }] = await sql`
       SELECT COALESCE(SUM(final_total), 0) AS total_revenue_aed
       FROM orders
-      WHERE (status = 'completed' OR status = 'delivered') AND COALESCE(currency, 'AED') = 'AED'
+      WHERE (status = 'completed' OR status = 'delivered') AND COALESCE(currency, 'INR') = 'AED'
     `
 
     const [{ total_revenue_inr }] = await sql`
       SELECT COALESCE(SUM(final_total), 0) AS total_revenue_inr
       FROM orders
-      WHERE (status = 'completed' OR status = 'delivered') AND COALESCE(currency, 'AED') = 'INR'
+      WHERE (status = 'completed' OR status = 'delivered') AND COALESCE(currency, 'INR') = 'INR'
     `
 
     // Debug query to see what data we have
@@ -150,7 +150,7 @@ export async function GET() {
              order_number,
              customer_name,
              total_amount,
-             COALESCE(currency, 'AED') as currency,
+             COALESCE(currency, 'INR') as currency,
              status,
              created_at,
              order_type

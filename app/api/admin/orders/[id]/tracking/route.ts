@@ -21,7 +21,7 @@ async function sendStatusUpdateEmail(order: any, newStatus: string, trackingUrl?
       return
     }
 
-    const currency = order.currency || 'AED'
+    const currency = order.currency || 'INR'
     const currencySymbol = currency === 'AED' ? 'AED' : '₹'
 
     // Only send emails for specific status changes
@@ -134,7 +134,7 @@ async function sendStatusUpdateEmail(order: any, newStatus: string, trackingUrl?
 // Function to send tracking notification email
 async function sendTrackingNotificationEmail(orderData: any, trackingUrl: string, trackingId: string, orderNumber?: string) {
   try {
-    const currencySymbol = orderData.currency === 'AED' ? 'AED' : '₹'
+    const currencySymbol = orderData.currency === 'INR' ? '₹' : orderData.currency
     
     const emailHtml = `
       <!DOCTYPE html>

@@ -357,8 +357,8 @@ const openEditDialog = (item: Product) => {
     const csvHeaders = [
       'ID', 'Name', 'Description', 'Category', 'Shop', 'Brand', 'Model', 
       'SKU', 'Store Name', 'Is Available', 'Is Featured', 'Is New',
-      'Variant Name', 'AED Price', 'AED Discount', 'INR Price', 'INR Discount',
-      'Stock Quantity', 'Available AED', 'Available INR', 'Created Date'
+      'Variant Name', 'INR Price', 'INR Discount',
+      'Stock Quantity', 'Created Date'
     ]
     
     const csvRows = []
@@ -381,13 +381,9 @@ const openEditDialog = (item: Product) => {
             product.is_featured ? 'Yes' : 'No',
             product.is_new ? 'Yes' : 'No',
             `"${variant.name}"`,
-            variant.price_aed || 0,
-            variant.discount_aed || 0,
             variant.price_inr || 0,
             variant.discount_inr || 0,
             variant.stock_quantity || 0,
-            variant.available_aed ? 'Yes' : 'No',
-            variant.available_inr ? 'Yes' : 'No',
             product.created_at ? new Date(product.created_at).toLocaleDateString() : ''
           ]
           csvRows.push(row.join(','))
@@ -407,7 +403,7 @@ const openEditDialog = (item: Product) => {
           product.is_featured ? 'Yes' : 'No',
           product.is_new ? 'Yes' : 'No',
           'No variants',
-          '', '', '', '', '', '', '',
+          '', '', '',
           product.created_at ? new Date(product.created_at).toLocaleDateString() : ''
         ]
         csvRows.push(row.join(','))
@@ -442,8 +438,8 @@ const openEditDialog = (item: Product) => {
     const csvHeaders = [
       'ID', 'Name', 'Description', 'Category', 'Shop', 'Brand', 'Model', 
       'SKU', 'Store Name', 'Is Available', 'Is Featured', 'Is New',
-      'Variant Name', 'AED Price', 'AED Discount', 'INR Price', 'INR Discount',
-      'Stock Quantity', 'Available AED', 'Available INR', 'Created Date'
+      'Variant Name', 'INR Price', 'INR Discount',
+      'Stock Quantity', 'Created Date'
     ]
     
     const csvRows = []
@@ -466,13 +462,9 @@ const openEditDialog = (item: Product) => {
             product.is_featured ? 'Yes' : 'No',
             product.is_new ? 'Yes' : 'No',
             `"${variant.name}"`,
-            variant.price_aed || 0,
-            variant.discount_aed || 0,
             variant.price_inr || 0,
             variant.discount_inr || 0,
             variant.stock_quantity || 0,
-            variant.available_aed ? 'Yes' : 'No',
-            variant.available_inr ? 'Yes' : 'No',
             product.created_at ? new Date(product.created_at).toLocaleDateString() : ''
           ]
           csvRows.push(row.join(','))
@@ -532,39 +524,11 @@ const formatPrice = (product: Product) => {
     : null;
 
   if (defaultVariant) {
-    const { price_aed, price_inr } = defaultVariant;
-    // Use product.default_currency if available, fallback to "AED"
-    const defaultCurrency = (product as any).default_currency || "AED";
-
-    if (price_aed && price_inr) {
-      return (
-        <div className="flex flex-col">
-          <span className={`font-semibold ${defaultCurrency === 'AED' ? 'text-cyan-400' : ''}`}>
-            AED {price_aed}
-            {defaultCurrency === 'AED' && (
-              <Badge variant="outline" className="ml-1 text-xs">
-                Default
-              </Badge>
-            )}
-          </span>
-          <span className={`text-sm text-gray-400 ${defaultCurrency === 'INR' ? 'text-cyan-400' : ''}`}>
-            ₹ {price_inr}
-            {defaultCurrency === 'INR' && (
-              <Badge variant="outline" className="ml-1 text-xs">
-                Default
-              </Badge>
-            )}
-          </span>
-        </div>
-      );
-    } else if (price_aed) {
-      return <span className="font-semibold">AED {price_aed}</span>;
-    } else if (price_inr) {
+    const { price_inr } = defaultVariant;
+    if (price_inr) {
       return <span className="font-semibold">₹ {price_inr}</span>;
     }
   }
-  
-  // Fallback for legacy products or those without variants
   return <span className="font-semibold text-gray-400">No price set</span>;
 };
 
@@ -1051,55 +1015,10 @@ const formatPrice = (product: Product) => {
         />
       </div>
 
-      {/* Price Section */}
+      {/* Pricing */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {/* AED Price */}
         <div>
-          <Label>AED Price</Label>
-          <Input
-            type="number"
-            value={variant.price_aed}
-            onChange={(e) => {
-              const variants = [...formData.variants]
-              variants[idx].price_aed = Number(e.target.value)
-              setFormData({ ...formData, variants })
-            }}
-          />
-        </div>
-
-        {/* AED Discount */}
-        <div>
-          <Label>AED Discount</Label>
-          <Input
-            type="number"
-            value={variant.discount_aed}
-            onChange={(e) => {
-              const variants = [...formData.variants]
-              variants[idx].discount_aed = Number(e.target.value)
-              setFormData({ ...formData, variants })
-            }}
-          />
-        </div>
-
-        {/* AED Available */}
-        <div className="flex items-center gap-3">
-          <Label>Available in AED</Label>
-          <Switch
-            checked={variant.available_aed}
-            onCheckedChange={(checked) => {
-              const variants = [...formData.variants]
-              variants[idx].available_aed = checked
-              setFormData({ ...formData, variants })
-            }}
-          />
-        </div>
-      </div>
-
-      {/* INR Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {/* INR Price */}
-        <div>
-          <Label>INR Price</Label>
+          <Label>Price (₹)</Label>
           <Input
             type="number"
             value={variant.price_inr}
@@ -1111,9 +1030,8 @@ const formatPrice = (product: Product) => {
           />
         </div>
 
-        {/* INR Discount */}
         <div>
-          <Label>INR Discount</Label>
+          <Label>Discount Price (₹)</Label>
           <Input
             type="number"
             value={variant.discount_inr}
@@ -1125,18 +1043,6 @@ const formatPrice = (product: Product) => {
           />
         </div>
 
-        {/* INR Available */}
-        <div className="flex items-center gap-3">
-          <Label>Available in INR</Label>
-          <Switch
-            checked={variant.available_inr}
-            onCheckedChange={(checked) => {
-              const variants = [...formData.variants]
-              variants[idx].available_inr = checked
-              setFormData({ ...formData, variants })
-            }}
-          />
-        </div>
       </div>
 
       {/* Stock Section */}
@@ -1426,30 +1332,10 @@ const formatPrice = (product: Product) => {
         <span className="font-semibold text-white">{variant.name}</span>
       </div>
 
-      {/* AED Pricing */}
-      {variant.available_aed && variant.price_aed > 0 && (
-        <div className="flex justify-between">
-          <Badge className="bg-cyan-500/20 text-cyan-300 px-1 py-0">
-              AED
-            </Badge>
-          <span className="text-cyan-400 line-through font-medium">
-            {variant.price_aed}
-          </span>
-          {variant.discount_aed && variant.discount_aed > 0 && (
-            <span className="text-green-400 ml-2">
-              {variant.discount_aed}
-            </span>
-          )}
-        </div>
-      )}
-
       {/* INR Pricing */}
-      {variant.available_inr && variant.price_inr > 0 && (
+      {variant.price_inr > 0 && (
         <div className="flex justify-between">
-          <Badge className="bg-orange-500/20 text-orange-300 px-1 py-0">
-              INR
-            </Badge>  
-          <span className="text-orange-400 line-through font-medium">
+          <span className="text-orange-400 font-medium">
             ₹{variant.price_inr}
           </span>
           {variant.discount_inr && variant.discount_inr > 0 && (

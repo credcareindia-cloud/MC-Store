@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Eye, Clock, CheckCircle, AlertCircle, Package, CreditCard, Smartphone, Link, Trash2, ExternalLink, Copy, Mail, MapPin, MessageCircle, Phone } from "lucide-react"
+import { Eye, Clock, CheckCircle, AlertCircle, Package, CreditCard, Smartphone, Link, Trash2, ExternalLink, Copy, Mail, MapPin, MessageCircle, Phone, RefreshCw } from "lucide-react"
 import Image from "next/image"
 import toast from "react-hot-toast"
 
@@ -50,6 +50,9 @@ export default function OrdersManagement() {
   const [trackingIds, setTrackingIds] = useState<{[key: number]: string}>({})
   const [orderStats, setOrderStats] = useState<OrderStats | null>(null)
   const [statsLoading, setStatsLoading] = useState(true)
+  const [refreshingOrder, setRefreshingOrder] = useState(false)
+  const [verifyingPayment, setVerifyingPayment] = useState(false)
+  const [verifyResult, setVerifyResult] = useState<any>(null)
 
 
   interface Order {
@@ -62,6 +65,15 @@ export default function OrdersManagement() {
     payment_method: string
     payment_status: string
     payment_id?: string
+    razorpay_order_id?: string
+    razorpay_payment_id?: string
+    razorpay_signature?: string
+    bank_reference_num?: string
+    bank_transaction_id?: string
+    payment_method_type?: string
+    payment_card_id?: string
+    payment_bank?: string
+    payment_vpa?: string
     delivery_address?: string
     customer_address?: string
     total_amount: number
@@ -160,6 +172,61 @@ export default function OrdersManagement() {
       setError(error instanceof Error ? error.message : "Unknown error occurred")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const refreshSelectedOrder = async () => {
+    if (!selectedOrder) return
+    setRefreshingOrder(true)
+    try {
+      const response = await fetch("/api/admin/orders")
+      if (response.ok) {
+        const data = await response.json()
+        if (Array.isArray(data)) {
+          setOrders(data)
+          const updated = data.find((o: Order) => o.id === selectedOrder.id)
+          if (updated) {
+            setSelectedOrder(updated)
+            toast.success("Order refreshed", { position: "top-center" })
+          }
+        }
+      }
+    } catch (err) {
+      toast.error("Failed to refresh", { position: "top-center" })
+    } finally {
+      setRefreshingOrder(false)
+    }
+  }
+
+  const verifyPaymentWithRazorpay = async () => {
+    if (!selectedOrder) return
+    setVerifyingPayment(true)
+    setVerifyResult(null)
+    try {
+      const res = await fetch("/api/admin/orders/verify-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: selectedOrder.id })
+      })
+      const data = await res.json()
+
+      if (res.ok && data.success) {
+        setVerifyResult(data)
+        if (data.status_changed) {
+          toast.success(`Payment status updated: ${data.previous_status} → ${data.new_status}`, { position: "top-center" })
+        } else {
+          toast.success(`Verified: Payment is ${data.new_status}`, { position: "top-center" })
+        }
+        // Refresh the order data to show updated fields
+        await refreshSelectedOrder()
+      } else {
+        setVerifyResult(data)
+        toast.error(data.error || "Verification failed", { position: "top-center" })
+      }
+    } catch (err) {
+      toast.error("Failed to verify payment", { position: "top-center" })
+    } finally {
+      setVerifyingPayment(false)
     }
   }
 
@@ -742,7 +809,7 @@ export default function OrdersManagement() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setSelectedOrder(order)}
+                              onClick={() => { setSelectedOrder(order); setVerifyResult(null); }}
                               className="text-blue-400 hover:text-blue-300"
                             >
                               <Eye className="w-4 h-4" />
@@ -757,9 +824,19 @@ export default function OrdersManagement() {
                                   {order.customer_name.charAt(0).toUpperCase()}
                                   </div>
                                   <span>Order {order.order_number} - {order.customer_name}</span>
-                                  <Badge className={`ml-auto ${getStatusColor(order.status)} text-white px-3 py-1 text-sm font-medium`}>
-                                    {order.status.toUpperCase()}
-                                  </Badge>
+                                  <div className="ml-auto flex items-center gap-2">
+                                    <button
+                                      onClick={refreshSelectedOrder}
+                                      disabled={refreshingOrder}
+                                      className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-600 hover:bg-gray-700 transition-colors disabled:opacity-50"
+                                      title="Refresh order details"
+                                    >
+                                      <RefreshCw className={`w-4 h-4 text-gray-300 ${refreshingOrder ? 'animate-spin' : ''}`} />
+                                    </button>
+                                    <Badge className={`${getStatusColor(order.status)} text-white px-3 py-1 text-sm font-medium`}>
+                                      {order.status.toUpperCase()}
+                                    </Badge>
+                                  </div>
                                 </DialogTitle>
                                 <p className="text-gray-400 mt-2 text-sm">
                                   Placed on {new Date(order.created_at).toLocaleDateString()} at {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -1080,41 +1157,160 @@ export default function OrdersManagement() {
                                     </div>
                                     <div className="flex items-center gap-3">
                                       <div className={`w-3 h-3 rounded-full ${
-                                        selectedOrder.payment_status === 'completed' ? 'bg-green-500' :
+                                        selectedOrder.payment_status === 'completed' || selectedOrder.payment_status === 'paid' ? 'bg-green-500' :
                                         selectedOrder.payment_status === 'failed' ? 'bg-red-500' : 'bg-yellow-500'
                                       }`}></div>
                                       <span className="text-gray-400">Status:</span>
                                       <Badge className={`capitalize ${
-                                        selectedOrder.payment_status === 'completed' ? 'bg-green-600 text-white' :
+                                        selectedOrder.payment_status === 'completed' || selectedOrder.payment_status === 'paid' ? 'bg-green-600 text-white' :
                                         selectedOrder.payment_status === 'failed' ? 'bg-red-600 text-white' : 'bg-yellow-600 text-white'
                                       }`}>{selectedOrder.payment_status || 'pending'}</Badge>
                                     </div>
                                   </div>
 
-                                  {/* Razorpay Details for Bank Reconciliation */}
-                                  {(selectedOrder.razorpay_order_id || selectedOrder.razorpay_payment_id) && (
+                                  {/* Transaction ID */}
+                                  {selectedOrder.payment_id && (
                                     <div className="mt-4 pt-4 border-t border-gray-600">
-                                      <h6 className="font-bold text-white mb-3">Bank Reconciliation</h6>
-                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                      <div className="text-sm">
+                                        <span className="text-gray-400">Transaction ID: </span>
+                                        <span className="font-mono text-blue-400 break-all">{selectedOrder.payment_id}</span>
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Razorpay Details */}
+                                  {(selectedOrder.razorpay_order_id || selectedOrder.razorpay_payment_id || selectedOrder.payment_vpa || selectedOrder.payment_bank) && (
+                                    <div className={`mt-4 pt-4 border-t border-gray-600 ${!selectedOrder.payment_id ? '' : ''}`}>
+                                      <h6 className="font-bold text-white mb-3 flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                        Razorpay Details
+                                      </h6>
+                                      <div className="grid grid-cols-1 gap-2.5 text-sm">
                                         {selectedOrder.razorpay_order_id && (
-                                          <div className="text-gray-300"><strong>Order ID:</strong> <span className="font-mono text-blue-400">{selectedOrder.razorpay_order_id}</span></div>
+                                          <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                                            <span className="text-gray-400 sm:w-32 shrink-0">Razorpay Order:</span>
+                                            <span className="font-mono text-blue-400 break-all">{selectedOrder.razorpay_order_id}</span>
+                                          </div>
                                         )}
                                         {selectedOrder.razorpay_payment_id && (
-                                          <div className="text-gray-300"><strong>Payment ID:</strong> <span className="font-mono text-blue-400">{selectedOrder.razorpay_payment_id}</span></div>
+                                          <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                                            <span className="text-gray-400 sm:w-32 shrink-0">Razorpay Payment:</span>
+                                            <span className="font-mono text-blue-400 break-all">{selectedOrder.razorpay_payment_id}</span>
+                                          </div>
                                         )}
                                         {selectedOrder.bank_reference_num && (
-                                          <div className="text-gray-300"><strong>Bank Ref:</strong> <span className="font-mono text-orange-400">{selectedOrder.bank_reference_num}</span></div>
+                                          <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                                            <span className="text-gray-400 sm:w-32 shrink-0">Bank Reference:</span>
+                                            <span className="font-mono text-orange-400">{selectedOrder.bank_reference_num}</span>
+                                          </div>
                                         )}
                                         {selectedOrder.payment_method_type && (
-                                          <div className="text-gray-300"><strong>Type:</strong> <span className="capitalize">{selectedOrder.payment_method_type}</span></div>
+                                          <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                                            <span className="text-gray-400 sm:w-32 shrink-0">Payment Type:</span>
+                                            <span className="capitalize text-gray-300">{selectedOrder.payment_method_type}</span>
+                                          </div>
                                         )}
                                         {selectedOrder.payment_bank && (
-                                          <div className="text-gray-300"><strong>Bank:</strong> {selectedOrder.payment_bank}</div>
+                                          <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                                            <span className="text-gray-400 sm:w-32 shrink-0">Bank:</span>
+                                            <span className="text-gray-300">{selectedOrder.payment_bank}</span>
+                                          </div>
                                         )}
                                         {selectedOrder.payment_vpa && (
-                                          <div className="text-gray-300"><strong>UPI:</strong> <span className="font-mono">{selectedOrder.payment_vpa}</span></div>
+                                          <div className="flex flex-col sm:flex-row sm:items-center gap-1">
+                                            <span className="text-gray-400 sm:w-32 shrink-0">UPI ID:</span>
+                                            <span className="font-mono text-purple-400">{selectedOrder.payment_vpa}</span>
+                                          </div>
                                         )}
                                       </div>
+                                    </div>
+                                  )}
+
+                                  {/* Verify with Razorpay */}
+                                  {selectedOrder.payment_method === 'upi' && (
+                                    <div className="mt-4 pt-4 border-t border-gray-600">
+                                      <div className="flex items-center justify-between gap-3">
+                                        <div>
+                                          <p className="text-sm text-gray-400">Cross-check payment status directly with Razorpay</p>
+                                        </div>
+                                        <Button
+                                          onClick={verifyPaymentWithRazorpay}
+                                          disabled={verifyingPayment}
+                                          size="sm"
+                                          className="bg-blue-600 hover:bg-blue-700 text-white whitespace-nowrap"
+                                        >
+                                          {verifyingPayment ? (
+                                            <>
+                                              <RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                                              Verifying...
+                                            </>
+                                          ) : (
+                                            <>
+                                              <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                                              Verify with Razorpay
+                                            </>
+                                          )}
+                                        </Button>
+                                      </div>
+
+                                      {/* Verification Result */}
+                                      {verifyResult && (
+                                        <div className={`mt-3 rounded-lg p-4 text-sm ${
+                                          verifyResult.success
+                                            ? verifyResult.status_changed
+                                              ? 'bg-yellow-500/10 border border-yellow-500/30'
+                                              : 'bg-green-500/10 border border-green-500/30'
+                                            : 'bg-red-500/10 border border-red-500/30'
+                                        }`}>
+                                          {verifyResult.success ? (
+                                            <div className="space-y-2">
+                                              <div className="flex items-center gap-2">
+                                                <CheckCircle className={`w-4 h-4 ${verifyResult.status_changed ? 'text-yellow-400' : 'text-green-400'}`} />
+                                                <span className={`font-semibold ${verifyResult.status_changed ? 'text-yellow-400' : 'text-green-400'}`}>
+                                                  {verifyResult.status_changed
+                                                    ? `Status corrected: ${verifyResult.previous_status} → ${verifyResult.new_status}`
+                                                    : `Verified: Payment is ${verifyResult.new_status}`
+                                                  }
+                                                </span>
+                                              </div>
+                                              <div className="text-gray-400 text-xs">
+                                                Razorpay status: <span className="text-gray-300">{verifyResult.razorpay_status}</span>
+                                                {' · '}Verified via: <span className="text-gray-300">{verifyResult.verified_via}</span>
+                                              </div>
+                                              {verifyResult.payment_details && (
+                                                <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-xs">
+                                                  {verifyResult.payment_details.method && (
+                                                    <div><span className="text-gray-500">Method:</span> <span className="text-gray-300 capitalize">{verifyResult.payment_details.method}</span></div>
+                                                  )}
+                                                  {verifyResult.payment_details.vpa && (
+                                                    <div><span className="text-gray-500">UPI:</span> <span className="text-gray-300 font-mono">{verifyResult.payment_details.vpa}</span></div>
+                                                  )}
+                                                  {verifyResult.payment_details.bank && (
+                                                    <div><span className="text-gray-500">Bank:</span> <span className="text-gray-300">{verifyResult.payment_details.bank}</span></div>
+                                                  )}
+                                                  {verifyResult.payment_details.fee !== null && (
+                                                    <div><span className="text-gray-500">Razorpay Fee:</span> <span className="text-gray-300">₹{verifyResult.payment_details.fee}</span></div>
+                                                  )}
+                                                  {verifyResult.payment_details.email && (
+                                                    <div><span className="text-gray-500">Email:</span> <span className="text-gray-300">{verifyResult.payment_details.email}</span></div>
+                                                  )}
+                                                  {verifyResult.payment_details.contact && (
+                                                    <div><span className="text-gray-500">Phone:</span> <span className="text-gray-300">{verifyResult.payment_details.contact}</span></div>
+                                                  )}
+                                                  {verifyResult.payment_details.error_description && (
+                                                    <div className="col-span-2"><span className="text-gray-500">Error:</span> <span className="text-red-400">{verifyResult.payment_details.error_description}</span></div>
+                                                  )}
+                                                </div>
+                                              )}
+                                            </div>
+                                          ) : (
+                                            <div className="flex items-center gap-2">
+                                              <AlertCircle className="w-4 h-4 text-red-400" />
+                                              <span className="text-red-400">{verifyResult.error}</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </div>

@@ -2,12 +2,24 @@ import { NextResponse } from "next/server";
 import { sql } from "@/lib/database";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
+import { currentUser } from "@clerk/nextjs/server";
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "your-secret-key-change-in-production"
 );
 
 async function getUserFromJWT() {
+  // Try Clerk first
+  const clerkUser = await currentUser();
+  if (clerkUser) {
+    return {
+      id: clerkUser.id,
+      email: clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses[0]?.emailAddress || "",
+      name: clerkUser.firstName ? `${clerkUser.firstName} ${clerkUser.lastName || ''}`.trim() : "User",
+    };
+  }
+
+  // Fallback to JWT
   const cookieStore = await cookies();
   const token = cookieStore.get("auth-token")?.value;
 

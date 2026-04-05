@@ -18,6 +18,7 @@ import type { RootState } from "@/lib/store"
 import Image from "next/image"
 import Banner from "@/components/ui/banner"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useShop } from "@/lib/contexts/shop-context"
 import LoginModal from "@/components/auth/login-modal"
 import { useUser } from "@clerk/nextjs"
@@ -439,17 +440,12 @@ function Nav() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="text-white hover:bg-white/20 rounded-full p-3">
                         {user?.isClerkUser ? (
-                          clerkUser?.imageUrl ? (
-                            <Image
-                              src={clerkUser.imageUrl}
-                              alt="Profile"
-                              width={24}
-                              height={24}
-                              className="rounded-full"
-                            />
-                          ) : (
-                            <User className="w-6 h-6" />
-                          )
+                          <Avatar className="h-6 w-6">
+                            {clerkUser?.imageUrl ? <AvatarImage src={clerkUser.imageUrl} alt="Profile" /> : null}
+                            <AvatarFallback className="bg-white/20 text-white">
+                              <User className="w-4 h-4" />
+                            </AvatarFallback>
+                          </Avatar>
                         ) : (
                           <User className="w-6 h-6" />
                         )}
@@ -460,13 +456,12 @@ function Nav() {
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                             {user?.isClerkUser && clerkUser?.imageUrl ? (
-                              <Image
-                                src={clerkUser.imageUrl}
-                                alt="Profile"
-                                width={48}
-                                height={48}
-                                className="rounded-full"
-                              />
+                              <Avatar className="h-12 w-12">
+                                <AvatarImage src={clerkUser.imageUrl} alt="Profile" />
+                                <AvatarFallback className="bg-white/20 text-white">
+                                  <User className="w-6 h-6" />
+                                </AvatarFallback>
+                              </Avatar>
                             ) : (
                               <User className="w-6 h-6 text-white" />
                             )}
@@ -770,14 +765,13 @@ function Nav() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="text-white hover:bg-white/20 rounded-full p-2">
-                        {user?.isClerkUser && clerkUser?.imageUrl ? (
-                          <Image
-                            src={clerkUser.imageUrl}
-                            alt="Profile"
-                            width={20}
-                            height={20}
-                            className="rounded-full"
-                          />
+                        {user?.isClerkUser ? (
+                          <Avatar className="h-5 w-5">
+                            {clerkUser?.imageUrl ? <AvatarImage src={clerkUser.imageUrl} alt="Profile" /> : null}
+                            <AvatarFallback className="bg-white/20 text-white">
+                              <User className="w-3.5 h-3.5" />
+                            </AvatarFallback>
+                          </Avatar>
                         ) : (
                           <User className="w-5 h-5" />
                         )}
@@ -788,13 +782,12 @@ function Nav() {
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                             {user?.isClerkUser && clerkUser?.imageUrl ? (
-                              <Image
-                                src={clerkUser.imageUrl}
-                                alt="Profile"
-                                width={40}
-                                height={40}
-                                className="rounded-full"
-                              />
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={clerkUser.imageUrl} alt="Profile" />
+                                <AvatarFallback className="bg-white/20 text-white">
+                                  <User className="w-5 h-5" />
+                                </AvatarFallback>
+                              </Avatar>
                             ) : (
                               <User className="w-5 h-5 text-white" />
                             )}

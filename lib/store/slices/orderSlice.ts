@@ -2,7 +2,7 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit"
 import type { MenuItem, Variant, CartItem as CartItemType } from "@/lib/database"
 
-interface CartItem {
+export interface CartItem {
   menuItem: MenuItem
   quantity: number
   specialRequests?: string
@@ -279,6 +279,13 @@ const orderSlice = createSlice({
       const selectedCurrency = action.payload
       state.total = calculateTotal(state.cart, selectedCurrency)
     },
+
+    setCart: (state, action: PayloadAction<{ cart: CartItem[]; selectedCurrency: string }>) => {
+      const { cart, selectedCurrency } = action.payload
+      state.cart = cart
+      state.total = calculateTotal(state.cart, selectedCurrency)
+      state.error = null
+    },
     
     setOrderType: (state, action: PayloadAction<"dine-in" | "takeaway" | "delivery">) => {
       state.orderType = action.payload
@@ -384,6 +391,7 @@ export const {
   removeFromCart, 
   updateQuantity, 
   recalculateTotal, 
+  setCart,
   setOrderType, 
   setCustomerInfo, 
   clearCart,

@@ -153,9 +153,9 @@ export async function POST(request: Request) {
           product_id, name, price_aed, price_inr, discount_aed, discount_inr,
           available_aed, available_inr, stock_quantity
         ) VALUES (
-          ${product.id}, ${variant.name}, ${variant.price_aed || 0}, ${variant.price_inr || 0},
-          ${variant.discount_aed || 0}, ${variant.discount_inr || 0},
-          ${variant.available_aed ?? true}, ${variant.available_inr ?? true}, ${variant.stock_quantity || 0}
+          ${product.id}, ${variant.name}, 0, ${variant.price_inr || 0},
+          0, ${variant.discount_inr || 0},
+          false, true, ${variant.stock_quantity || 0}
         );
       `
     }
