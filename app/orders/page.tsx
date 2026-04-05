@@ -12,16 +12,9 @@ import Image from "next/image"
 import { useAuth } from "@/lib/contexts/auth-context"
 import { format } from "path"
 
-function formatCurrency(value: unknown, currency: string = 'AED') {
+function formatCurrency(value: unknown, _currency?: string) {
   const num = typeof value === "number" ? value : Number.parseFloat(String(value ?? 0))
-  const formattedNum = num.toFixed(2)
-
-  if (currency === 'AED') {
-    return `AED ${formattedNum}`
-  } else if (currency === 'INR') {
-    return `₹${formattedNum}`
-  }
-  return `${formattedNum} ${currency}`
+  return `₹${num.toFixed(2)}`
 }
 
 function formatMoney(value: unknown) {

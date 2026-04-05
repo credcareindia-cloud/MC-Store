@@ -589,7 +589,7 @@ async function generateOrderNumber(): Promise<string> {
     const result = await sql`
       SELECT order_number 
       FROM orders 
-      WHERE order_number LIKE 'SAB-%' 
+      WHERE order_number LIKE 'MC-%' 
       ORDER BY CAST(SUBSTRING(order_number FROM 5) AS INTEGER) DESC 
       LIMIT 1
     `
@@ -597,18 +597,18 @@ async function generateOrderNumber(): Promise<string> {
     let nextNumber = 10001
 
     if (result.length > 0 && result[0].order_number) {
-      const lastNumber = parseInt(result[0].order_number.replace('SAB-', ''))
+      const lastNumber = parseInt(result[0].order_number.replace('MC-', ''))
       if (!isNaN(lastNumber)) {
         nextNumber = lastNumber + 1
       }
     }
 
-    return `SAB-${nextNumber}`
+    return `MC-${nextNumber}`
   } catch (error) {
     console.error('Error generating order number:', error)
     // Fallback to timestamp-based number if database query fails
     const timestamp = Date.now().toString().slice(-6)
-    return `SAB-${10000 + parseInt(timestamp.slice(-4))}`
+    return `MC-${10000 + parseInt(timestamp.slice(-4))}`
   }
 }
 

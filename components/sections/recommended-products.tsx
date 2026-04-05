@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useCurrency } from "@/lib/contexts/currency-context"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Star, Heart, ShoppingCart, Eye, Sparkles } from "lucide-react"
+import { ArrowRight, ChevronRight } from "lucide-react"
 import Image from "next/image"
 
 interface Variant {
@@ -77,7 +76,7 @@ export default function RecommendedProducts({
       return { price: 0, originalPrice: 0, hasDiscount: false }
     }
 
-    const variant = product.variants[0] // Use first variant for display
+    const variant = product.variants[0]
     const isAED = selectedCurrency === 'AED'
     const isAvailable = isAED ? variant.available_aed : variant.available_inr
     
@@ -103,18 +102,18 @@ export default function RecommendedProducts({
 
   if (loading) {
     return (
-      <div className="bg-gray-50 py-16">
+      <div className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Recommended Products</h2>
-            <p className="text-gray-600">Loading similar products...</p>
+          <div className="mb-8">
+            <div className="h-6 w-48 bg-gray-200 rounded-lg animate-pulse" />
+            <div className="h-4 w-64 bg-gray-100 rounded-lg animate-pulse mt-2" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, index) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+            {[...Array(5)].map((_, index) => (
               <div key={index} className="animate-pulse">
-                <div className="bg-gray-200 aspect-square rounded-lg mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                <div className="bg-gray-100 aspect-square rounded-2xl mb-3" />
+                <div className="h-3 bg-gray-100 rounded-full mb-2 w-3/4" />
+                <div className="h-4 bg-gray-200 rounded-full w-1/2" />
               </div>
             ))}
           </div>
@@ -124,222 +123,136 @@ export default function RecommendedProducts({
   }
 
   if (recommendedProducts.length === 0) {
-    return null // Don't show section if no products
+    return null
   }
 
-  return (
-    <div className="bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-3 text-center">
-            Recommended for You
-          </h2>
-          <p className="text-gray-600 text-sm max-w-xl mx-auto">
-            Discover similar products that other customers loved.
-          </p>
-        </div>
+  const ProductCard = ({ product, compact = false }: { product: Product; compact?: boolean }) => {
+    const { price, originalPrice, hasDiscount } = getProductPrice(product)
+    const currencySymbol = getCurrencySymbol(selectedCurrency)
+    const discountPercent = hasDiscount ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0
 
-        {/* Desktop Grid */}
-        <div className="hidden sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          {recommendedProducts.slice(0, 5).map((product) => {
-            const { price, originalPrice, hasDiscount } = getProductPrice(product)
-            const currencySymbol = getCurrencySymbol(selectedCurrency)
+    return (
+      <div
+        className="group cursor-pointer"
+        onClick={() => handleProductClick(product.id)}
+      >
+        <div className="relative aspect-square rounded-2xl overflow-hidden bg-white border border-gray-100 mb-3 transition-all duration-300 group-hover:shadow-xl group-hover:shadow-black/[0.06] group-hover:border-gray-200">
+          <Image
+            src={product.image_urls?.[0] || "/placeholder.svg"}
+            alt={product.name}
+            fill
+            className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+          />
 
-            return (
-              <Card 
-                key={product.id} 
-                className="group cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 bg-white border-0 shadow-md overflow-hidden"
-                onClick={() => handleProductClick(product.id)}
-              >
-                <CardContent className="p-0">
-                  {/* Product Image */}
-                  <div className="relative aspect-square overflow-hidden bg-gray-50">
-                    <Image
-                      src={product.image_urls?.[0] || "/placeholder.svg"}
-                      alt={product.name}
-                      fill
-                      className="object-contain p-3 group-hover:scale-105 transition-transform duration-300"
-                    />
-                    
-                    {/* Badges */}
-                    <div className="absolute top-3 left-3 flex flex-col gap-2">
-                      {product.is_new && (
-                        <Badge className="bg-green-500 text-white text-xs px-2 py-1">
-                          New
-                        </Badge>
-                      )}
-                      {product.is_featured && (
-                        <Badge className="bg-zinc-900 text-white text-xs px-2 py-1 font-medium">
-                          Featured
-                        </Badge>
-                      )}
-                      {hasDiscount && (
-                        <Badge className="bg-red-500 text-white text-xs px-2 py-1">
-                          {Math.round(((originalPrice - price) / originalPrice) * 100)}% OFF
-                        </Badge>
-                      )}
-                    </div>
+          {/* Overlay gradient on hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                    {/* Quick Actions */}
-                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="bg-white/90 backdrop-blur-sm hover:bg-white"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleProductClick(product.id)
-                        }}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
+          {/* Top-left badges */}
+          <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
+            {hasDiscount && (
+              <span className="bg-rose-500 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full tracking-wide">
+                -{discountPercent}%
+              </span>
+            )}
+            {product.is_new && (
+              <span className="bg-emerald-500 text-white text-[10px] sm:text-xs font-medium px-2 py-0.5 rounded-full">
+                New
+              </span>
+            )}
+          </div>
 
-                  {/* Product Info */}
-                  <div className="p-3">
-                    <div className="mb-2">
-                      <h3 className="font-medium text-sm text-gray-900 line-clamp-2 group-hover:text-zinc-700 transition-colors">
-                        {product.name}
-                      </h3>
-                      {product.brand && (
-                        <p className="text-xs text-gray-500">{product.brand}</p>
-                      )}
-                    </div>
-
-                    {/* Price */}
-                    <div className="flex items-center gap-2 mb-2">
-                      {price > 0 ? (
-                        <>
-                          <span className="text-sm font-semibold text-zinc-900">
-                            {currencySymbol}{price}
-                          </span>
-                          {hasDiscount && (
-                            <span className="text-xs text-gray-500 line-through">
-                              {currencySymbol}{originalPrice}
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <span className="text-xs text-gray-500">Price not available</span>
-                      )}
-                    </div>
-
-                    {/* Category */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                        {product.category_name}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-zinc-300 text-zinc-300" />
-                        <span className="text-xs text-gray-600">4.5</span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-
-        {/* Mobile Horizontal Scroll */}
-        <div className="sm:hidden">
-          <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
-            {recommendedProducts.slice(0, 6).map((product) => {
-              const { price, originalPrice, hasDiscount } = getProductPrice(product)
-              const currencySymbol = getCurrencySymbol(selectedCurrency)
-
-              return (
-                <div 
-                  key={product.id}
-                  className="flex-none w-[calc(40%-6px)] cursor-pointer"
-                  onClick={() => handleProductClick(product.id)}
-                >
-                  <Card className="group hover:shadow-lg transition-all duration-300 bg-white border-0 shadow-md overflow-hidden h-full">
-                    <CardContent className="p-0">
-                      {/* Product Image */}
-                      <div className="relative aspect-square overflow-hidden bg-gray-50">
-                        <Image
-                          src={product.image_urls?.[0] || "/placeholder.svg"}
-                          alt={product.name}
-                          fill
-                          className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
-                        />
-                        
-                        {/* Badges */}
-                        <div className="absolute top-2 left-2 flex flex-col gap-1">
-                          {product.is_new && (
-                            <Badge className="bg-green-500 text-white text-xs px-1.5 py-0.5">
-                              New
-                            </Badge>
-                          )}
-                          {product.is_featured && (
-                            <Badge className="bg-zinc-900 text-white text-xs px-1.5 py-0.5 font-medium">
-                              Featured
-                            </Badge>
-                          )}
-                          {hasDiscount && (
-                            <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5">
-                              {Math.round(((originalPrice - price) / originalPrice) * 100)}% OFF
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Product Info */}
-                      <div className="p-2">
-                        <div className="mb-1">
-                          <h3 className="font-medium text-xs text-gray-900 line-clamp-2 group-hover:text-zinc-700 transition-colors">
-                            {product.name}
-                          </h3>
-                        </div>
-
-                        {/* Price */}
-                        <div className="flex items-center gap-1 mb-1">
-                          {price > 0 ? (
-                            <>
-                              <span className="text-xs font-semibold text-zinc-900">
-                                {currencySymbol}{price}
-                              </span>
-                              {hasDiscount && (
-                                <span className="text-xs text-gray-500 line-through">
-                                  {currencySymbol}{originalPrice}
-                                </span>
-                              )}
-                            </>
-                          ) : (
-                            <span className="text-xs text-gray-500">Price not available</span>
-                          )}
-                        </div>
-
-                        {/* Category */}
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full truncate">
-                            {product.category_name}
-                          </span>
-                          <div className="flex items-center gap-0.5">
-                            <Star className="w-2.5 h-2.5 fill-zinc-300 text-zinc-300" />
-                            <span className="text-xs text-gray-600">4.5</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              )
-            })}
+          {/* Quick view pill on hover */}
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+            <span className="bg-zinc-900/90 backdrop-blur-sm text-white text-xs font-medium px-4 py-1.5 rounded-full whitespace-nowrap">
+              Quick View
+            </span>
           </div>
         </div>
 
-        {/* View More Button */}
-        <div className="text-center mt-8">
-          <Button
+        {/* Product info */}
+        <div className={compact ? "px-0.5" : "px-1"}>
+          {product.brand && (
+            <p className="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider mb-0.5">
+              {product.brand}
+            </p>
+          )}
+          <h3 className={`font-medium text-gray-900 line-clamp-2 group-hover:text-zinc-600 transition-colors leading-snug ${compact ? "text-xs" : "text-sm"}`}>
+            {product.name}
+          </h3>
+          <div className="flex items-baseline gap-2 mt-1.5">
+            {price > 0 ? (
+              <>
+                <span className={`font-bold text-gray-900 ${compact ? "text-sm" : "text-base"}`}>
+                  {currencySymbol}{price.toLocaleString()}
+                </span>
+                {hasDiscount && (
+                  <span className="text-xs text-gray-400 line-through">
+                    {currencySymbol}{originalPrice.toLocaleString()}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-xs text-gray-400">Unavailable</span>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="py-10 sm:py-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section header */}
+        <div className="flex items-end justify-between mb-6 sm:mb-8">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+              You Might Also Like
+            </h2>
+            <p className="text-sm text-gray-500 mt-1 hidden sm:block">
+              Similar products picked for you
+            </p>
+          </div>
+          <button
             onClick={() => router.push(`/products?category=${categoryId}`)}
-            variant="outline"
-            className="px-6 py-2 text-sm text-zinc-800 border-zinc-300 hover:bg-zinc-50"
+            className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors flex items-center gap-1 group/btn shrink-0"
           >
-            View More Similar Products
-          </Button>
+            View all
+            <ChevronRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-0.5" />
+          </button>
+        </div>
+
+        {/* Desktop grid */}
+        <div className="hidden sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-5">
+          {recommendedProducts.slice(0, 5).map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+
+        {/* Mobile horizontal scroll */}
+        <div className="sm:hidden -mx-4 px-4">
+          <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+            {recommendedProducts.slice(0, 6).map((product) => (
+              <div 
+                key={product.id}
+                className="flex-none w-[42%] snap-start"
+              >
+                <ProductCard product={product} compact />
+              </div>
+            ))}
+            {/* "See more" card */}
+            <div
+              className="flex-none w-[42%] snap-start cursor-pointer group"
+              onClick={() => router.push(`/products?category=${categoryId}`)}
+            >
+              <div className="aspect-square rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 transition-all duration-300 group-hover:bg-gray-100 group-hover:border-gray-300 mb-3">
+                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center group-hover:bg-gray-300 transition-colors">
+                  <ArrowRight className="w-5 h-5 text-gray-500" />
+                </div>
+                <span className="text-xs font-medium text-gray-500">See more</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

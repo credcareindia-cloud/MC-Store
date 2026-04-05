@@ -10,9 +10,8 @@ import { useCurrency } from "@/lib/contexts/currency-context"
 import { useAuth } from "@/lib/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { useLoginModal } from '@/lib/stores/useLoginModal'
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, ArrowLeft, ShoppingCart, Heart, Share2, Globe, AlertCircle, Plus, Minus, Truck, Shield, RotateCcw, Award, Zap, ChevronRight, Eye, Sparkles, Verified } from "lucide-react"
+import { ArrowLeft, ShoppingCart, Heart, Share2, AlertCircle, Plus, Minus, Truck, Shield, Zap, ChevronRight, Sparkles, Verified, Check, Package, Info } from "lucide-react"
 import Image from "next/image"
 import Navbar from "@/components/ui/navbar"
 import Footer from "@/components/ui/footer"
@@ -64,13 +63,12 @@ interface Product {
 }
 
 
-
 export default function ProductPage() {
   const { user, isAuthenticated } = useAuth()
   const params = useParams()
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
-  const { selectedCurrency, formatPriceWithSmallDecimals } = useCurrency()
+  const { selectedCurrency, formatPriceWithSmallDecimals, getCurrencySymbol } = useCurrency()
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items)
 
   const [product, setProduct] = useState<Product | null>(null)
@@ -79,8 +77,6 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null)
-
-  // Animation states
   const [showBlur, setShowBlur] = useState(false)
   const [animationType, setAnimationType] = useState<'cart' | 'wishlist' | 'buy' | null>(null)
 
@@ -97,7 +93,8 @@ export default function ProductPage() {
     return wishlistItems.some(item => item.id === productId)
   }
 
-  const hasSelectedCurrencyPrice = (variant: Variant) => {
+  const hasSelectedCurrencyPrice = (variant: Variant | null) => {
+    if (!variant) return false
     return selectedCurrency === 'AED' ? variant.available_aed : variant.available_inr
   }
 
@@ -119,7 +116,6 @@ export default function ProductPage() {
 
   const handleToggleWishlist = async (product: Product) => {
     if (!isAuthenticated) {
-      // toast.error('Please login to add items to wishlist')
       openModal()
       return
     }
@@ -167,22 +163,18 @@ export default function ProductPage() {
       const response = await fetch(`/api/admin/products/${params.id}`)
       if (response.ok) {
         const data = await response.json()
-        
         setProduct(data)
-        // Set default variant based on currency availability
-        const defaultVariant = data.variants?.find((v: Variant) => 
+        const defaultVariant = data.variants?.find((v: Variant) =>
           selectedCurrency === 'AED' ? v.available_aed : v.available_inr
         ) || data.variants?.[0]
         setSelectedVariant(defaultVariant || null)
       } else {
         console.error("Product not found")
-        // Redirect to 404 page if product doesn't exist
         router.push('/not-found')
       }
     } catch (error) {
       console.error("Error fetching product:", error)
       toast.error('Failed to load product')
-      // Redirect to home page on error
       setTimeout(() => {
         router.push('/')
       }, 2000)
@@ -241,39 +233,38 @@ export default function ProductPage() {
 
   const handleVariantChange = (variant: Variant) => {
     setSelectedVariant(variant)
-    setQuantity(1) // Reset quantity when variant changes
-    
-    // Show a toast if variant has low stock or is out of stock
+    setQuantity(1)
     if (variant.stock_quantity === 0) {
       toast.error('This variant is out of stock')
     } else if (variant.stock_quantity <= 5) {
-      toast.warn(`Only ${variant.stock_quantity} items left in stock!`)
+      toast(`Only ${variant.stock_quantity} items left in stock!`, { icon: '⚠️' })
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen bg-white">
         <Navbar />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse">
-            <div className="bg-gradient-to-r from-gray-200 to-gray-300 h-8 w-32 rounded-lg mb-6"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-              <div className="space-y-4">
-                <div className="bg-gradient-to-r from-gray-200 to-gray-300 h-80 sm:h-96 lg:h-[500px] rounded-2xl"></div>
+            <div className="h-4 w-40 bg-gray-100 rounded-full mb-8" />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+              <div className="lg:col-span-7 space-y-3">
+                <div className="bg-gray-50 aspect-square rounded-2xl" />
                 <div className="grid grid-cols-4 gap-2">
                   {[...Array(4)].map((_, i) => (
-                    <div key={i} className="bg-gradient-to-r from-gray-200 to-gray-300 h-20 rounded-lg"></div>
+                    <div key={i} className="bg-gray-50 aspect-square rounded-xl" />
                   ))}
                 </div>
               </div>
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-gray-200 to-gray-300 h-8 w-3/4 rounded-lg"></div>
-                <div className="bg-gradient-to-r from-gray-200 to-gray-300 h-6 w-1/2 rounded-lg"></div>
-                <div className="bg-gradient-to-r from-gray-200 to-gray-300 h-12 w-1/3 rounded-lg"></div>
+              <div className="lg:col-span-5 space-y-6">
+                <div className="h-8 w-3/4 bg-gray-100 rounded-lg" />
+                <div className="h-5 w-1/3 bg-gray-50 rounded-lg" />
+                <div className="h-12 w-1/2 bg-gray-100 rounded-lg" />
+                <div className="h-px bg-gray-100" />
                 <div className="space-y-3">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="bg-gradient-to-r from-gray-200 to-gray-300 h-4 rounded-lg"></div>
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="h-4 bg-gray-50 rounded-lg" />
                   ))}
                 </div>
               </div>
@@ -287,18 +278,20 @@ export default function ProductPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen bg-white">
         <Navbar />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center">
-          <div className="text-8xl mb-6">🔍</div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Product Not Found</h2>
-          <p className="text-gray-600 mb-8 text-lg">The product you're looking for doesn't exist or has been removed.</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Package className="w-10 h-10 text-gray-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Product Not Found</h2>
+          <p className="text-gray-500 mb-8">The product you're looking for doesn't exist or has been removed.</p>
           <Button
             onClick={() => router.back()}
-            className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-3 text-lg rounded-lg shadow-sm transition-colors"
+            className="bg-zinc-900 hover:bg-zinc-800 text-white rounded-full px-8"
             aria-label="Go back"
           >
-            <ArrowLeft className="w-5 h-5 mr-2" />
+            <ArrowLeft className="w-4 h-4 mr-2" />
             Go Back
           </Button>
         </div>
@@ -309,8 +302,7 @@ export default function ProductPage() {
 
   const currencyAvailable = selectedVariant ? hasSelectedCurrencyPrice(selectedVariant) : false
 
-  // Condition label and color mapping
-  const conditionLabels = {
+  const conditionLabels: Record<string, string> = {
     master: "Master",
     "first-copy": "1st Copy",
     "second-copy": "2nd Copy",
@@ -318,14 +310,6 @@ export default function ProductPage() {
     sale: "Sale",
     none: ""
   }
-const conditionColors = {
-  master: "from-zinc-700 to-zinc-900",
-  "first-copy": "from-zinc-600 to-zinc-800",
-  "second-copy": "from-zinc-500 to-zinc-700",
-  hot: "from-zinc-800 to-zinc-950",
-  sale: "from-zinc-500 to-zinc-700",
-  none: "from-zinc-400 to-zinc-600",
-}
 
   const discountPercent = selectedVariant
     ? selectedCurrency === 'AED' && selectedVariant.price_aed && selectedVariant.discount_aed
@@ -335,534 +319,486 @@ const conditionColors = {
         : 0
     : 0
 
+  const stockQty = selectedVariant?.stock_quantity ?? 0
+
+  const specEntries = [
+    ...(product.brand ? [{ label: "Brand", value: product.brand }] : []),
+    ...(product.model ? [{ label: "Model", value: product.model }] : []),
+    ...(product.color ? [{ label: "Color", value: product.color }] : []),
+    ...(product.storage_capacity ? [{ label: "Storage", value: product.storage_capacity }] : []),
+    ...(product.condition_type && product.condition_type !== 'none' ? [{ label: "Condition", value: conditionLabels[product.condition_type] }] : []),
+    ...(product.warranty_months && product.warranty_months !== "0"
+      ? [{ label: "Warranty", value: `${product.warranty_months} months` }]
+      : []),
+    { label: "Availability", value: selectedCurrency },
+    { label: "Stock", value: stockQty > 0 ? `${stockQty} available` : "Out of stock" },
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 relative">
+    <div className="min-h-screen bg-white relative">
       <Navbar />
 
-      {/* Blur Overlay with Animation */}
-     {showBlur && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center">
-    {/* Enhanced backdrop with gradient and subtle animation */}
-    <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-slate-900/40 to-black/30 backdrop-blur-md animate-in fade-in duration-500" />
-    
-    <div className="relative z-10">
-      {animationType === 'wishlist' && (
-        <div className="animate-in zoom-in-50 duration-700 animate-out zoom-out-95 fade-out delay-2000 duration-800">
-          {/* Main icon container with enhanced styling */}
-          <div className="relative">
-            <div className="bg-zinc-900 rounded-2xl p-10 shadow-xl">
-              <Heart className="w-24 h-24 text-white fill-white" />
-            </div>
-          </div>
-          
-          {/* Enhanced message styling */}
-          <div className="text-center mt-6 animate-in slide-in-from-bottom-4 duration-500 delay-300">
-            <div className="inline-block bg-gradient-to-r from-black/70 to-gray-900/70 backdrop-blur-md rounded-2xl px-6 py-3 border border-white/20 shadow-xl">
-              <p className="text-white font-bold text-xl tracking-wide">
-                {isInWishlist(product.id) ? '💔 Removed from Wishlist' : '❤️ Added to Wishlist'}
-              </p>
-              <div className="w-full h-px bg-zinc-600 mt-3" />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {animationType === 'cart' && (
-        <div className="animate-in zoom-in-50 duration-700 animate-out zoom-out-95 fade-out delay-2000 duration-800">
-          <div className="relative">
-            <div className="bg-zinc-900 rounded-2xl p-10 shadow-xl">
-              <ShoppingCart className="w-24 h-24 text-white" />
-            </div>
-          </div>
-          
-          <div className="text-center mt-6 animate-in slide-in-from-bottom-4 duration-500 delay-300">
-            <div className="inline-block bg-gradient-to-r from-black/70 to-gray-900/70 backdrop-blur-md rounded-2xl px-6 py-3 border border-white/20 shadow-xl">
-              <p className="text-white font-bold text-xl tracking-wide">
-                🛒 Added to Cart Successfully!
-              </p>
-              <div className="w-full h-px bg-zinc-600 mt-3" />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {animationType === 'buy' && (
-        <div className="animate-in zoom-in-50 duration-700 animate-out zoom-out-95 fade-out delay-1800 duration-800">
-          <div className="relative">
-            <div className="bg-zinc-800 rounded-2xl p-10 shadow-xl">
-              <Zap className="w-24 h-24 text-white" />
-            </div>
-          </div>
-          
-          <div className="text-center mt-6 animate-in slide-in-from-bottom-4 duration-500 delay-300">
-            <div className="inline-block bg-gradient-to-r from-black/70 to-gray-900/70 backdrop-blur-md rounded-2xl px-6 py-3 border border-white/20 shadow-xl">
-              <p className="text-white font-bold text-xl tracking-wide">
-                ⚡ Processing Your Order...
-              </p>
-              <div className="w-full h-px bg-zinc-600 mt-3" />
-              <div className="mt-3 w-32 h-1 bg-zinc-700 rounded-full mx-auto overflow-hidden">
-                <div className="h-full bg-zinc-300 rounded-full" style={{ width: "100%", animation: "progress 1.5s ease-in-out" }} />
+      {/* Blur Overlay */}
+      {showBlur && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-md animate-in fade-in duration-500" />
+          <div className="relative z-10">
+            {animationType === 'wishlist' && (
+              <div className="animate-in zoom-in-50 duration-700">
+                <div className="bg-white rounded-3xl p-8 shadow-2xl">
+                  <Heart className="w-16 h-16 text-zinc-900 fill-zinc-900 mx-auto" />
+                </div>
+                <p className="text-center text-white font-semibold text-lg mt-4">
+                  {isInWishlist(product.id) ? 'Removed from Wishlist' : 'Added to Wishlist'}
+                </p>
               </div>
-            </div>
+            )}
+            {animationType === 'cart' && (
+              <div className="animate-in zoom-in-50 duration-700">
+                <div className="bg-white rounded-3xl p-8 shadow-2xl">
+                  <ShoppingCart className="w-16 h-16 text-zinc-900 mx-auto" />
+                </div>
+                <p className="text-center text-white font-semibold text-lg mt-4">Added to Cart</p>
+              </div>
+            )}
+            {animationType === 'buy' && (
+              <div className="animate-in zoom-in-50 duration-700">
+                <div className="bg-white rounded-3xl p-8 shadow-2xl">
+                  <Zap className="w-16 h-16 text-zinc-900 mx-auto" />
+                </div>
+                <p className="text-center text-white font-semibold text-lg mt-4">Processing Your Order...</p>
+                <div className="mt-3 w-40 h-1 bg-white/30 rounded-full mx-auto overflow-hidden">
+                  <div className="h-full bg-white rounded-full" style={{ width: "100%", animation: "progress 1.5s ease-in-out" }} />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
-    </div>
 
-  </div>
-)}
-
-<style jsx>{`
-  @keyframes progress {
-    0% { width: 0%; }
-    100% { width: 100%; }
-  }
-  
-  @keyframes float {
-    0%, 100% { 
-      transform: translateY(0px) rotate(0deg);
-      opacity: 0.4;
-    }
-    50% { 
-      transform: translateY(-20px) rotate(180deg);
-      opacity: 0.8;
-    }
-  }
-  
-  .animation-delay-100 {
-    animation-delay: 100ms;
-  }
-  
-  .animation-delay-200 {
-    animation-delay: 200ms;
-  }
-  
-  .animation-delay-300 {
-    animation-delay: 300ms;
-  }
-`}</style>
+      <style jsx>{`
+        @keyframes progress {
+          0% { width: 0%; }
+          100% { width: 100%; }
+        }
+      `}</style>
 
       <div className={`transition-all duration-300 ${showBlur ? "blur-sm" : ""}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Breadcrumb */}
-          <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
-            <div className="flex items-center gap-2 text-sm flex-wrap">
-              <Button
-                variant="ghost"
-                onClick={() => router.back()}
-                className="flex items-center gap-2 hover:bg-zinc-100 rounded-lg px-4 py-2 transition-colors"
-                aria-label="Go back"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back
-              </Button>
-              <ChevronRight className="w-4 h-4 text-gray-400" />
-              <span
-                className="text-gray-600 hover:text-gray-900 cursor-pointer transition-colors"
+        {/* Breadcrumb */}
+        <div className="border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-2 py-3 text-sm text-gray-500">
+              <button onClick={() => router.push('/')} className="hover:text-gray-900 transition-colors">Home</button>
+              <ChevronRight className="w-3.5 h-3.5" />
+              <button
                 onClick={() => router.push(`/products?category=${product.category_id}`)}
+                className="hover:text-gray-900 transition-colors"
               >
                 {product.category_name}
-              </span>
-              {/* <ChevronRight className="w-4 h-4 text-gray-400" />
-              <span className="text-gray-900 font-medium truncate max-w-48 sm:max-w-64">{product.name}</span> */}
-            </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-zinc-700 border-zinc-200 bg-zinc-50">
-                <Eye className="w-3 h-3 mr-1" />
-                {Math.floor(Math.random() * 1000) + 100} views
-              </Badge>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="rounded-xl" aria-label="Share product">
-                    <Share2 className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="rounded-xl">
-                  <DropdownMenuItem onClick={() => navigator.clipboard.writeText(window.location.href).then(() => toast.success('Product link copied to clipboard')).catch(() => toast.error('Failed to copy link'))}>
-                    Copy Link
-                  </DropdownMenuItem>
-                  {/* <DropdownMenuItem>Share on Social</DropdownMenuItem> */}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              </button>
+              <ChevronRight className="w-3.5 h-3.5" />
+              <span className="text-gray-900 font-medium truncate max-w-[200px] sm:max-w-xs">{product.name}</span>
             </div>
           </div>
+        </div>
 
-          {/* Currency availability warning */}
-          {!currencyAvailable && (
-            <Alert className="mb-8 border-zinc-200 bg-zinc-50 rounded-lg">
-              <AlertCircle className="h-4 w-4 text-zinc-600" />
-              <AlertDescription className="text-zinc-700">
-                This product is not available in INR for India. Please select another variant if listed.
+        {/* Currency warning */}
+        {!currencyAvailable && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+            <Alert className="border-amber-200 bg-amber-50 rounded-xl">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800">
+                This product is not available in {selectedCurrency}. Please select another variant if listed.
               </AlertDescription>
             </Alert>
-          )}
+          </div>
+        )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
-            {/* Product Images */}
-            <div className="space-y-6">
-              <div className="relative group">
-                <div className="overflow-hidden rounded-2xl shadow-2xl bg-gray-50 p-4">
+        {/* Main product area */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14">
+
+            {/* ─── Left: Images ─── */}
+            <div className="lg:col-span-7">
+              <div className="lg:sticky lg:top-24 space-y-3">
+                {/* Main image */}
+                <div className="relative bg-gray-50 rounded-2xl overflow-hidden aspect-square">
                   <Image
                     src={product.image_urls[selectedImageIndex] || `/placeholder.svg?height=600&width=600&query=${encodeURIComponent(product.name)}`}
                     alt={product.name || 'Product image'}
-                    width={600}
-                    height={600}
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
-                    className="w-full h-80 sm:h-96 lg:h-[500px] object-contain rounded-xl group-hover:scale-105 transition-transform duration-500"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 58vw, 660px"
+                    className="object-contain p-6 sm:p-10"
+                    priority
                   />
-                  <div className="absolute top-6 left-6 flex flex-col gap-2">
-                    {product.is_new && (
-                      <Badge className="bg-zinc-900 text-white font-medium">
-                        <Sparkles className="w-3 h-3 mr-1" />
-                       New Release
-                      </Badge>
-                    )}
-                  {product.condition_type && product.condition_type !== 'none' && (
-  <Badge
-    className={`
-      bg-gradient-to-r ${conditionColors[product.condition_type]}
-      text-white font-medium text-sm
-      px-3 py-1 rounded-full
-      shadow-md hover:shadow-lg
-      transition-all duration-200 ease-in-out
-      capitalize
-    `}
-  >
-    {conditionLabels[product.condition_type]}
-  </Badge>
-)}
-                  </div>
-                  {/* <Badge className="absolute bottom-6 left-6 bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg">
-                    Shop {product.shop_category}
-                  </Badge> */}
-                  <Badge
-  variant={(selectedVariant?.stock_quantity ?? 0) > 5 ? "default" : "destructive"}
-  className={`absolute bottom-6 right-6 shadow-sm font-medium ${(selectedVariant?.stock_quantity ?? 0) <= 5 ? "bg-zinc-900 text-white" : ""}`}
->
-  {(selectedVariant?.stock_quantity ?? 0) > 5
-    ? "In Stock"
-    : (selectedVariant?.stock_quantity ?? 0) > 0
-    ? `Only ${selectedVariant?.stock_quantity ?? 0} left`
-    : "Out of Stock"}
-</Badge>
-                </div>
-              </div>
-              {/* Thumbnail Gallery */}
-              {product.image_urls.length > 0 && (
-                <div className="grid grid-cols-4 gap-3">
-                  {product.image_urls.slice(0, 4).map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImageIndex(index)}
-                      className={`relative overflow-hidden rounded-xl transition-shadow duration-200 ${
-                        selectedImageIndex === index ? "ring-2 ring-zinc-900 shadow-md" : "hover:shadow-md"
-                      }`}
-                      aria-label={`Select image ${index + 1}`}
-                    >
-                      <Image
-                        src={image || `/placeholder.svg?height=100&width=100&query=${encodeURIComponent(product.name)}`}
-                        alt={`${product.name} image ${index + 1}`}
-                        width={100}
-                        height={100}
-                        sizes="(max-width: 768px) 25vw, 100px"
-                        className="w-full h-20 object-contain bg-gray-50 p-1"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
 
-            {/* Product Details */}
-            <div className="space-y-8">
-              {/* Title and Rating */}
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
-                      {product.name}
-                    </h1>
-                    <div className="flex items-center gap-4 flex-wrap">
-                      {/* <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-zinc-300 text-zinc-300" />
-                        ))}
-                        <span className="text-sm text-gray-600 ml-1">(4.8 • 234 reviews)</span>
-                      </div> */}
-                      {product.is_new && (
-                      <Badge variant="outline" className="text-zinc-700 border-zinc-200 bg-zinc-50">
-                        <Award className="w-3 h-3 mr-1" />
-                        Bestseller
-                      </Badge>
+                  {/* Top-left badges */}
+                  <div className="absolute top-4 left-4 flex flex-col gap-2">
+                    {product.is_new && (
+                      <span className="bg-emerald-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                        New
+                      </span>
                     )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-                {/* Price Section */}
-              <Card className="p-6 bg-gradient-to-br from-gray-50 to-white border-0 shadow-lg rounded-2xl">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <span className="text-4xl font-bold text-zinc-900">
-                      {currencyAvailable && selectedVariant
-                        ? formatPriceWithSmallDecimals(
-                            selectedVariant.discount_aed,
-                            selectedVariant.discount_inr,
-                            selectedCurrency,
-                            true,
-                            "#18181b"
-                          )
-                        : `Not available in ${selectedCurrency}`}
-                    </span>
-                    {currencyAvailable && (
-                      <div className="flex flex-col">
-                        <span className="text-lg text-gray-400 line-through">
-                          {formatPriceWithSmallDecimals(
-                            selectedVariant?.price_aed,
-                            selectedVariant?.price_inr,
-                            selectedCurrency,
-                            true,
-                            "#6B7280"
-                          )}
-                        </span>
-                        
-                      </div>
+                    {product.condition_type && product.condition_type !== 'none' && (
+                      <span className="bg-zinc-900 text-white text-xs font-semibold px-3 py-1 rounded-full capitalize">
+                        {conditionLabels[product.condition_type]}
+                      </span>
                     )}
                     {discountPercent > 0 && (
-                      <div className="flex flex-col">
-                       <Badge className="bg-zinc-100 text-zinc-800 text-xs font-medium">Save {discountPercent}%</Badge>
-                      </div>
+                      <span className="bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        -{discountPercent}%
+                      </span>
                     )}
                   </div>
-                  <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Truck className="w-4 h-4 text-zinc-600" />
-                      <span className="text-gray-600">Doorstep Delivery</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Verified className="w-4 h-4 text-zinc-600" />
-                      <span className="text-gray-600">Motoclub verified</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-  <Shield className="w-4 h-4 text-zinc-600" />
-  {product.warranty_months && product.warranty_months !== "0" ? (
-    <span className="text-gray-600">{product.warranty_months} Months Warranty</span>
-  ) : (
-    <span className="text-zinc-700 font-medium">Quality assured</span>
-  )}
-</div>
 
+                  {/* Top-right actions */}
+                  <div className="absolute top-4 right-4 flex flex-col gap-2">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleToggleWishlist(product) }}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
+                        isInWishlist(product.id)
+                          ? 'bg-zinc-900 text-white shadow-lg'
+                          : 'bg-white/90 backdrop-blur-sm text-gray-600 hover:bg-white shadow-md hover:text-zinc-900'
+                      }`}
+                      aria-label={isInWishlist(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                    >
+                      <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-white' : ''}`} />
+                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white transition-colors text-gray-600 hover:text-zinc-900"
+                          aria-label="Share product"
+                        >
+                          <Share2 className="w-5 h-5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="rounded-xl">
+                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(window.location.href).then(() => toast.success('Link copied!')).catch(() => toast.error('Failed to copy'))}>
+                          Copy Link
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  {/* Stock indicator */}
+                  {stockQty > 0 && stockQty <= 5 && (
+                    <div className="absolute bottom-4 left-4">
+                      <span className="bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                        Only {stockQty} left
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Thumbnails */}
+                {product.image_urls.length > 1 && (
+                  <div className="grid grid-cols-4 gap-2">
+                    {product.image_urls.slice(0, 4).map((image, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={`relative aspect-square rounded-xl overflow-hidden bg-gray-50 transition-all duration-200 ${
+                          selectedImageIndex === index
+                            ? "ring-2 ring-zinc-900 ring-offset-2"
+                            : "hover:ring-2 hover:ring-gray-200 hover:ring-offset-1"
+                        }`}
+                        aria-label={`Select image ${index + 1}`}
+                      >
+                        <Image
+                          src={image || "/placeholder.svg"}
+                          alt={`${product.name} ${index + 1}`}
+                          fill
+                          sizes="100px"
+                          className="object-contain p-2"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ─── Right: Product Info ─── */}
+            <div className="lg:col-span-5">
+              <div className="space-y-6">
+
+                {/* Category + Brand */}
+                <div>
+                  <button
+                    onClick={() => router.push(`/products?category=${product.category_id}`)}
+                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors mb-2 block"
+                  >
+                    {product.category_name}
+                  </button>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight tracking-tight">
+                    {product.name}
+                  </h1>
+                  {product.brand && (
+                    <p className="text-sm text-gray-500 mt-1">by <span className="font-medium text-gray-700">{product.brand}</span></p>
+                  )}
+                </div>
+
+                {/* Price block */}
+                <div className="space-y-3">
+                  <div className="flex items-baseline gap-3 flex-wrap">
+                    {currencyAvailable && selectedVariant ? (
+                      <>
+                        <span className="text-3xl sm:text-4xl font-bold text-gray-900">
+                          {formatPriceWithSmallDecimals(
+                            selectedVariant.discount_aed || selectedVariant.price_aed,
+                            selectedVariant.discount_inr || selectedVariant.price_inr,
+                            selectedCurrency,
+                            true,
+                            "#111827"
+                          )}
+                        </span>
+                        {discountPercent > 0 && (
+                          <span className="text-lg text-gray-400 line-through">
+                            {formatPriceWithSmallDecimals(
+                              selectedVariant.price_aed,
+                              selectedVariant.price_inr,
+                              selectedCurrency,
+                              true,
+                              "#9ca3af"
+                            )}
+                          </span>
+                        )}
+                        {discountPercent > 0 && (
+                          <span className="text-sm font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">
+                            Save {discountPercent}%
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-lg text-gray-500">Not available in {selectedCurrency}</span>
+                    )}
+                  </div>
+
+                  {/* Trust signals */}
+                  <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                    <span className="flex items-center gap-1.5">
+                      <Truck className="w-4 h-4" />
+                      Doorstep Delivery
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Verified className="w-4 h-4" />
+                      Motoclub Verified
+                    </span>
+                    {product.warranty_months && product.warranty_months !== "0" ? (
+                      <span className="flex items-center gap-1.5">
+                        <Shield className="w-4 h-4" />
+                        {product.warranty_months}mo Warranty
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1.5">
+                        <Shield className="w-4 h-4" />
+                        Quality Assured
+                      </span>
+                    )}
                   </div>
                 </div>
-              </Card>
 
-              {/* Variant Selector */}
-              {product.variants.length > 0 && (
-  <Card className="p-6 bg-gradient-to-br from-gray-50 to-white border-0 shadow-lg rounded-2xl">
-    <h3 className="font-bold text-lg text-gray-900 mb-4">Select Variant</h3>
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-      {product.variants.map((variant) => {
-        const isDisabled = !hasSelectedCurrencyPrice(variant) || variant.stock_quantity === 0;
-        const isSelected = selectedVariant?.id === variant.id;
-        const isLowStock = variant.stock_quantity > 0 && variant.stock_quantity <= 5;
-        
-        return (
-          <Button
-            key={variant.id}
-            variant={isSelected ? "default" : "outline"}
-            className={`p-3 text-sm h-auto text-left flex flex-col gap-1 ${
-              isSelected
-                ? "bg-zinc-900 text-white hover:bg-zinc-800"
-                : isDisabled
-                ? "border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed"
-                : "border-gray-200 hover:bg-gray-50"
-            }`}
-            onClick={() => handleVariantChange(variant)}
-            disabled={isDisabled}
-            aria-label={`Select variant ${variant.name}${isDisabled ? ' (not available)' : ''}`}
-          >
-            <span className={isDisabled ? "text-gray-400" : ""}>{variant.name}</span>
-            <span>
-              {formatPriceWithSmallDecimals(
-                variant.discount_aed,
-                variant.discount_inr,
-                selectedCurrency,
-                true,
-                isSelected ? "#fff" : isDisabled ? "#9ca3af" : "#18181b"
-              )}
-            </span>
-            {variant.stock_quantity === 0 && (
-              <span className="text-xs text-zinc-500 font-medium mt-1">
-                Out of Stock
-              </span>
-            )}
-            {!hasSelectedCurrencyPrice(variant) && variant.stock_quantity > 0 && (
-              <span className="text-xs text-zinc-500 font-medium mt-1">
-                Not available in INR
-              </span>
-            )}
-            {variant.stock_quantity > 0 && hasSelectedCurrencyPrice(variant) && (
-              <span className={`text-xs font-medium mt-1 ${
-                isSelected ? "text-white/80" : isLowStock ? "text-zinc-300" : "text-zinc-200"
-              }`}>
-                {isLowStock ? `Only ${variant.stock_quantity} left` : `${variant.stock_quantity} in stock`}
-              </span>
-            )}
-          </Button>
-        );
-      })}
-    </div>
-  </Card>
-)}
+                <div className="h-px bg-gray-100" />
 
-
-              {/* Product Info */}
-              <div className="space-y-6">
-                {product.description && (
-                  <Card className="p-6 border-0 shadow-lg rounded-2xl">
-                    <h3 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-zinc-500" />
-                      About Product
+                {/* Variant selector */}
+                {product.variants.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                      Variant
+                      {selectedVariant && (
+                        <span className="font-normal text-gray-500 ml-1">— {selectedVariant.name}</span>
+                      )}
                     </h3>
-                    <p className="text-gray-600 leading-relaxed">{product.description}</p>
-                  </Card>
+                    <div className="flex flex-wrap gap-2">
+                      {product.variants.map((variant) => {
+                        const isDisabled = !hasSelectedCurrencyPrice(variant) || variant.stock_quantity === 0
+                        const isSelected = selectedVariant?.id === variant.id
+
+                        return (
+                          <button
+                            key={variant.id}
+                            onClick={() => handleVariantChange(variant)}
+                            disabled={isDisabled}
+                            className={`relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border ${
+                              isSelected
+                                ? "bg-zinc-900 text-white border-zinc-900 shadow-sm"
+                                : isDisabled
+                                  ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
+                                  : "bg-white text-gray-700 border-gray-200 hover:border-zinc-400 hover:shadow-sm"
+                            }`}
+                            aria-label={`Select variant ${variant.name}${isDisabled ? ' (not available)' : ''}`}
+                          >
+                            <span className="block">{variant.name}</span>
+                            <span className={`block text-xs mt-0.5 ${isSelected ? 'text-white/70' : isDisabled ? 'text-gray-300' : 'text-gray-400'}`}>
+                              {formatPriceWithSmallDecimals(
+                                variant.discount_aed || variant.price_aed,
+                                variant.discount_inr || variant.price_inr,
+                                selectedCurrency,
+                                true,
+                                isSelected ? "rgba(255,255,255,0.7)" : isDisabled ? "#d1d5db" : "#9ca3af"
+                              )}
+                            </span>
+                            {isSelected && (
+                              <span className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-sm">
+                                <Check className="w-2.5 h-2.5 text-zinc-900" />
+                              </span>
+                            )}
+                            {isDisabled && variant.stock_quantity === 0 && (
+                              <span className="absolute inset-0 flex items-center justify-center">
+                                <span className="w-full h-px bg-gray-300 rotate-[-12deg]" />
+                              </span>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {selectedVariant && (
+                      <p className={`text-xs mt-2 ${stockQty <= 5 && stockQty > 0 ? 'text-amber-600 font-medium' : 'text-gray-400'}`}>
+                        {getStockMessage(selectedVariant)}
+                      </p>
+                    )}
+                  </div>
                 )}
 
-                {/* Key Features */}
-                {product.features?.length > 0 && (
-                  <Card className="p-6 border-0 shadow-lg rounded-2xl">
-                    <h3 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
-                      <Award className="w-5 h-5 text-zinc-500" />
-                      Key Features
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {product.features.map((feature, index) => (
-                        <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="w-2 h-2 rounded-full bg-zinc-400" />
-                          <span className="text-sm text-gray-700">{feature}</span>
-                        </div>
-                      ))}
+                <div className="h-px bg-gray-100" />
+
+                {/* Quantity + Actions */}
+                <div className="space-y-4">
+                  {/* Quantity */}
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-semibold text-gray-900">Qty</span>
+                    <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-30"
+                        disabled={!currencyAvailable || stockQty === 0}
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus className="w-4 h-4" />
+                      </button>
+                      <span className="w-12 h-10 flex items-center justify-center text-sm font-bold border-x border-gray-200">
+                        {quantity}
+                      </span>
+                      <button
+                        onClick={() => setQuantity(Math.min(stockQty, quantity + 1))}
+                        className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-30"
+                        disabled={!currencyAvailable || stockQty === 0}
+                        aria-label="Increase quantity"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
                     </div>
-                  </Card>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex flex-col gap-3">
+                    <Button
+                      onClick={handleBuyNow}
+                      className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-semibold rounded-xl shadow-sm transition-all duration-200 hover:shadow-md disabled:opacity-50"
+                      disabled={!product.is_available || !selectedVariant || stockQty === 0 || !currencyAvailable}
+                      aria-label="Buy now"
+                    >
+                      <Zap className="w-4 h-4 mr-2" />
+                      {!selectedVariant || !isVariantAvailable(selectedVariant)
+                        ? (!hasSelectedCurrencyPrice(selectedVariant)
+                            ? `Not available in ${selectedCurrency === 'INR' ? 'India' : 'UAE'}`
+                            : 'Out of Stock')
+                        : "Buy Now"}
+                    </Button>
+                    <Button
+                      onClick={handleAddToCart}
+                      variant="outline"
+                      className="w-full h-12 rounded-xl border-gray-200 hover:border-zinc-400 text-sm font-semibold transition-all duration-200 hover:shadow-sm disabled:opacity-50"
+                      disabled={!product.is_available || !selectedVariant || stockQty === 0 || !currencyAvailable}
+                      aria-label="Add to cart"
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Add to Cart
+                    </Button>
+                  </div>
+                </div>
+
+                {/* About */}
+                {product.description && (
+                  <>
+                    <div className="h-px bg-gray-100" />
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900 mb-2">About this product</h3>
+                      <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
+                    </div>
+                  </>
+                )}
+
+                {/* Features */}
+                {product.features?.length > 0 && (
+                  <>
+                    <div className="h-px bg-gray-100" />
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3">Features</h3>
+                      <ul className="space-y-2">
+                        {product.features.map((feature, index) => (
+                          <li key={index} className="flex items-start gap-2.5 text-sm text-gray-600">
+                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </>
                 )}
 
                 {/* Specifications */}
-                <Card className="p-6 border-0 shadow-lg rounded-2xl">
-                  <h3 className="font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
-                    <Globe className="w-5 h-5 text-zinc-500" />
-                    Specifications
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[
-                      ...(product.brand ? [{ label: "Brand", value: product.brand }] : []),
-                      ...(product.model ? [{ label: "Model", value: product.model }] : []),
-                      ...(product.color ? [{ label: "Color", value: product.color }] : []),
-                      ...(product.storage_capacity ? [{ label: "Storage", value: product.storage_capacity }] : []),
-                      ...(product.condition_type && product.condition_type !== 'none' ? [{ label: "Condition", value: conditionLabels[product.condition_type] }] : []),
-                      { label: "Currency", value: selectedCurrency },
-                      {
-                        label: "Available in",
-                        value: selectedVariant
-                            ? selectedVariant.available_aed ? 'UAE' : '' + (selectedVariant.available_inr ? 'India' : '') : 'N/A'
-                      },
-                      ...(product.warranty_months && product.warranty_months !== "0"
-                        ? [{ label: "Warranty", value: `${product.warranty_months} months` }]
-                        : []),
-                      { label: "Stock", value: `${selectedVariant?.stock_quantity ?? 0} available` },
-                      // ...(product.sku ? [{ label: "SKU", value: product.sku }] : [])
-                    ].map((spec, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <span className="text-sm text-gray-500 font-medium">{spec.label}:</span>
-                        <span className={`text-sm font-semibold ${spec.label === "Stock" ? "text-zinc-700" : "text-gray-900"}`}>
-                          {spec.value}
-                        </span>
+                {specEntries.length > 0 && (
+                  <>
+                    <div className="h-px bg-gray-100" />
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-900 mb-3">Specifications</h3>
+                      <div className="rounded-xl border border-gray-100 overflow-hidden divide-y divide-gray-100">
+                        {specEntries.map((spec, index) => (
+                          <div key={index} className="flex items-center justify-between px-4 py-2.5 even:bg-gray-50/50">
+                            <span className="text-sm text-gray-500">{spec.label}</span>
+                            <span className="text-sm font-medium text-gray-900">{spec.value}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </Card>
-              </div>
-
-              {/* Quantity Selector */}
-              <Card className="p-6 border-0 shadow-lg rounded-2xl">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-lg">Quantity:</span>
-                  <div className="flex items-center bg-gray-100 rounded-xl p-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="rounded-lg hover:bg-white transition-colors"
-                      disabled={!currencyAvailable || !selectedVariant || (selectedVariant?.stock_quantity ?? 0) === 0}
-                      aria-label="Decrease quantity"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </Button>
-                    <span className="px-6 py-2 font-bold text-lg min-w-16 text-center">{quantity}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setQuantity(Math.min(selectedVariant?.stock_quantity ?? 0, quantity + 1))}
-                      className="rounded-lg hover:bg-white transition-colors"
-                      disabled={!currencyAvailable || !selectedVariant || (selectedVariant?.stock_quantity ?? 0) === 0}
-                      aria-label="Increase quantity"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Action Buttons */}
-              <div className="space-y-4 bottom-4 z-10">
-                <Button
-                  onClick={handleBuyNow}
-                  className="w-full bg-zinc-900 hover:bg-zinc-800 text-white py-4 text-lg font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50"
-                  disabled={!product.is_available || !selectedVariant || (selectedVariant?.stock_quantity ?? 0) === 0 || !currencyAvailable}
-                  aria-label="Buy now"
-                >
-                  <Zap className="w-5 h-5 mr-2" />
-                  {!selectedVariant || !isVariantAvailable(selectedVariant) ? 
-                    (!hasSelectedCurrencyPrice(selectedVariant) ? 
-                      `Not available in ${selectedCurrency === 'INR' ? 'India' : 'UAE'}` : 
-                      'Out of Stock') : 
-                    "Buy Now - Quick Checkout"}
-                </Button>
-                <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    onClick={handleAddToCart}
-                    variant="outline"
-                    className="py-3 rounded-lg border border-zinc-300 hover:border-zinc-400 hover:bg-zinc-50 transition-colors"
-                    disabled={!product.is_available || !selectedVariant || (selectedVariant?.stock_quantity ?? 0) === 0 || !currencyAvailable}
-                    aria-label="Add to cart"
-                  >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Add to Cart
-                  </Button>
-                  <Button
-                    onClick={() => handleToggleWishlist(product)}
-                    variant="outline"
-                    className={`py-3 rounded-lg transition-colors ${
-                      isInWishlist(product.id)
-                        ? "bg-zinc-100 text-zinc-900 border-zinc-300 hover:bg-zinc-200 border"
-                        : "border border-zinc-200 hover:border-zinc-400 hover:bg-zinc-50"
-                    }`}
-                    aria-label={isInWishlist(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
-                  >
-                    <Heart className={`w-4 h-4 mr-2 ${isInWishlist(product.id) ? "fill-zinc-900 text-zinc-900" : ""}`} />
-                    {isInWishlist(product.id) ? 'Saved' : 'Save'}
-                  </Button>
-                </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Recommended Products Section */}
-      <RecommendedProducts 
+      {/* Recommended Products */}
+      <RecommendedProducts
         currentProductId={product.id}
         categoryId={product.category_id}
       />
+
+      {/* Mobile sticky bottom bar */}
+      {product && currencyAvailable && stockQty > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 p-3 flex gap-3 lg:hidden safe-area-pb">
+          <Button
+            onClick={handleAddToCart}
+            variant="outline"
+            className="flex-1 h-12 rounded-xl border-gray-200 text-sm font-semibold"
+            disabled={!product.is_available || !selectedVariant || stockQty === 0}
+          >
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            Cart
+          </Button>
+          <Button
+            onClick={handleBuyNow}
+            className="flex-[2] h-12 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-sm font-semibold shadow-sm"
+            disabled={!product.is_available || !selectedVariant || stockQty === 0}
+          >
+            <Zap className="w-4 h-4 mr-2" />
+            Buy Now
+          </Button>
+        </div>
+      )}
 
       <Footer />
     </div>

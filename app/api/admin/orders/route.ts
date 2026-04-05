@@ -80,7 +80,7 @@ async function ensureSchema() {
         
         let startingNumber = 10001
         for (const order of ordersWithoutNumbers) {
-          const orderNumber = `SAB-${startingNumber}`
+          const orderNumber = `MC-${startingNumber}`
           await sql`
             UPDATE orders 
             SET order_number = ${orderNumber}
