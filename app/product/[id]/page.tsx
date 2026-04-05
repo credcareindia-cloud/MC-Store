@@ -501,14 +501,14 @@ const conditionColors = {
             {/* Product Images */}
             <div className="space-y-6">
               <div className="relative group">
-                <div className="overflow-hidden rounded-2xl shadow-2xl bg-white p-4">
+                <div className="overflow-hidden rounded-2xl shadow-2xl bg-gray-50 p-4">
                   <Image
                     src={product.image_urls[selectedImageIndex] || `/placeholder.svg?height=600&width=600&query=${encodeURIComponent(product.name)}`}
                     alt={product.name || 'Product image'}
                     width={600}
                     height={600}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
-                    className="w-full h-80 sm:h-96 lg:h-[500px] object-cover rounded-xl group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-80 sm:h-96 lg:h-[500px] object-contain rounded-xl group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute top-6 left-6 flex flex-col gap-2">
                     {product.is_new && (
@@ -565,7 +565,7 @@ const conditionColors = {
                         width={100}
                         height={100}
                         sizes="(max-width: 768px) 25vw, 100px"
-                        className="w-full h-20 object-cover"
+                        className="w-full h-20 object-contain bg-gray-50 p-1"
                       />
                     </button>
                   ))}

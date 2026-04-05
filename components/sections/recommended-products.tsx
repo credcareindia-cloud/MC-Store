@@ -153,12 +153,12 @@ export default function RecommendedProducts({
               >
                 <CardContent className="p-0">
                   {/* Product Image */}
-                  <div className="relative aspect-square overflow-hidden bg-gray-100">
+                  <div className="relative aspect-square overflow-hidden bg-gray-50">
                     <Image
                       src={product.image_urls?.[0] || "/placeholder.svg"}
                       alt={product.name}
                       fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-300"
+                      className="object-contain p-3 group-hover:scale-105 transition-transform duration-300"
                     />
                     
                     {/* Badges */}
@@ -258,12 +258,12 @@ export default function RecommendedProducts({
                   <Card className="group hover:shadow-lg transition-all duration-300 bg-white border-0 shadow-md overflow-hidden h-full">
                     <CardContent className="p-0">
                       {/* Product Image */}
-                      <div className="relative aspect-square overflow-hidden bg-gray-100">
+                      <div className="relative aspect-square overflow-hidden bg-gray-50">
                         <Image
                           src={product.image_urls?.[0] || "/placeholder.svg"}
                           alt={product.name}
                           fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="object-contain p-2 group-hover:scale-105 transition-transform duration-300"
                         />
                         
                         {/* Badges */}

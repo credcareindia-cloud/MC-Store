@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useRef } from "react"
 import { upload } from "@vercel/blob/client"
+import { compressImage } from "@/lib/compress-image"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Upload, X, ImageIcon } from "lucide-react"
@@ -40,13 +41,18 @@ export default function ImageUploadSingle({ value, onChange, label = "Image", cl
     setError(null)
 
     try {
-      const safeName = file.name.replace(/[^\w.-]/g, "_").slice(0, 180) || "image"
+      const { file: optimized, originalSizeKB, compressedSizeKB, saved } = await compressImage(file)
+      if (saved) {
+        console.log(`Image: ${originalSizeKB} KB → ${compressedSizeKB} KB`)
+      }
+
+      const safeName = optimized.name.replace(/[^\w.-]/g, "_").slice(0, 180) || "image.webp"
       const pathname = `uploads/${Date.now()}-${safeName}`
 
-      const blob = await upload(pathname, file, {
+      const blob = await upload(pathname, optimized, {
         access: "public",
         handleUploadUrl: "/api/blob/client-upload",
-        multipart: file.size > 4 * 1024 * 1024,
+        multipart: optimized.size > 4 * 1024 * 1024,
       })
 
       onChange(blob.url)
@@ -119,7 +125,7 @@ export default function ImageUploadSingle({ value, onChange, label = "Image", cl
 
       {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
 
-      <p className="text-gray-500 text-xs mt-1">Supports: JPG, PNG, GIF, WebP (max 50MB)</p>
+      <p className="text-gray-500 text-xs mt-1">JPG, PNG, GIF, WebP (max 50MB, auto-compressed to WebP)</p>
     </div>
   )
 }

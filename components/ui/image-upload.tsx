@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState, useRef } from "react"
 import { upload } from "@vercel/blob/client"
+import { compressImage } from "@/lib/compress-image"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Upload, X, ImageIcon, Loader2 } from "lucide-react"
@@ -47,14 +48,19 @@ export default function MultipleImageUpload({
     setErrors(prev => ({ ...prev, [index]: "" }))
 
     try {
-      const safeName = file.name.replace(/[^\w.-]/g, "_").slice(0, 180) || "image"
+      // Compress in-browser: ≤1 MB WebP, max 1920px
+      const { file: optimized, originalSizeKB, compressedSizeKB, saved } = await compressImage(file)
+      if (saved) {
+        console.log(`Image ${index + 1}: ${originalSizeKB} KB → ${compressedSizeKB} KB`)
+      }
+
+      const safeName = optimized.name.replace(/[^\w.-]/g, "_").slice(0, 180) || "image.webp"
       const pathname = `products/${Date.now()}-${index}-${safeName}`
 
-      // Direct browser → Vercel Blob (avoids ~4.5MB serverless body limit on Vercel)
-      const blob = await upload(pathname, file, {
+      const blob = await upload(pathname, optimized, {
         access: "public",
         handleUploadUrl: "/api/blob/client-upload",
-        multipart: file.size > 4 * 1024 * 1024,
+        multipart: optimized.size > 4 * 1024 * 1024,
       })
 
       const newImages = [...value]
@@ -142,13 +148,13 @@ export default function MultipleImageUpload({
                   {uploading.includes(index) ? (
                     <>
                       <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mb-2" />
-                      <span className="text-sm text-gray-400">Uploading...</span>
+                      <span className="text-sm text-gray-400">Compressing & uploading...</span>
                     </>
                   ) : (
                     <>
                       <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
                       <span className="text-sm text-gray-400">Click to upload</span>
-                      <span className="text-xs text-gray-500">JPG, PNG, WebP (Max 50MB)</span>
+                      <span className="text-xs text-gray-500">JPG, PNG, WebP (Max 50MB, auto-compressed)</span>
                     </>
                   )}
                 </div>
@@ -185,7 +191,7 @@ export default function MultipleImageUpload({
 
       <div className="mt-3 space-y-1">
         <p className="text-gray-500 text-xs">
-          Upload up to {maxImages} images. Files upload directly to storage (works on Vercel for large images).
+          Upload up to {maxImages} images. Auto-compressed to WebP (≤ 1 MB) for fast page loads.
         </p>
         <p className="text-gray-500 text-xs">
           The first image will be used as the main product image in listings.

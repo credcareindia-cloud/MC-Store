@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { useLoginModal } from '@/lib/stores/useLoginModal'
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, ChevronRight, Zap, Grid3X3, List, SlidersHorizontal, Tag, Heart, ChevronDown, ShoppingCart, Loader2 } from "lucide-react"
+import { Star, ChevronRight, Zap, Grid3X3, List, SlidersHorizontal, Tag, Heart, ChevronDown, ShoppingCart, Loader2, Flame, ArrowRight, Bookmark } from "lucide-react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/contexts/auth-context"
@@ -507,162 +507,79 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
           </div>
         </div>
 
-        {/* Lightning Deals Section - Only show when not searching */}
+        {/* Top Picks */}
     {lightningDeals.length > 0 && !isSearchActive && (
-  <div className="px-4 lg:px-6 mt-6">
+  <div className="px-4 lg:px-6 mt-6 lg:mt-8">
     <div className="max-w-7xl mx-auto">
-    
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-zinc-600" />
-          <h3 className="text-xl font-bold text-gray-900">Lightning deals</h3>
-          <span className="text-gray-500">({lightningDeals.length} items)</span>
-        </div>
-        <ChevronDown className="w-5 h-5 text-gray-400" />
+
+      <div className="flex items-center gap-2 mb-4">
+        <Zap className="w-5 h-5 text-zinc-900" />
+        <h3 className="text-base lg:text-lg font-bold text-zinc-900">Top Picks</h3>
       </div>
-      
-      {/* Horizontally Scrollable Container */}
-      <div className="relative">
-        <div className="flex gap-3 lg:gap-4 overflow-x-auto pb-4 scrollbar-hide">
-          {lightningDeals.map((item, index) => {
-            // Get the best available variant
-            const availableVariant = item.variants?.find((v: any) => 
-              v.available_aed || v.available_inr
-            ) || item.variants?.[0];
-            
-            // Calculate discount percentage based on selected currency
-            let discountPercent = 0;
-            if (availableVariant) {
-              console.log('Lightning Deals - Currency:', selectedCurrency, 'Variant:', availableVariant);
-              if (selectedCurrency === 'AED' && availableVariant.price_aed && availableVariant.discount_aed && availableVariant.price_aed > availableVariant.discount_aed) {
-                discountPercent = Math.round(((availableVariant.price_aed - availableVariant.discount_aed) / availableVariant.price_aed) * 100);
-                console.log('AED Discount:', discountPercent, 'Price:', availableVariant.price_aed, 'Discount:', availableVariant.discount_aed);
-              } else if (selectedCurrency === 'INR' && availableVariant.price_inr && availableVariant.discount_inr && availableVariant.price_inr > availableVariant.discount_inr) {
-                discountPercent = Math.round(((availableVariant.price_inr - availableVariant.discount_inr) / availableVariant.price_inr) * 100);
-                console.log('INR Discount:', discountPercent, 'Price:', availableVariant.price_inr, 'Discount:', availableVariant.discount_inr);
-              }
-            }
 
-            return (
-              <Card
-                key={item.id}
-                className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group border border-zinc-200 hover:border-zinc-300 flex-shrink-0 w-44 lg:w-52"
-              >
-                <div className="relative">
-                  <Image
-                    key={item.id}
-                    onClick={() => router.push(`/product/${item.id}`)}
-                    src={
-                      item.image_urls?.[0] ||
-                      `/placeholder.svg?height=200&width=200&query=${encodeURIComponent(item.name) || "/placeholder.svg"}`
-                    }
-                    alt={item.name || "Product"}
-                    width={200}
-                    height={200}
-                    className="w-full h-32 lg:h-40 object-cover group-hover:scale-110 transition-transform duration-500 cursor-pointer"
-                  />
-                  
-                  {/* Ranking Badge */}
-                  <div className="absolute top-2 left-2 bg-zinc-900 text-white rounded w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center text-xs lg:text-sm font-semibold">
-                    #{index + 1}
-                  </div>
+      <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide">
+        {lightningDeals.map((item) => {
+          const v = item.variants?.find((vt: any) => vt.available_aed || vt.available_inr) || item.variants?.[0];
 
-                  {/* TOP SELLING Badge - only show if featured */}
-                  {item.is_featured && (
-                    <Badge className="absolute top-2 right-2 bg-white text-zinc-900 text-xs px-2 py-1 rounded border border-zinc-200 font-medium">
-                      Featured
-                    </Badge>
-                  )}
+          let off = 0;
+          if (v) {
+            if (selectedCurrency === "AED" && v.price_aed && v.discount_aed && v.price_aed > v.discount_aed)
+              off = Math.round(((v.price_aed - v.discount_aed) / v.price_aed) * 100);
+            else if (selectedCurrency === "INR" && v.price_inr && v.discount_inr && v.price_inr > v.discount_inr)
+              off = Math.round(((v.price_inr - v.discount_inr) / v.price_inr) * 100);
+          }
 
-                  {/* Feature Badge */}
-                  <Badge className="absolute bottom-2 left-2 bg-zinc-100 text-zinc-800 text-xs px-2 py-1 rounded border border-zinc-200">
-                    {item.features?.[0]
-                      ? item.features[0].length > 7
-                        ? item.features[0].slice(0, 7) + "..."
-                        : item.features[0]
-                      : "Assured"}
-                  </Badge>
+          const unavail =
+            (selectedCurrency === "AED" && !v?.available_aed) ||
+            (selectedCurrency === "INR" && !v?.available_inr);
 
-                  {/* Discount Percentage Badge */}
-                  {discountPercent > 0 && (
-                    <Badge className="absolute bottom-2 right-2 bg-zinc-900 text-white text-xs px-2 py-1 rounded font-medium">
-                      -{discountPercent}% 
-                    </Badge>
-                  )}
-                </div>
+          return (
+            <div
+              key={item.id}
+              onClick={() => router.push(`/product/${item.id}`)}
+              className="flex-shrink-0 w-36 lg:w-44 cursor-pointer group"
+            >
+              {/* Image */}
+              <div className="relative aspect-square rounded-2xl bg-white border border-zinc-200 overflow-hidden mb-2.5">
+                <Image
+                  src={item.image_urls?.[0] || `/placeholder.svg?height=200&width=200&query=${encodeURIComponent(item.name)}`}
+                  alt={item.name || "Product"}
+                  fill
+                  className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+                />
 
-                <CardContent className="p-3 lg:p-4">
-                  {/* Enhanced Price Section */}
-                  <div className="mb-2">
-                    {availableVariant && (
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {(
-                          // Check currency availability
-                          (selectedCurrency === "AED" && !availableVariant.available_aed) ||
-                          (selectedCurrency === "INR" && !availableVariant.available_inr)
-                        ) ? (
-                          // Show "Not Available" in red if unavailable
-                          <span className="text-zinc-500 font-medium text-sm lg:text-base">
-                            Not Available
-                          </span>
-                        ) : (
-                          <>
-                            {/* Discounted Price with smaller decimal */}
-                            <span className="text-zinc-900 font-semibold text-sm lg:text-base">
-                              {formatPriceWithSmallDecimals(
-                                availableVariant.discount_aed,
-                                availableVariant.discount_inr,
-                                "AED",
-                                true,
-                                "#18181b"
-                              )}
-                            </span>
+                {off > 0 && (
+                  <span className="absolute top-2 left-2 bg-zinc-900 text-white text-[10px] font-bold rounded-md px-1.5 py-0.5 leading-none">
+                    {off}% OFF
+                  </span>
+                )}
 
-                            {/* Original Price if discount is available */}
-                            {discountPercent > 0 && (
-                              <span className="text-gray-500 text-xs line-through">
-                               {formatPriceWithSmallDecimals(
-                                availableVariant.price_aed,
-                                availableVariant.price_inr,
-                                "AED",
-                                true,           
-                                "#6B7280"  
-                              )}
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleToggleWishlist(item); }}
+                  className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
+                    isInWishlist(item.id)
+                      ? "bg-red-50 text-red-500"
+                      : "bg-white/90 text-zinc-400 hover:text-red-500"
+                  }`}
+                >
+                  <Heart className={`w-3.5 h-3.5 ${isInWishlist(item.id) ? "fill-current" : ""}`} />
+                </button>
+              </div>
 
-                  <p className="text-xs lg:text-sm text-gray-600 mt-1 line-clamp-2">{item.name}</p>
-
-                  <Button
-                    onClick={() => router.push(`/product/${item.id}`)}
-                    className="w-full mt-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-md py-2 text-xs lg:text-sm font-medium transition-colors"
-                  >
-                    Buy Now
-                  </Button>
-                  
-                  <Button
-                    onClick={() => handleToggleWishlist(item)}
-                    className={`w-full mt-2 rounded-md py-2 text-xs lg:text-sm font-medium transition-colors ${
-                      isInWishlist(item.id)
-                        ? 'bg-zinc-900 text-white hover:bg-zinc-800'
-                        : 'bg-zinc-100 text-zinc-800 border border-zinc-200 hover:bg-zinc-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center gap-1">
-                      <Heart className={`w-3 h-3 ${isInWishlist(item.id) ? 'fill-current' : ''}`} />
-                      {isInWishlist(item.id) ? 'Saved' : 'Save'}
-                    </div>
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+              {/* Text */}
+              <p className="text-[13px] font-medium text-zinc-800 leading-tight line-clamp-1">{item.name}</p>
+              <div className="mt-1">
+                {unavail ? (
+                  <span className="text-xs text-zinc-400">Unavailable</span>
+                ) : v ? (
+                  <span className="text-sm font-bold text-zinc-900">
+                    {formatPriceWithSmallDecimals(v.discount_aed, v.discount_inr, "AED", true, "#18181b")}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   </div>
@@ -770,7 +687,7 @@ const badgeColor = conditionColors[item.condition_type as keyof typeof condition
         }`}
       >
         <div
-          className={`relative ${
+          className={`relative bg-gray-50 ${
             viewMode === "list" ? "w-32 h-32 flex-shrink-0" : ""
           }`}
         >
@@ -785,8 +702,8 @@ const badgeColor = conditionColors[item.condition_type as keyof typeof condition
             alt={item.name}
             width={200}
             height={200}
-            className={`object-cover group-hover:scale-105 transition-transform duration-300 cursor-pointer ${
-              viewMode === "list" ? "w-32 h-32 rounded-lg" : "w-full h-40 lg:h-48"
+            className={`object-contain group-hover:scale-105 transition-transform duration-300 cursor-pointer ${
+              viewMode === "list" ? "w-32 h-32 rounded-lg p-2" : "w-full h-40 lg:h-48 p-3"
             }`}
           />
 

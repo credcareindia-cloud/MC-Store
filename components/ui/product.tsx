@@ -54,7 +54,7 @@ export default function Product({ product, viewMode = "grid", showShopBadge = tr
       }`}
       onClick={handleViewProduct}
     >
-      <div className={`relative ${viewMode === "list" ? "w-48 flex-shrink-0" : ""}`}>
+      <div className={`relative bg-gray-50 ${viewMode === "list" ? "w-48 flex-shrink-0" : ""}`}>
         <Image
           src={
             product.image_url ||
@@ -63,8 +63,8 @@ export default function Product({ product, viewMode = "grid", showShopBadge = tr
           alt={product.name}
           width={200}
           height={200}
-          className={`object-cover group-hover:scale-105 transition-transform duration-300 ${
-            viewMode === "list" ? "w-full h-full" : "w-full h-40 lg:h-48"
+          className={`object-contain group-hover:scale-105 transition-transform duration-300 ${
+            viewMode === "list" ? "w-full h-full p-2" : "w-full h-40 lg:h-48 p-3"
           }`}
         />
 

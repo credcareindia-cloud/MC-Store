@@ -106,7 +106,7 @@ const NewArrivals: React.FC = () => {
                       viewMode === "list" ? "flex" : ""
                     }`}
                   >
-                    <div className={`relative ${viewMode === "list" ? "w-48 flex-shrink-0" : ""}`}>
+                    <div className={`relative bg-gray-50 ${viewMode === "list" ? "w-48 flex-shrink-0" : ""}`}>
                       <Image
                         src={
                           item.image_url ||
@@ -115,8 +115,8 @@ const NewArrivals: React.FC = () => {
                         alt={item.name}
                         width={200}
                         height={200}
-                        className={`object-cover group-hover:scale-105 transition-transform duration-300 ${
-                          viewMode === "list" ? "w-full h-full" : "w-full h-40 lg:h-48"
+                        className={`object-contain group-hover:scale-105 transition-transform duration-300 ${
+                          viewMode === "list" ? "w-full h-full p-2" : "w-full h-40 lg:h-48 p-3"
                         }`}
                       />
                       <Badge className="absolute top-2 left-2 bg-green-500 text-white text-xs">NEW</Badge>

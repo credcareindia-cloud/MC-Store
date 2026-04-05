@@ -116,14 +116,14 @@ export default function WishlistPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {currencyFilteredItems.map((item) => (
               <Card key={item.id} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
-                <div className="relative">
+                <div className="relative bg-gray-50">
                   <Link href={`/product/${item.id}`}>
                     <Image
                       src={item.image_urls?.[0] || item.image_url || `/placeholder.svg?height=200&width=200&query=${encodeURIComponent(item.name)}`}
                       alt={item.name}
                       width={300}
                       height={300}
-                      className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
+                      className="w-full h-48 object-contain p-3 hover:scale-105 transition-transform duration-300"
                     />
                   </Link>
                   

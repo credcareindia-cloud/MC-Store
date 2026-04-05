@@ -130,13 +130,13 @@ export default function FeaturedMenu() {
               className={`group hover:shadow-2xl transition-all duration-500 animate-slide-up rounded-3xl border-0 ${theme.cardBg} ${theme.shadow} transform hover:scale-105 hover:-translate-y-2`}
               style={{ animationDelay: `${index * 0.15}s` }}
             >
-              <div className="relative overflow-hidden rounded-t-3xl">
+              <div className="relative overflow-hidden rounded-t-3xl bg-gray-50">
                 <Image
                   src={item.image_url || `/placeholder.svg?height=320&width=400&query=${encodeURIComponent(item.name)}`}
                   alt={item.name}
                   width={400}
                   height={320}
-                  className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-700 rounded-t-3xl"
+                  className="w-full h-72 object-contain p-4 group-hover:scale-105 transition-transform duration-700 rounded-t-3xl"
                 />
 
                 {/* Gradient overlay */}
