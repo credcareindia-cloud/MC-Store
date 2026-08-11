@@ -3,7 +3,7 @@ import { sql } from "@/lib/database";
 
 export async function GET() {
   try {
-    
+    // Dynamically ensure offers table is created with all required columns
     await sql`
       CREATE TABLE IF NOT EXISTS offers (
         id SERIAL PRIMARY KEY,
@@ -11,13 +11,49 @@ export async function GET() {
         start_date DATE NOT NULL,
         end_date DATE NOT NULL,
         offers TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT TRUE,
+        priority INTEGER DEFAULT 0,
+        minimum_order_value_aed NUMERIC DEFAULT 0,
+        maximum_order_value_aed NUMERIC,
+        minimum_order_value_inr NUMERIC DEFAULT 0,
+        maximum_order_value_inr NUMERIC,
+        usage_limit_per_user INTEGER,
+        total_usage_limit INTEGER,
+        shop_restriction VARCHAR(255),
+        user_type_restriction VARCHAR(255),
+        allowed_categories TEXT,
+        excluded_categories TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `;
 
+    // Retroactively add columns to handle existing old schemas
+    const columns = [
+      { name: "is_active", type: "BOOLEAN DEFAULT TRUE" },
+      { name: "priority", type: "INTEGER DEFAULT 0" },
+      { name: "minimum_order_value_aed", type: "NUMERIC DEFAULT 0" },
+      { name: "maximum_order_value_aed", type: "NUMERIC" },
+      { name: "minimum_order_value_inr", type: "NUMERIC DEFAULT 0" },
+      { name: "maximum_order_value_inr", type: "NUMERIC" },
+      { name: "usage_limit_per_user", type: "INTEGER" },
+      { name: "total_usage_limit", type: "INTEGER" },
+      { name: "shop_restriction", type: "VARCHAR(255)" },
+      { name: "user_type_restriction", type: "VARCHAR(255)" },
+      { name: "allowed_categories", type: "TEXT" },
+      { name: "excluded_categories", type: "TEXT" }
+    ];
+
+    for (const col of columns) {
+      try {
+        await sql.query(`ALTER TABLE offers ADD COLUMN IF NOT EXISTS ${col.name} ${col.type}`);
+      } catch (err) {
+        // Suppress column exists errors
+      }
+    }
+
     const currentDate = new Date().toISOString().split('T')[0];
 
-    // Fetch only active offers ordered by priority (same as coupon validation system)
+    // Fetch active offers
     const activeOffers = await sql`
       SELECT * FROM offers 
       WHERE start_date <= ${currentDate} 
@@ -33,9 +69,6 @@ export async function GET() {
              THEN 0 ELSE 1 END,
         created_at DESC;
     `;
-    
-    console.log("Active offers found:", activeOffers.length);
-    console.log("Current date:", currentDate);
     
     return NextResponse.json(activeOffers);
   } catch (error) {

@@ -1,30 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/database"
-import { currentUser } from "@clerk/nextjs/server"
 import jwt from 'jsonwebtoken'
 
 async function getAuthenticatedUser(request: NextRequest) {
-  try {
-    const clerkUser = await currentUser()
-    if (clerkUser) {
-      return { id: clerkUser.id, source: 'clerk' }
-    }
-  } catch (error) {
-    console.log('Clerk auth failed:', error)
-  }
-
   try {
     const cookies = request.headers.get('cookie') || ''
     const authTokenMatch = cookies.match(/auth-token=([^;]+)/)
     
     if (authTokenMatch) {
       const token = authTokenMatch[1]
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any
-      console.log('manual auth user found:', decoded.userId)
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key-change-in-production') as any
       return { id: decoded.userId.toString(), source: 'manual' }
     }
   } catch (error) {
-    console.log('manual auth failed:', error)
+    console.log('auth failed:', error)
   }
 
   return null

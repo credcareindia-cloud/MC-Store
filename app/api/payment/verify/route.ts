@@ -1,33 +1,43 @@
 import { NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
-import { neon } from "@neondatabase/serverless"
+import { query } from "@/lib/db"
 
 // Helper function to get active Razorpay account credentials
 async function getActiveRazorpayCredentials() {
+  let activeAccount = "1"
   try {
-    // Initialize Neon DB connection
-    const sql = neon(process.env.DATABASE_URL!)
-
-    // Fetch active account number from settings
-    const rows = await sql`
-      SELECT value FROM settings WHERE key = 'active_razorpay_account' LIMIT 1
-    `
-
-    const activeAccount = rows[0]?.value || "1" // Default to account 1
-
-    // Get credentials from environment variables
-    const keyId = process.env[`RAZORPAY_ACCOUNT_${activeAccount}_KEY_ID`]
-    const keySecret = process.env[`RAZORPAY_ACCOUNT_${activeAccount}_KEY_SECRET`]
-
-    if (!keyId || !keySecret) {
-      throw new Error(`Razorpay credentials not found for account ${activeAccount}`)
+    const rows = await query<{ value: string }>(
+      "SELECT value FROM settings WHERE key = 'active_razorpay_account' LIMIT 1"
+    )
+    if (rows[0]?.value) {
+      activeAccount = rows[0].value
     }
-
-    return { keyId, keySecret, accountNumber: activeAccount }
   } catch (error) {
-    console.error("Failed to get Razorpay credentials:", error)
-    throw error
+    console.warn("Could not read active_razorpay_account from settings, defaulting to 1:", error)
   }
+
+  // Check all standard Razorpay env variable formats
+  const keyId =
+    process.env[`RAZORPAY_ACCOUNT_${activeAccount}_KEY_ID`] ||
+    process.env.RAZORPAY_KEY_ID ||
+    process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
+    process.env.RAZORPAY_ACCOUNT_1_KEY_ID ||
+    ""
+
+  const keySecret =
+    process.env[`RAZORPAY_ACCOUNT_${activeAccount}_KEY_SECRET`] ||
+    process.env.RAZORPAY_KEY_SECRET ||
+    process.env.RAZORPAY_SECRET ||
+    process.env.RAZORPAY_ACCOUNT_1_KEY_SECRET ||
+    ""
+
+  if (!keyId || !keySecret) {
+    throw new Error(
+      `Razorpay credentials missing. Please set RAZORPAY_KEY_ID & RAZORPAY_KEY_SECRET (or RAZORPAY_ACCOUNT_${activeAccount}_KEY_ID & RAZORPAY_ACCOUNT_${activeAccount}_KEY_SECRET) in .env`
+    )
+  }
+
+  return { keyId, keySecret, accountNumber: activeAccount }
 }
 
 export async function POST(request: NextRequest) {

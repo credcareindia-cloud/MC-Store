@@ -57,34 +57,21 @@ export default function Footer() {
     : SITE_PHONE_E164
 
   return (
-    <footer id="contact" className="relative bg-zinc-900 text-zinc-100">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-zinc-600 to-transparent opacity-60" aria-hidden />
+    <footer id="contact" className="relative bg-stone-900 text-zinc-100 border-t-4 border-red-600">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-600 to-transparent opacity-60" aria-hidden />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20 relative z-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12 gap-10 sm:gap-y-12 xl:gap-8">
           {/* Brand */}
           <div className="sm:col-span-2 xl:col-span-5 space-y-5">
-            <Link href="/" className="inline-flex items-center gap-3 group">
-              {settings.restaurant_logo ? (
-                <div className="relative h-11 w-11 sm:h-12 sm:w-12 shrink-0 rounded-lg bg-white/5 ring-1 ring-white/10 p-1">
-                  <Image
-                    src={settings.restaurant_logo || "/placeholder.svg"}
-                    alt=""
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-lg bg-zinc-800 ring-1 ring-zinc-700 flex items-center justify-center shrink-0 group-hover:bg-zinc-700 transition-colors">
-                  <Wrench className="h-5 w-5 sm:h-6 sm:w-6 text-zinc-300" />
-                </div>
-              )}
-              <div className="min-w-0 text-left">
-                <span className="block text-lg sm:text-xl font-semibold tracking-tight text-white truncate">
-                  {settings.restaurant_name}
+            <Link href="/" className="inline-flex items-center group">
+              <div className="flex items-center text-3xl font-black italic tracking-tighter select-none py-1 group-hover:scale-105 transition-transform duration-200">
+                <span className="text-white tracking-wider drop-shadow-md">
+                  Moto
                 </span>
-                <span className="block text-xs sm:text-sm text-zinc-500 font-medium uppercase tracking-wider">
-                  Spare parts & accessories
+                <span className="text-red-600 relative ml-0.5 inline-block">
+                  cart
+                  <span className="absolute -bottom-1 left-0 right-0 h-1 bg-red-600 rounded-full transform -skew-x-12"></span>
                 </span>
               </div>
             </Link>

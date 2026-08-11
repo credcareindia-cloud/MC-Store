@@ -1,6 +1,7 @@
 // app/api/admin/products/[id]/route.ts
 import { NextResponse } from "next/server"
 import { sql } from "@/lib/database"
+import { getProductById } from "@/lib/services/product-service"
 
 export async function PUT(
   request: Request,
@@ -220,32 +221,7 @@ export async function GET(
       )
     }
 
-    const [product] = await sql`
-      SELECT
-        p.*,
-        c.name AS category_name,
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'id', v.id,
-              'name', v.name,
-              'price_aed', v.price_aed,
-              'price_inr', v.price_inr,
-              'discount_aed', v.discount_aed,
-              'discount_inr', v.discount_inr,
-              'available_aed', v.available_aed,
-              'available_inr', v.available_inr,
-              'stock_quantity', v.stock_quantity
-            ) ORDER BY v.id
-          ) FILTER (WHERE v.id IS NOT NULL),
-          '[]'::json
-        ) AS variants
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN product_variants v ON p.id = v.product_id
-      WHERE p.id = ${id}
-      GROUP BY p.id, c.name;
-    `
+    const product = await getProductById(Number(id))
 
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 })
@@ -260,3 +236,5 @@ export async function GET(
     )
   }
 }
+
+

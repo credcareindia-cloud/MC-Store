@@ -1,4 +1,6 @@
 "use client"
+
+export const dynamic = "force-dynamic"
 import { useState, useEffect } from "react"
 import { X, Plus, Trash2, Calendar, Tag, Percent, DollarSign, AlertCircle, CheckCircle, XCircle, Star } from "lucide-react"
 

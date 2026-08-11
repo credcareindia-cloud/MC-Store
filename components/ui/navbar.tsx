@@ -21,7 +21,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useShop } from "@/lib/contexts/shop-context"
 import LoginModal from "@/components/auth/login-modal"
-import { useUser } from "@clerk/nextjs"
 import { NavbarSkeleton } from "@/components/ui/navbar-skeleton"
 
 const baseNavigation = [
@@ -59,7 +58,6 @@ function Nav() {
   const { settings } = useSettings()
   const { user, logout, isAuthenticated } = useAuth()
   const { shop } = useShop()
-  const { user: clerkUser } = useUser()
   const { selectedCurrency } = useCurrency()
   const searchParams = useSearchParams()
   const wishlistItems = useSelector((state: RootState) => state.wishlist.items)
@@ -358,7 +356,7 @@ function Nav() {
         <Banner page={currentPage} />
       </div>
       <nav
-        className={`sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950 transition-all duration-300 ${isScrolled ? "shadow-md shadow-black/20" : ""}`}
+        className={`sticky top-0 z-40 border-b-2 border-red-600 bg-zinc-950 transition-all duration-300 ${isScrolled ? "shadow-lg shadow-black/50" : ""}`}
         style={{ top: "var(--banner-height, 0px)" }}
       >
         {/* Desktop Header */}
@@ -367,35 +365,16 @@ function Nav() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-8">
                 {/* Logo */}
-                <Link href="/" className="nav-logo-link flex items-center group shrink-0" aria-label={settings.restaurant_name}>
-                  {settings.restaurant_logo ? (
-                    <div className="relative w-72 h-20 sm:w-80 sm:h-20 overflow-visible rounded-lg">
-                      <div className="nav-logo-3d h-full w-full">
-                        <div className="nav-logo-exhaust" aria-hidden>
-                          <span className="nav-logo-smoke nav-logo-smoke--haze" />
-                          <span className="nav-logo-smoke nav-logo-smoke--billow" />
-                          <span className="nav-logo-smoke nav-logo-smoke--wisp-1" />
-                          <span className="nav-logo-smoke nav-logo-smoke--wisp-2" />
-                          <span className="nav-logo-smoke nav-logo-smoke--core" />
-                        </div>
-                        <span className="nav-logo-streak nav-logo-streak--1" aria-hidden />
-                        <span className="nav-logo-streak nav-logo-streak--2" aria-hidden />
-                        <div className="relative z-[1] h-full w-full overflow-hidden rounded-lg">
-                          <Image
-                            src={settings.restaurant_logo || "/placeholder.svg"}
-                            alt=""
-                            fill
-                            className="object-cover object-left"
-                            sizes="(min-width: 640px) 320px, 288px"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="w-72 h-20 sm:w-80 sm:h-20 bg-zinc-800 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:bg-zinc-700">
-                      <ShoppingBag className="w-10 h-10 sm:w-11 sm:h-11 text-zinc-100" />
-                    </div>
-                  )}
+                <Link href="/" className="nav-logo-link flex items-center group shrink-0" aria-label="MotoCart">
+                  <div className="flex items-center text-3xl font-black italic tracking-tighter select-none py-1 group-hover:scale-105 transition-transform duration-200">
+                    <span className="text-white tracking-wider drop-shadow-md">
+                      Moto
+                    </span>
+                    <span className="text-red-600 relative ml-0.5 inline-block">
+                      cart
+                      <span className="absolute -bottom-1 left-0 right-0 h-1 bg-red-600 rounded-full transform -skew-x-12"></span>
+                    </span>
+                  </div>
                 </Link>
 
                 {/* Enhanced Search Bar */}
@@ -439,39 +418,18 @@ function Nav() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="text-white hover:bg-white/20 rounded-full p-3">
-                        {user?.isClerkUser ? (
-                          <Avatar className="h-6 w-6">
-                            {clerkUser?.imageUrl ? <AvatarImage src={clerkUser.imageUrl} alt="Profile" /> : null}
-                            <AvatarFallback className="bg-white/20 text-white">
-                              <User className="w-4 h-4" />
-                            </AvatarFallback>
-                          </Avatar>
-                        ) : (
-                          <User className="w-6 h-6" />
-                        )}
+                        <User className="w-6 h-6" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-80 p-0 border-0 shadow-2xl">
                       <div className="bg-zinc-900 rounded-t-lg p-6 border-b border-zinc-800">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                            {user?.isClerkUser && clerkUser?.imageUrl ? (
-                              <Avatar className="h-12 w-12">
-                                <AvatarImage src={clerkUser.imageUrl} alt="Profile" />
-                                <AvatarFallback className="bg-white/20 text-white">
-                                  <User className="w-6 h-6" />
-                                </AvatarFallback>
-                              </Avatar>
-                            ) : (
-                              <User className="w-6 h-6 text-white" />
-                            )}
+                            <User className="w-6 h-6 text-white" />
                           </div>
                           <div className="flex-1">
                             <h3 className="text-white font-semibold text-lg">{user?.name || "User"}</h3>
-                            <p className="text-white/80 text-sm">{user?.email}</p>
-                            {user?.isClerkUser && (
-                              <p className="text-white/60 text-xs">Google Account</p>
-                            )}
+                            <p className="text-white/80 text-sm">{user?.email || user?.phone || ""}</p>
                           </div>
                         </div>
                       </div>
@@ -568,8 +526,8 @@ function Nav() {
                         onClick={(e) => handleNavClick(baseNavigation[0], e)}
                         className={`hidden lg:flex items-center rounded-full px-6 py-2 font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
                           pathname === '/products' && !searchParams.get('category')
-                            ? "bg-white text-zinc-900 shadow-sm border border-zinc-200"
-                            : "text-white hover:bg-white/20"
+                            ? "bg-red-600 text-white font-bold shadow-md shadow-red-950/40"
+                            : "text-gray-200 hover:text-white hover:bg-white/10"
                         }`}
                       >
                         All Products
@@ -667,11 +625,11 @@ function Nav() {
                             onClick={(e) => handleNavClick(item, e)}
                             className={`rounded-full px-6 py-2 font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0 relative ${
                               isActiveCategoryLink(item)
-                                ? "bg-white text-zinc-900 shadow-sm border border-zinc-200"
-                                : "text-white hover:bg-white/20"
+                                ? "bg-red-600 text-white font-bold shadow-md shadow-red-950/40"
+                                : "text-gray-200 hover:text-white hover:bg-white/10"
                             } ${
                               category.is_special 
-                                ? "border-2 border-zinc-300 shadow-sm" 
+                                ? "border-2 border-red-500 shadow-sm" 
                                 : ""
                             }`}
                           >
@@ -703,35 +661,16 @@ function Nav() {
         <div className="hidden md:block lg:hidden">
           <div className="px-4 py-3">
             <div className="flex items-center justify-between mb-3">
-              <Link href="/" className="nav-logo-link flex items-center group shrink-0" aria-label={settings.restaurant_name}>
-                {settings.restaurant_logo ? (
-                  <div className="relative w-56 h-16 overflow-visible rounded-lg">
-                    <div className="nav-logo-3d h-full w-full">
-                      <div className="nav-logo-exhaust" aria-hidden>
-                        <span className="nav-logo-smoke nav-logo-smoke--haze" />
-                        <span className="nav-logo-smoke nav-logo-smoke--billow" />
-                        <span className="nav-logo-smoke nav-logo-smoke--wisp-1" />
-                        <span className="nav-logo-smoke nav-logo-smoke--wisp-2" />
-                        <span className="nav-logo-smoke nav-logo-smoke--core" />
-                      </div>
-                      <span className="nav-logo-streak nav-logo-streak--1" aria-hidden />
-                      <span className="nav-logo-streak nav-logo-streak--2" aria-hidden />
-                      <div className="relative z-[1] h-full w-full overflow-hidden rounded-lg">
-                        <Image
-                          src={settings.restaurant_logo || "/placeholder.svg"}
-                          alt=""
-                          fill
-                          className="object-cover object-left"
-                          sizes="224px"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-56 h-16 bg-white/20 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-105">
-                    <ShoppingBag className="w-9 h-9 text-white" />
-                  </div>
-                )}
+              <Link href="/" className="nav-logo-link flex items-center group shrink-0" aria-label="MotoCart">
+                <div className="flex items-center text-2xl font-black italic tracking-tighter select-none py-1 group-hover:scale-105 transition-transform duration-200">
+                  <span className="text-white tracking-wider drop-shadow-md">
+                    Moto
+                  </span>
+                  <span className="text-red-600 relative ml-0.5 inline-block">
+                    cart
+                    <span className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-red-600 rounded-full transform -skew-x-12"></span>
+                  </span>
+                </div>
               </Link>
               <div className="flex items-center gap-3">
                 <Button variant="ghost" className="text-white hover:bg-white/20 rounded-full p-2">
@@ -778,7 +717,7 @@ function Nav() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-64 p-0 border-0 shadow-2xl">
-                      <div className="bg-zinc-900 rounded-t-lg p-4 border-b border-zinc-800">
+                      <div className="bg-red-700 rounded-t-lg p-4 border-b border-red-800">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
                             {user?.isClerkUser && clerkUser?.imageUrl ? (
@@ -801,7 +740,7 @@ function Nav() {
                       <div className="bg-white rounded-b-lg p-2 space-y-1">
                         <DropdownMenuItem asChild>
                           <Link href="/dashboard" className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
-                            <User className="w-4 h-4 text-zinc-300" />
+                            <User className="w-4 h-4 text-zinc-700" />
                             <span className="text-gray-700">Dashboard</span>
                           </Link>
                         </DropdownMenuItem>
@@ -920,7 +859,7 @@ function Nav() {
                       href={item.href}
                       onClick={(e) => handleNavClick(item, e)}
                       className={`rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap ${isActiveCategoryLink(item) || ((item as any).scroll && pathname === "/" && item.href.includes("#"))
-                        ? "bg-white text-zinc-900"
+                        ? "bg-red-600 text-white font-bold"
                         : "text-white hover:bg-white/20"
                         }`}
                     >
@@ -952,35 +891,16 @@ function Nav() {
                 </Button>
               </div>
               <div className="flex justify-center min-w-0">
-                <Link href="/" className="nav-logo-link flex items-center justify-center group" aria-label={settings.restaurant_name}>
-                  {settings.restaurant_logo ? (
-                    <div className="relative h-14 w-[11.5rem] sm:w-52 sm:h-16 mx-auto overflow-visible rounded-md">
-                      <div className="nav-logo-3d h-full w-full">
-                        <div className="nav-logo-exhaust" aria-hidden>
-                          <span className="nav-logo-smoke nav-logo-smoke--haze" />
-                          <span className="nav-logo-smoke nav-logo-smoke--billow" />
-                          <span className="nav-logo-smoke nav-logo-smoke--wisp-1" />
-                          <span className="nav-logo-smoke nav-logo-smoke--wisp-2" />
-                          <span className="nav-logo-smoke nav-logo-smoke--core" />
-                        </div>
-                        <span className="nav-logo-streak nav-logo-streak--1" aria-hidden />
-                        <span className="nav-logo-streak nav-logo-streak--2" aria-hidden />
-                        <div className="relative z-[1] h-full w-full overflow-hidden rounded-md">
-                          <Image
-                            src={settings.restaurant_logo || "/placeholder.svg"}
-                            alt=""
-                            fill
-                            className="object-cover object-left"
-                            sizes="(max-width: 768px) 184px, 208px"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="h-14 w-[11.5rem] sm:w-52 sm:h-16 bg-white/20 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 group-hover:scale-105 mx-auto">
-                      <ShoppingBag className="w-8 h-8 text-white" />
-                    </div>
-                  )}
+                <Link href="/" className="nav-logo-link flex items-center justify-center group" aria-label="MotoCart">
+                  <div className="flex items-center text-xl font-black italic tracking-tighter select-none py-0.5 group-hover:scale-105 transition-transform duration-200">
+                    <span className="text-white tracking-wider drop-shadow-md">
+                      Moto
+                    </span>
+                    <span className="text-red-600 relative ml-0.5 inline-block">
+                      cart
+                      <span className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-red-600 rounded-full transform -skew-x-12"></span>
+                    </span>
+                  </div>
                 </Link>
               </div>
               <div className="flex items-center justify-end gap-2 min-w-0">

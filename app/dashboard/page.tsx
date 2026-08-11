@@ -1,5 +1,7 @@
 "use client"
 
+export const dynamic = "force-dynamic"
+
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/contexts/auth-context"
 import { useRouter } from "next/navigation"
@@ -8,10 +10,9 @@ import Footer from "@/components/ui/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { CalendarDays, ShoppingBag, Clock, CheckCircle, XCircle, User, Mail, Edit3, Settings, ChefHat, Truck } from "lucide-react"
+import { CalendarDays, ShoppingBag, Clock, CheckCircle, XCircle, User, Mail, ChefHat, Truck } from "lucide-react"
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useUser } from "@clerk/nextjs"
 
 interface OrderItem {
   id: number
@@ -25,6 +26,8 @@ interface Order {
   id: number
   status: string
   order_type: string
+  payment_method?: string
+  payment_status?: string
   customer_name: string
   total_amount: number | string
   delivery_fee: number | string
@@ -36,7 +39,7 @@ interface Order {
 
 export default function DashboardPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth()
-  const { user: clerkUser } = useUser()
+  const clerkUser: any = null
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [totalOrders, setTotalOrders] = useState(0)
@@ -59,8 +62,8 @@ export default function DashboardPage() {
 
       if (ordersRes.ok) {
         const ordersData = await ordersRes.json()
-        setTotalOrders(ordersData.length) // Set actual total count
-        setOrders(ordersData.slice(0, 2)) // Show only recent 2 orders
+        setTotalOrders(ordersData.length)
+        setOrders(ordersData.slice(0, 2))
       }
     } catch (error) {
       console.error("Error fetching user data:", error)
@@ -105,18 +108,13 @@ export default function DashboardPage() {
     }
   }
 
-  // Get member since year from original data
   const getMemberSinceYear = () => {
     if (user?.createdAt) {
       return new Date(user.createdAt).getFullYear()
     }
-    if (user?.isClerkUser && clerkUser?.createdAt) {
-      return new Date(clerkUser.createdAt).getFullYear()
-    }
-    return new Date().getFullYear() // Fallback to current year
+    return new Date().getFullYear()
   }
 
-  // Format money safely
   const formatMoney = (value: unknown) => {
     const num = typeof value === "number" ? value : Number.parseFloat(String(value ?? 0))
     return num.toFixed(2)
@@ -153,50 +151,23 @@ export default function DashboardPage() {
         <div className="mb-8">
           <div className="bg-white rounded-xl shadow-lg p-8">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-              {/* Profile Picture */}
               <div className="flex-shrink-0">
                 <div className="w-24 h-24 bg-gradient-to-br from-orange-400 to-yellow-500 rounded-full flex items-center justify-center shadow-lg">
-                  {user?.isClerkUser ? (
-                    <Avatar className="h-24 w-24">
-                      {clerkUser?.imageUrl ? <AvatarImage src={clerkUser.imageUrl} alt="Profile" /> : null}
-                      <AvatarFallback className="bg-gradient-to-br from-orange-400 to-yellow-500 text-white">
-                        <User className="w-12 h-12 text-white" />
-                      </AvatarFallback>
-                    </Avatar>
-                  ) : (
-                    <User className="w-12 h-12 text-white" />
-                  )}
+                  <User className="w-12 h-12 text-white" />
                 </div>
               </div>
 
-              {/* User Info */}
               <div className="flex-1">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                   <div>
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                      {user?.name || clerkUser?.fullName || "User"}
+                      {user?.name || "User"}
                     </h1>
                     <div className="flex items-center gap-2 text-gray-600 mb-2">
                       <Mail className="w-4 h-4" />
-                      <span>{user?.email || clerkUser?.primaryEmailAddress?.emailAddress}</span>
+                      <span>{user?.email}</span>
                     </div>
-                    {user?.isClerkUser && (
-                      <div className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
-                        <span>Google Account</span>
-                      </div>
-                    )}
                   </div>
-                  
-                  {/* <div className="flex gap-2 mt-4 md:mt-0">
-                    <Button variant="outline" size="sm" className="flex items-center gap-2">
-                      <Edit3 className="w-4 h-4" />
-                      Edit Profile
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex items-center gap-2">
-                      <Settings className="w-4 h-4" />
-                      Change Password
-                    </Button>
-                  </div> */}
                 </div>
 
                 <p className="text-gray-600">
@@ -288,9 +259,20 @@ export default function DashboardPage() {
                   {orders.map((order) => (
                     <div key={order.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                       <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-lg font-semibold text-gray-800">Order #{order.id}</span>
-                          <Badge className={`${getStatusColor(order.status)} flex items-center gap-1`}>
+
+                          {/* Payment Status Badge */}
+                          <Badge className={`text-xs px-2.5 py-0.5 font-medium ${
+                            order.payment_method?.toLowerCase() === 'cod' && order.payment_status !== 'paid'
+                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                              : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                          }`}>
+                            {order.payment_method?.toLowerCase() === 'cod' && order.payment_status !== 'paid' ? 'COD (Pending)' : 'Paid'}
+                          </Badge>
+
+                          {/* Delivery Status Badge */}
+                          <Badge className={`${getStatusColor(order.status)} flex items-center gap-1 text-xs px-2.5 py-0.5 font-medium`}>
                             {getStatusIcon(order.status)}
                             <span className="capitalize">{order.status}</span>
                           </Badge>
@@ -309,7 +291,6 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       
-                      {/* Order Items Summary */}
                       <div className="mb-4">
                         <div className="text-sm text-gray-600">
                           <p className="font-medium mb-2">Items:</p>

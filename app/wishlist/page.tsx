@@ -1,5 +1,7 @@
 "use client"
 
+export const dynamic = "force-dynamic"
+
 import { useSelector, useDispatch } from "react-redux"
 import { addToCart } from "@/lib/store/slices/orderSlice"
 import { removeFromWishlistAPI } from "@/lib/store/slices/wishlistSlice" 

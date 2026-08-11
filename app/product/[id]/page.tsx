@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { useLoginModal } from '@/lib/stores/useLoginModal'
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, ShoppingCart, Heart, Share2, AlertCircle, Plus, Minus, Truck, Shield, Zap, ChevronRight, Sparkles, Verified, Check, Package, Info } from "lucide-react"
+import { ArrowLeft, ShoppingCart, Heart, Share2, AlertCircle, Plus, Minus, Truck, Shield, Zap, ChevronRight, Sparkles, Verified, Check, Package, Info, Star } from "lucide-react"
 import Image from "next/image"
 import Navbar from "@/components/ui/navbar"
 import Footer from "@/components/ui/footer"
@@ -188,6 +188,16 @@ export default function ProductPage() {
       openModal()
       return
     }
+    const maxStock = selectedVariant?.stock_quantity ?? product?.stock_quantity ?? 0
+    if (maxStock <= 0) {
+      toast.error('This variant is currently out of stock')
+      return
+    }
+    if (quantity > maxStock) {
+      toast.error(`Cannot order more than available stock (${maxStock})`)
+      return
+    }
+
     if (product && selectedVariant && hasSelectedCurrencyPrice(selectedVariant)) {
       dispatch(addToCart({
         menuItem: product,
@@ -201,14 +211,22 @@ export default function ProductPage() {
       toast.success('Added to cart')
     } else if (!hasSelectedCurrencyPrice(selectedVariant)) {
       toast.error("This product is not available in INR")
-    } else if ((selectedVariant?.stock_quantity ?? 0) === 0) {
-      toast.error('This variant is currently out of stock')
     } else {
       toast.error('Unable to add to cart. Please try again.')
     }
   }
 
   const handleBuyNow = () => {
+    const maxStock = selectedVariant?.stock_quantity ?? product?.stock_quantity ?? 0
+    if (maxStock <= 0) {
+      toast.error('This variant is currently out of stock')
+      return
+    }
+    if (quantity > maxStock) {
+      toast.error(`Cannot order more than available stock (${maxStock})`)
+      return
+    }
+
     if (product && selectedVariant && hasSelectedCurrencyPrice(selectedVariant)) {
       dispatch(addToCart({
         menuItem: product,
@@ -224,8 +242,6 @@ export default function ProductPage() {
       }, 1500)
     } else if (!hasSelectedCurrencyPrice(selectedVariant)) {
       toast.error("This product is not available in INR")
-    } else if ((selectedVariant?.stock_quantity ?? 0) === 0) {
-      toast.error('This variant is currently out of stock')
     } else {
       toast.error('Unable to process order. Please try again.')
     }
@@ -519,252 +535,150 @@ export default function ProductPage() {
               </div>
             </div>
 
-            {/* ─── Right: Product Info ─── */}
-            <div className="lg:col-span-5">
-              <div className="space-y-6">
+            {/* ─── Right: Product Info (Zytheme Autoshop Screenshot 2 Style) ─── */}
+            <div className="lg:col-span-5 space-y-6">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 uppercase tracking-tight">
+                  {product.name}
+                </h1>
 
-                {/* Category + Brand */}
-                <div>
-                  <button
-                    onClick={() => router.push(`/products?category=${product.category_id}`)}
-                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors mb-2 block"
-                  >
-                    {product.category_name}
-                  </button>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight tracking-tight">
-                    {product.name}
-                  </h1>
-                  {product.brand && (
-                    <p className="text-sm text-gray-500 mt-1">by <span className="font-medium text-gray-700">{product.brand}</span></p>
-                  )}
-                </div>
-
-                {/* Price block */}
-                <div className="space-y-3">
-                  <div className="flex items-baseline gap-3 flex-wrap">
-                    {currencyAvailable && selectedVariant ? (
-                      <>
-                        <span className="text-3xl sm:text-4xl font-bold text-gray-900">
-                          {formatPriceWithSmallDecimals(
-                            selectedVariant.discount_aed || selectedVariant.price_aed,
-                            selectedVariant.discount_inr || selectedVariant.price_inr,
-                            selectedCurrency,
-                            true,
-                            "#111827"
-                          )}
-                        </span>
-                        {discountPercent > 0 && (
-                          <span className="text-lg text-gray-400 line-through">
-                            {formatPriceWithSmallDecimals(
-                              selectedVariant.price_aed,
-                              selectedVariant.price_inr,
-                              selectedCurrency,
-                              true,
-                              "#9ca3af"
-                            )}
-                          </span>
-                        )}
-                        {discountPercent > 0 && (
-                          <span className="text-sm font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">
-                            Save {discountPercent}%
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      <span className="text-lg text-gray-500">Not available in {selectedCurrency}</span>
-                    )}
+                {/* Rating + Reviews */}
+                <div className="flex items-center gap-3 mt-2">
+                  <div className="flex items-center text-red-600">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-current text-red-600" />
+                    ))}
                   </div>
+                  <span className="text-xs text-gray-500 font-semibold">5 Review(s) / Add Review</span>
+                </div>
+              </div>
 
-                  {/* Trust signals */}
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                    <span className="flex items-center gap-1.5">
-                      <Truck className="w-4 h-4" />
-                      Doorstep Delivery
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Verified className="w-4 h-4" />
-                      Motoclub Verified
-                    </span>
-                    {product.warranty_months && product.warranty_months !== "0" ? (
-                      <span className="flex items-center gap-1.5">
-                        <Shield className="w-4 h-4" />
-                        {product.warranty_months}mo Warranty
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1.5">
-                        <Shield className="w-4 h-4" />
-                        Quality Assured
+              {/* Price block */}
+              <div className="flex items-baseline gap-3">
+                {currencyAvailable && selectedVariant ? (
+                  <>
+                    {discountPercent > 0 && (
+                      <span className="text-lg text-gray-400 line-through">
+                        {formatPriceWithSmallDecimals(
+                          selectedVariant.price_aed,
+                          selectedVariant.price_inr,
+                          selectedCurrency,
+                          true,
+                          "#9ca3af"
+                        )}
                       </span>
                     )}
-                  </div>
-                </div>
-
-                <div className="h-px bg-gray-100" />
-
-                {/* Variant selector */}
-                {product.variants.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">
-                      Variant
-                      {selectedVariant && (
-                        <span className="font-normal text-gray-500 ml-1">— {selectedVariant.name}</span>
+                    <span className="text-3xl font-extrabold text-red-600">
+                      {formatPriceWithSmallDecimals(
+                        selectedVariant.discount_aed || selectedVariant.price_aed,
+                        selectedVariant.discount_inr || selectedVariant.price_inr,
+                        selectedCurrency,
+                        true,
+                        "#dc2626"
                       )}
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {product.variants.map((variant) => {
-                        const isDisabled = !hasSelectedCurrencyPrice(variant) || variant.stock_quantity === 0
-                        const isSelected = selectedVariant?.id === variant.id
-
-                        return (
-                          <button
-                            key={variant.id}
-                            onClick={() => handleVariantChange(variant)}
-                            disabled={isDisabled}
-                            className={`relative px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border ${
-                              isSelected
-                                ? "bg-zinc-900 text-white border-zinc-900 shadow-sm"
-                                : isDisabled
-                                  ? "bg-gray-50 text-gray-300 border-gray-100 cursor-not-allowed"
-                                  : "bg-white text-gray-700 border-gray-200 hover:border-zinc-400 hover:shadow-sm"
-                            }`}
-                            aria-label={`Select variant ${variant.name}${isDisabled ? ' (not available)' : ''}`}
-                          >
-                            <span className="block">{variant.name}</span>
-                            <span className={`block text-xs mt-0.5 ${isSelected ? 'text-white/70' : isDisabled ? 'text-gray-300' : 'text-gray-400'}`}>
-                              {formatPriceWithSmallDecimals(
-                                variant.discount_aed || variant.price_aed,
-                                variant.discount_inr || variant.price_inr,
-                                selectedCurrency,
-                                true,
-                                isSelected ? "rgba(255,255,255,0.7)" : isDisabled ? "#d1d5db" : "#9ca3af"
-                              )}
-                            </span>
-                            {isSelected && (
-                              <span className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-sm">
-                                <Check className="w-2.5 h-2.5 text-zinc-900" />
-                              </span>
-                            )}
-                            {isDisabled && variant.stock_quantity === 0 && (
-                              <span className="absolute inset-0 flex items-center justify-center">
-                                <span className="w-full h-px bg-gray-300 rotate-[-12deg]" />
-                              </span>
-                            )}
-                          </button>
-                        )
-                      })}
-                    </div>
-                    {selectedVariant && (
-                      <p className={`text-xs mt-2 ${stockQty <= 5 && stockQty > 0 ? 'text-amber-600 font-medium' : 'text-gray-400'}`}>
-                        {getStockMessage(selectedVariant)}
-                      </p>
-                    )}
-                  </div>
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-lg text-gray-500">Not available in {selectedCurrency}</span>
                 )}
+              </div>
 
-                <div className="h-px bg-gray-100" />
+              {/* Short description */}
+              {product.description && (
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {product.description}
+                </p>
+              )}
 
-                {/* Quantity + Actions */}
-                <div className="space-y-4">
-                  {/* Quantity */}
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-semibold text-gray-900">Qty</span>
-                    <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
+              {/* OTHER DETAILS Section (Screenshot 2) */}
+              <div className="bg-stone-50 border border-stone-200 p-4 rounded-xl space-y-2">
+                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-2">
+                  OTHER DETAILS :
+                </h3>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="font-semibold text-gray-700">Product : </span>
+                    <span className="text-gray-600">{product.category_name}</span>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Code : </span>
+                    <span className="text-gray-600">#{product.sku || product.id}</span>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Availability : </span>
+                    <span className={stockQty > 0 ? "text-red-600 font-bold" : "text-gray-400 font-bold"}>
+                      {stockQty > 0 ? "In Stock" : "Out of Stock"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-gray-700">Brand : </span>
+                    <span className="text-red-600 font-bold">{product.brand || "Motoclub"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quantity + Add To Cart + Wishlist */}
+              <div className="space-y-4 pt-2">
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase text-gray-700">Quantity :</span>
+                    <div className="flex items-center border border-gray-300 rounded-lg bg-white overflow-hidden">
                       <button
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-30"
+                        className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold"
                         disabled={!currencyAvailable || stockQty === 0}
-                        aria-label="Decrease quantity"
                       >
-                        <Minus className="w-4 h-4" />
+                        -
                       </button>
-                      <span className="w-12 h-10 flex items-center justify-center text-sm font-bold border-x border-gray-200">
+                      <span className="w-10 h-8 flex items-center justify-center text-xs font-bold border-x border-gray-300">
                         {quantity}
                       </span>
                       <button
                         onClick={() => setQuantity(Math.min(stockQty, quantity + 1))}
-                        className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-30"
+                        className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold"
                         disabled={!currencyAvailable || stockQty === 0}
-                        aria-label="Increase quantity"
                       >
-                        <Plus className="w-4 h-4" />
+                        +
                       </button>
                     </div>
                   </div>
 
-                  {/* Buttons */}
-                  <div className="flex flex-col gap-3">
-                    <Button
-                      onClick={handleBuyNow}
-                      className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 text-white text-sm font-semibold rounded-xl shadow-sm transition-all duration-200 hover:shadow-md disabled:opacity-50"
-                      disabled={!product.is_available || !selectedVariant || stockQty === 0 || !currencyAvailable}
-                      aria-label="Buy now"
-                    >
-                      <Zap className="w-4 h-4 mr-2" />
-                      {!selectedVariant || !isVariantAvailable(selectedVariant)
-                        ? (!hasSelectedCurrencyPrice(selectedVariant)
-                            ? `Not available in ${selectedCurrency === 'INR' ? 'India' : 'UAE'}`
-                            : 'Out of Stock')
-                        : "Buy Now"}
-                    </Button>
-                    <Button
-                      onClick={handleAddToCart}
-                      variant="outline"
-                      className="w-full h-12 rounded-xl border-gray-200 hover:border-zinc-400 text-sm font-semibold transition-all duration-200 hover:shadow-sm disabled:opacity-50"
-                      disabled={!product.is_available || !selectedVariant || stockQty === 0 || !currencyAvailable}
-                      aria-label="Add to cart"
-                    >
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Add to Cart
-                    </Button>
-                  </div>
+                  <Button
+                    onClick={handleAddToCart}
+                    className="bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-xs tracking-wider px-6 py-2.5 rounded-lg shadow-sm transition-colors"
+                    disabled={!product.is_available || stockQty === 0}
+                  >
+                    Add To Cart
+                  </Button>
+
+                  <Button
+                    onClick={() => handleToggleWishlist(product)}
+                    variant="outline"
+                    className="border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-xs py-2.5 rounded-lg"
+                  >
+                    Wishlist
+                  </Button>
                 </div>
 
-                {/* About */}
-                {product.description && (
-                  <>
-                    <div className="h-px bg-gray-100" />
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900 mb-2">About this product</h3>
-                      <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
-                    </div>
-                  </>
-                )}
+                <Button
+                  onClick={handleBuyNow}
+                  className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold uppercase text-xs tracking-wider py-3 rounded-lg shadow-sm transition-colors mt-2"
+                  disabled={!product.is_available || stockQty === 0}
+                >
+                  Buy Now
+                </Button>
+              </div>
 
-                {/* Features */}
-                {product.features?.length > 0 && (
-                  <>
-                    <div className="h-px bg-gray-100" />
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900 mb-3">Features</h3>
-                      <ul className="space-y-2">
-                        {product.features.map((feature, index) => (
-                          <li key={index} className="flex items-start gap-2.5 text-sm text-gray-600">
-                            <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </>
-                )}
-
-                {/* Specifications */}
-                {specEntries.length > 0 && (
-                  <>
-                    <div className="h-px bg-gray-100" />
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900 mb-3">Specifications</h3>
-                      <div className="rounded-xl border border-gray-100 overflow-hidden divide-y divide-gray-100">
-                        {specEntries.map((spec, index) => (
-                          <div key={index} className="flex items-center justify-between px-4 py-2.5 even:bg-gray-50/50">
-                            <span className="text-sm text-gray-500">{spec.label}</span>
-                            <span className="text-sm font-medium text-gray-900">{spec.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
+              {/* SHARE PRODUCT Section */}
+              <div className="pt-4 border-t border-gray-200">
+                <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">
+                  SHARE PRODUCT :
+                </h4>
+                <div className="flex gap-2">
+                  <button onClick={() => toast.success('Shared!')} className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs">f</button>
+                  <button onClick={() => toast.success('Shared!')} className="w-8 h-8 bg-sky-400 text-white rounded flex items-center justify-center font-bold text-xs">t</button>
+                  <button onClick={() => toast.success('Shared!')} className="w-8 h-8 bg-red-600 text-white rounded flex items-center justify-center font-bold text-xs">g+</button>
+                </div>
               </div>
             </div>
           </div>

@@ -1,9 +1,7 @@
-// app/api/orders/route.ts
 import { NextResponse } from "next/server"
 import { sql } from "@/lib/database"
 import { cookies } from "next/headers"
 import { jwtVerify } from "jose"
-import { currentUser } from "@clerk/nextjs/server"
 import nodemailer from 'nodemailer'
 import { SITE_CONTACT_EMAIL, SITE_PHONE_DISPLAY, SITE_PHONE_E164 } from '@/lib/site-contact'
 
@@ -377,17 +375,6 @@ async function getUserFromToken() {
 }
 
 async function getAuthenticatedUser() {
-  // First try Clerk authentication
-  const clerkUser = await currentUser()
-  if (clerkUser) {
-    return {
-      userId: clerkUser.id, // Clerk user ID is a string
-      email: clerkUser.primaryEmailAddress?.emailAddress || clerkUser.emailAddresses[0]?.emailAddress || "",
-      isClerkUser: true
-    }
-  }
-
-  // Fallback to manual authentication
   return await getUserFromToken()
 }
 
@@ -652,6 +639,63 @@ export async function POST(request: Request) {
     await ensureOrdersTableExists()
     await ensureOrderItemsTableExists()
 
+    // Stock availability validation
+    for (const item of orderData.items) {
+      const variantId = item.variantId || item.variant_id
+      const menuItemId = item.menuItemId || item.menu_item_id || item.id
+
+      let availableStock = 999
+      if (variantId) {
+        const vRes = await sql.query(`
+          SELECT (
+            COALESCE((
+              SELECT SUM(pbds.stock)::int 
+              FROM product_batches pb 
+              JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
+              WHERE pb.product_variant_id = $1
+            ), (
+              SELECT SUM(pb.remaining_quantity)::int 
+              FROM product_batches pb 
+              WHERE pb.product_variant_id = $1
+            ), 0) +
+            COALESCE((
+              SELECT SUM(pds.stock)::int 
+              FROM product_device_stock pds 
+              WHERE pds.product_id = (SELECT product_id FROM product_variants WHERE id = $1)
+            ), 0)
+          )::int AS live_stock
+        `, [variantId])
+        availableStock = Number(vRes[0]?.live_stock ?? 0)
+      } else if (menuItemId) {
+        const pRes = await sql.query(`
+          SELECT (
+            COALESCE((
+              SELECT SUM(pbds.stock)::int 
+              FROM product_batches pb 
+              JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
+              WHERE pb.product_id = $1 OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = $1)
+            ), (
+              SELECT SUM(pb.remaining_quantity)::int 
+              FROM product_batches pb 
+              WHERE pb.product_id = $1 OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = $1)
+            ), 0) +
+            COALESCE((
+              SELECT SUM(pds.stock)::int 
+              FROM product_device_stock pds 
+              WHERE pds.product_id = $1
+            ), 0)
+          )::int AS live_stock
+        `, [menuItemId])
+        availableStock = Number(pRes[0]?.live_stock ?? 0)
+      }
+
+      if (item.quantity > availableStock) {
+        return NextResponse.json({
+          error: `Cannot order ${item.quantity} of "${item.menuItemName || 'Item'}". Only ${availableStock} left in stock.`
+        }, { status: 400 })
+      }
+    }
+
     // Calculate subtotal from individual items 
     let subtotal = 0
     for (const item of orderData.items) {
@@ -792,6 +836,7 @@ export async function POST(request: Request) {
           ${item.storageCapacity || null}
         )
       `
+
     }
 
     console.log('Order completed successfully')
@@ -850,87 +895,46 @@ export async function GET(request: Request) {
     const linkedUserId = await findLinkedUser(user.email, user.isClerkUser, user.userId)
     console.log("Linked user ID:", linkedUserId)
 
-    // Get orders for the authenticated user AND linked user (by email)
-    let orders
-    if (user.isClerkUser) {
-      // For Clerk users: get orders by clerk_user_id OR by email OR by linked manual user ID
-      orders = await sql`
-        SELECT 
-          o.*,
-          COALESCE(
-            json_agg(
-              CASE WHEN oi.id IS NOT NULL THEN
-                json_build_object(
-                  'id', oi.id,
-                  'menu_item_id', oi.menu_item_id,
-                  'variant_id', oi.variant_id,
-                  'menu_item_name', oi.menu_item_name,
-                  'variant_name', oi.variant_name,
-                  'quantity', oi.quantity,
-                  'unit_price', oi.unit_price,
-                  'original_price', oi.original_price,
-                  'total_price', oi.total_price,
-                  'currency', oi.currency,
-                  'special_requests', oi.special_requests,
-                  'product_image_url', oi.product_image_url,
-                  'brand', oi.brand,
-                  'model', oi.model,
-                  'color', oi.color,
-                  'storage_capacity', oi.storage_capacity
-                )
-              END ORDER BY oi.id
-            ) FILTER (WHERE oi.id IS NOT NULL), 
-            '[]'::json
-          ) as items
-        FROM orders o
-        LEFT JOIN order_items oi ON o.id = oi.order_id
-        WHERE o.clerk_user_id = ${user.userId} 
-           OR o.customer_email = ${user.email}
-           ${linkedUserId ? sql`OR o.user_id = ${linkedUserId.toString()}` : sql``}
-        GROUP BY o.id
-        ORDER BY o.created_at DESC
-        LIMIT 50
-      `
-    } else {
-      // For manual users: get orders by user_id OR by email OR by linked clerk user ID
-      orders = await sql`
-        SELECT 
-          o.*,
-          COALESCE(
-            json_agg(
-              CASE WHEN oi.id IS NOT NULL THEN
-                json_build_object(
-                  'id', oi.id,
-                  'menu_item_id', oi.menu_item_id,
-                  'variant_id', oi.variant_id,
-                  'menu_item_name', oi.menu_item_name,
-                  'variant_name', oi.variant_name,
-                  'quantity', oi.quantity,
-                  'unit_price', oi.unit_price,
-                  'original_price', oi.original_price,
-                  'total_price', oi.total_price,
-                  'currency', oi.currency,
-                  'special_requests', oi.special_requests,
-                  'product_image_url', oi.product_image_url,
-                  'brand', oi.brand,
-                  'model', oi.model,
-                  'color', oi.color,
-                  'storage_capacity', oi.storage_capacity
-                )
-              END ORDER BY oi.id
-            ) FILTER (WHERE oi.id IS NOT NULL), 
-            '[]'::json
-          ) as items
-        FROM orders o
-        LEFT JOIN order_items oi ON o.id = oi.order_id
-        WHERE o.user_id = ${user.userId.toString()}
-           OR o.customer_email = ${user.email}
-           ${linkedUserId ? sql`OR o.clerk_user_id = ${linkedUserId}` : sql``}
-        GROUP BY o.id
-        ORDER BY o.created_at DESC
-        LIMIT 50
-      `
-    }
+    // Get orders for the authenticated user (by user_id or customer_email)
+    const userIdStr = user.userId.toString()
+    const userEmailStr = user.email || ''
+
+    const orders = await sql`
+      SELECT 
+        o.*,
+        COALESCE(
+          json_agg(
+            CASE WHEN oi.id IS NOT NULL THEN
+              json_build_object(
+                'id', oi.id,
+                'menu_item_id', oi.menu_item_id,
+                'variant_id', oi.variant_id,
+                'menu_item_name', oi.menu_item_name,
+                'variant_name', oi.variant_name,
+                'quantity', oi.quantity,
+                'unit_price', oi.unit_price,
+                'original_price', oi.original_price,
+                'total_price', oi.total_price,
+                'currency', oi.currency,
+                'special_requests', oi.special_requests,
+                'product_image_url', oi.product_image_url,
+                'brand', oi.brand,
+                'model', oi.model,
+                'color', oi.color,
+                'storage_capacity', oi.storage_capacity
+              )
+            END ORDER BY oi.id
+          ) FILTER (WHERE oi.id IS NOT NULL), 
+          '[]'::json
+        ) as items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      WHERE o.user_id = ${userIdStr} 
+         OR o.customer_email = ${userEmailStr}
+      GROUP BY o.id
+      ORDER BY o.created_at DESC
+      LIMIT 50
+    `
 
     console.log(`Found ${orders.length} orders for user ${user.email}`)
 

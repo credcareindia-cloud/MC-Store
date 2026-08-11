@@ -1,9 +1,12 @@
 "use client"
+
+export const dynamic = "force-dynamic"
 import Navbar from "@/components/ui/navbar"
 import Footer from "@/components/ui/footer"
 import Services from "@/components/sections/services"
 import NewUserSpinnerSection from "@/components/sections/new-user-spinner-section"
 import UserCoupons from "@/components/sections/user-coupons"
+import TrendingProducts from "@/components/sections/trending-products"
 import ProductList from "@/components/sections/product-list"
 import { ProductListSkeleton } from "@/components/sections/product-list-skeleton"
 import { useAuth } from "@/lib/contexts/auth-context"
@@ -17,11 +20,9 @@ export default function HomePage() {
       <Navbar />
       {!isAuthenticated && <NewUserSpinnerSection />}
 
-      {/* {isAuthenticated && (
-        <section className="mt-4">z
-          <UserCoupons />
-        </section>
-      )} */}
+      {/* Trending Products Section powered by ERP PostgreSQL sales data */}
+      <TrendingProducts limit={8} />
+
       <Suspense fallback={<ProductListSkeleton />}>
         <ProductList />
       
@@ -30,4 +31,4 @@ export default function HomePage() {
       <Footer />
     </main>
   )
-}
+}

@@ -22,57 +22,47 @@ function formatMoney(value: unknown) {
   return num.toFixed(2)
 }
 
-// Timeline component for order status
+// Timeline component for order status matching Accounting ERP delivery statuses
 const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
   const timelineSteps = [
     { 
-      status: 'pending', 
+      status: 'paid', 
       label: 'Order Placed',
       description: 'Order received',
-      icon: Clock,
-      color: 'text-gray-500'
-    },
-    { 
-      status: 'confirmed', 
-      label: 'Confirmed',
-      description: 'Order confirmed',
       icon: CheckCircle,
-      color: 'text-zinc-600'
     },
     { 
       status: 'packed', 
       label: 'Packed',
       description: 'Items packed',
       icon: Package,
-      color: 'text-zinc-600'
     },
     { 
-      status: 'dispatched', 
-      label: 'Shipped',
+      status: 'sent', 
+      label: 'Sent',
       description: 'Package shipped',
       icon: Send,
-      color: 'text-zinc-600'
     },
     { 
-      status: 'out for delivery', 
+      status: 'shipping', 
       label: 'Out for Delivery',
       description: 'On the way to you',
       icon: Truck,
-      color: 'text-zinc-600'
     },
     { 
       status: 'delivered', 
       label: 'Delivered',
       description: 'Order delivered',
-      icon: CheckCircle,
-      color: 'text-zinc-700'
+      icon: Home,
     }
   ]
 
-  // Handle cancelled status separately
-  if (currentStatus.toLowerCase() === 'cancel' || currentStatus.toLowerCase() === 'cancelled') {
+  const s = (currentStatus || '').toLowerCase()
+
+  // Handle cancelled / failed / returned status
+  if (s === 'cancel' || s === 'cancelled') {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
         <div className="flex items-center gap-3">
           <XCircle className="w-6 h-6 text-red-500" />
           <div>
@@ -84,56 +74,90 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
     )
   }
 
-  const getCurrentStepIndex = () => {
-    const index = timelineSteps.findIndex(step => 
-      step.status.toLowerCase() === currentStatus.toLowerCase()
+  if (s === 'returned') {
+    return (
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+        <div className="flex items-center gap-3">
+          <Clock className="w-6 h-6 text-amber-600" />
+          <div>
+            <p className="font-semibold text-amber-900">Order Returned</p>
+            <p className="text-sm text-amber-700">This package has been marked as returned</p>
+          </div>
+        </div>
+      </div>
     )
-    return index >= 0 ? index : 0
+  }
+
+  if (s === 'failed') {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+        <div className="flex items-center gap-3">
+          <XCircle className="w-6 h-6 text-red-600" />
+          <div>
+            <p className="font-semibold text-red-900">Delivery Failed</p>
+            <p className="text-sm text-red-700">Delivery attempt failed. Please contact customer support.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const getCurrentStepIndex = () => {
+    if (s === 'paid' || s === 'pending' || s === 'order placed' || s === 'order received' || s === 'confirmed') return 0
+    if (s === 'packed') return 1
+    if (s === 'sent' || s === 'dispatched' || s === 'shipped') return 2
+    if (s === 'shipping' || s === 'out for delivery') return 3
+    if (s === 'delivered' || s === 'completed') return 4
+    return 0
   }
 
   const currentStepIndex = getCurrentStepIndex()
+  const progressPercent = (currentStepIndex / (timelineSteps.length - 1)) * 100
 
   return (
-    <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4 mb-4">
-      <h4 className="font-semibold text-zinc-900 mb-3 text-sm">Order progress</h4>
+    <div className="bg-gradient-to-b from-emerald-50/40 to-zinc-50/80 border border-emerald-100 rounded-xl p-4 sm:p-5 mb-5 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="font-bold text-zinc-900 text-sm sm:text-base flex items-center gap-2">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+          Order progress
+        </h4>
+        <span className="text-xs font-semibold text-emerald-800 bg-emerald-100/80 px-2.5 py-1 rounded-full border border-emerald-200">
+          {timelineSteps[currentStepIndex]?.label || 'Order Placed'}
+        </span>
+      </div>
       
       {/* Mobile Timeline - Vertical */}
       <div className="md:hidden">
-        <div className="space-y-3">
+        <div className="space-y-4">
           {timelineSteps.map((step, index) => {
             const Icon = step.icon
             const isCompleted = index <= currentStepIndex
-            const isCurrent = index === currentStepIndex
             
             return (
-              <div key={step.status} className="flex items-center gap-3">
+              <div key={step.status} className="flex items-center gap-3.5">
                 <div className={`
-                  w-8 h-8 rounded-full flex items-center justify-center border-2
+                  w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all
                   ${isCompleted 
-                    ? 'bg-zinc-200 border-zinc-400 text-zinc-900' 
-                    : isCurrent 
-                    ? 'bg-white border-zinc-900 text-zinc-900'
-                    : 'bg-zinc-50 border-zinc-200 text-zinc-400'
+                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm' 
+                    : 'bg-white border-gray-200 text-gray-400'
                   }
                 `}>
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
-                  <p className={`text-sm font-medium ${
-                    isCompleted ? 'text-zinc-900' :
-                    isCurrent ? 'text-zinc-900' : 'text-zinc-500'
+                  <p className={`text-sm font-semibold ${
+                    isCompleted ? 'text-emerald-900' : 'text-gray-400'
                   }`}>
                     {step.label}
                   </p>
                   <p className={`text-xs ${
-                    isCompleted ? 'text-zinc-600' :
-                    isCurrent ? 'text-zinc-600' : 'text-zinc-400'
+                    isCompleted ? 'text-emerald-700 font-medium' : 'text-gray-400'
                   }`}>
                     {step.description}
                   </p>
                 </div>
                 {isCompleted && (
-                  <CheckCircle className="w-4 h-4 text-zinc-600" />
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
                 )}
               </div>
             )
@@ -142,44 +166,39 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
       </div>
 
       {/* Desktop Timeline - Horizontal */}
-      <div className="hidden md:block">
+      <div className="hidden md:block px-4 py-2">
         <div className="flex items-center justify-between relative">
-          {/* Progress Bar */}
-          <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 rounded-full">
+          {/* Progress Bar Track & Fill */}
+          <div className="absolute top-4 left-6 right-6 h-1.5 bg-gray-200 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-zinc-800 rounded-full transition-all duration-500"
-              style={{ width: `${(currentStepIndex / (timelineSteps.length - 1)) * 100}%` }}
+              className="h-full bg-emerald-600 rounded-full transition-all duration-500 shadow-sm"
+              style={{ width: `${progressPercent}%` }}
             />
           </div>
 
           {timelineSteps.map((step, index) => {
             const Icon = step.icon
             const isCompleted = index <= currentStepIndex
-            const isCurrent = index === currentStepIndex
             
             return (
               <div key={step.status} className="flex flex-col items-center relative z-10">
                 <div className={`
-                  w-8 h-8 rounded-full flex items-center justify-center border-2 bg-white
+                  w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all duration-300
                   ${isCompleted 
-                    ? 'border-zinc-500 text-zinc-800 shadow-sm' 
-                    : isCurrent 
-                    ? 'border-zinc-900 text-zinc-900 shadow-sm'
-                    : 'border-zinc-200 text-zinc-400'
+                    ? 'bg-emerald-600 border-emerald-600 text-white shadow-md shadow-emerald-200/50' 
+                    : 'bg-white border-gray-300 text-gray-400'
                   }
                 `}>
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-4.5 h-4.5" />
                 </div>
-                <div className="text-center mt-2">
-                  <p className={`text-xs font-medium ${
-                    isCompleted ? 'text-zinc-900' :
-                    isCurrent ? 'text-zinc-900' : 'text-zinc-500'
+                <div className="text-center mt-2.5">
+                  <p className={`text-xs font-semibold ${
+                    isCompleted ? 'text-emerald-950 font-bold' : 'text-gray-400'
                   }`}>
                     {step.label}
                   </p>
-                  <p className={`text-xs ${
-                    isCompleted ? 'text-zinc-600' :
-                    isCurrent ? 'text-zinc-600' : 'text-zinc-400'
+                  <p className={`text-[11px] mt-0.5 ${
+                    isCompleted ? 'text-emerald-700 font-medium' : 'text-gray-400'
                   }`}>
                     {step.description}
                   </p>
@@ -190,12 +209,13 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
         </div>
       </div>
 
-      {/* Current Status Description */}
-      <div className="mt-3 pt-3 border-t border-zinc-200">
-        <p className="text-sm text-center text-zinc-700">
-          <span className="font-medium">Current Status:</span> {
-            timelineSteps[currentStepIndex]?.description || 'Processing your order'
-          }
+      {/* Current Status Description Footer */}
+      <div className="mt-4 pt-3 border-t border-emerald-100/80">
+        <p className="text-xs sm:text-sm text-center text-zinc-700">
+          <span className="font-medium text-zinc-500">Current Status:</span>{' '}
+          <span className="font-bold text-emerald-800">
+            {timelineSteps[currentStepIndex]?.description || 'Order received'}
+          </span>
         </p>
       </div>
     </div>

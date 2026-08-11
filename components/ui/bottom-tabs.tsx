@@ -8,7 +8,6 @@ import { useSelector } from "react-redux"
 import { useAuth } from "@/lib/contexts/auth-context"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useUser } from "@clerk/nextjs"
 import LoginModal from "@/components/auth/login-modal"
 import type { RootState } from "@/lib/store"
 
@@ -17,7 +16,6 @@ export default function BottomTabs() {
   const cartItems = useSelector((state: RootState) => state.order.cart)
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
   const { isAuthenticated, user, logout } = useAuth()
-  const { user: clerkUser } = useUser()
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
 
   const navItems = [
@@ -54,16 +52,7 @@ export default function BottomTabs() {
                             }`}
                           >
                             <div className="relative mb-0.5">
-                              {user?.isClerkUser ? (
-                                <Avatar className="h-5 w-5">
-                                  {clerkUser?.imageUrl ? <AvatarImage src={clerkUser.imageUrl} alt="Profile" /> : null}
-                                  <AvatarFallback className="bg-zinc-200 text-zinc-700">
-                                    <User className="w-3.5 h-3.5" />
-                                  </AvatarFallback>
-                                </Avatar>
-                              ) : (
-                                <User size={20} />
-                              )}
+                              <User size={20} />
                             </div>
                             <span className="text-xs">My</span>
                           </button>
@@ -72,23 +61,11 @@ export default function BottomTabs() {
                           <div className="bg-zinc-900 rounded-t-lg p-4 border-b border-zinc-800">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-zinc-800 rounded-full flex items-center justify-center">
-                                {user?.isClerkUser ? (
-                                  <Avatar className="h-10 w-10">
-                                    {clerkUser?.imageUrl ? <AvatarImage src={clerkUser.imageUrl} alt="Profile" /> : null}
-                                    <AvatarFallback className="bg-zinc-700 text-white">
-                                      <User className="w-5 h-5" />
-                                    </AvatarFallback>
-                                  </Avatar>
-                                ) : (
-                                  <User className="w-5 h-5 text-white" />
-                                )}
+                                <User className="w-5 h-5 text-white" />
                               </div>
                               <div className="flex-1">
                                 <h3 className="text-white font-semibold">{user?.name || "User"}</h3>
-                                <p className="text-white/80 text-sm">{user?.email}</p>
-                                {user?.isClerkUser && (
-                                  <p className="text-white/60 text-xs">Google Account</p>
-                                )}
+                                <p className="text-white/80 text-sm">{user?.email || user?.phone || ""}</p>
                               </div>
                             </div>
                           </div>

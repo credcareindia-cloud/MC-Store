@@ -1,43 +1,38 @@
-// app/api/admin/products/[id]/route.ts
+/**
+ * GET /api/products/[id]
+ * Returns a single ERP product with full variants, images, and stock.
+ * Only returns if own_ecom_status = 'active'.
+ */
 import { NextResponse } from "next/server"
-import { sql } from "@/lib/database"
+import { getProductById } from "@/lib/services/product-service"
+
+export const dynamic = "force-dynamic"
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const productId = parseInt(params.id)
-    
-    if (isNaN(productId)) {
-      return NextResponse.json(
-        { error: "Invalid product ID" },
-        { status: 400 }
-      )
+    const id = parseInt(params.id, 10)
+
+    if (isNaN(id) || id <= 0) {
+      return NextResponse.json({ error: "Invalid product ID" }, { status: 400 })
     }
 
-    const result = await sql`
-      SELECT
-        p.*,
-        c.name AS category_name
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      WHERE p.id = ${productId}
-      LIMIT 1;
-    `
+    const product = await getProductById(id)
 
-    if (result.length === 0) {
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      )
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 })
     }
 
-    return NextResponse.json({ product: result[0] })
+    return NextResponse.json({ product })
   } catch (error) {
-    console.error("Error fetching product:", error)
+    console.error("[/api/products/[id]] Error:", error)
     return NextResponse.json(
-      { error: "Failed to fetch product", details: error instanceof Error ? error.message : String(error) },
+      {
+        error: "Failed to fetch product",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     )
   }

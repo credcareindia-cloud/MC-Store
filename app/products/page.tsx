@@ -1,5 +1,7 @@
 "use client"
 
+export const dynamic = "force-dynamic"
+
 import { Suspense, useEffect } from "react"
 import { useDispatch } from "react-redux"
 import type { AppDispatch } from "@/lib/store"

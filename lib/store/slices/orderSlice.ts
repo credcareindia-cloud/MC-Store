@@ -226,18 +226,19 @@ const orderSlice = createSlice({
       selected_variant?: Variant;
     }>) => {
       const { menuItem, quantity, specialRequests, selectedCurrency, userId, variant_id, selected_variant } = action.payload
-      // For variant-based products, check both product id and variant id
+      const maxStock = selected_variant?.stock_quantity ?? (menuItem as any).stock_quantity ?? 999
+
       const existingItem = state.cart.find((item) => 
         item.menuItem.id === menuItem.id && 
         (variant_id ? item.variant_id === variant_id : !item.variant_id)
       )
       
       if (existingItem) {
-        existingItem.quantity += quantity
+        existingItem.quantity = Math.min(existingItem.quantity + quantity, maxStock)
       } else {
         state.cart.push({
           menuItem,
-          quantity,
+          quantity: Math.min(quantity, maxStock),
           specialRequests,
           variant_id,
           selected_variant
@@ -261,14 +262,20 @@ const orderSlice = createSlice({
       id: number; 
       quantity: number;
       userId?: string | number;
+      variant_id?: number;
     }>) => {
-      const { id, quantity } = action.payload
-      const item = state.cart.find((item) => item.menuItem.id === id)
+      const { id, quantity, variant_id } = action.payload
+      const item = state.cart.find((item) => 
+        item.menuItem.id === id && (variant_id ? item.variant_id === variant_id : true)
+      )
       
       if (item) {
-        item.quantity = quantity
+        const maxStock = item.selected_variant?.stock_quantity ?? (item.menuItem as any).stock_quantity ?? 999
+        item.quantity = Math.min(quantity, maxStock)
         if (item.quantity <= 0) {
-          state.cart = state.cart.filter((cartItem) => cartItem.menuItem.id !== id)
+          state.cart = state.cart.filter((cartItem) => 
+            cartItem.menuItem.id !== id || (variant_id && cartItem.variant_id !== variant_id)
+          )
         }
       }
       

@@ -935,6 +935,15 @@ export default function OrderPage() {
   }
 
   const handleQuantityChange = async (id: number, newQuantity: number) => {
+    const item = cart.find((i) => i.menuItem.id === id)
+    if (item && newQuantity > item.quantity) {
+      const maxStock = item.selected_variant?.stock_quantity ?? (item.menuItem as any).stock_quantity ?? 999
+      if (newQuantity > maxStock) {
+        toast.error(`Cannot order more than available stock (${maxStock})`, { position: 'top-center' })
+        return
+      }
+    }
+
     if (newQuantity <= 0) {
       dispatch(removeFromCart({ id, userId: user?.id }))
       toast.success('Item removed from cart', { position: 'top-center' })
@@ -1862,22 +1871,49 @@ export default function OrderPage() {
                 <RadioGroup
                   value={paymentMethod}
                   onValueChange={setPaymentMethod}
-                  className="grid grid-cols-1 gap-4"
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                 >
-                  {selectedCurrency === 'INR' && (
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="upi" id="upi" />
-                      <Label htmlFor="upi" className="text-sm sm:text-base cursor-pointer">
-                        UPI Payment
-                      </Label>
-                    </div>
-                  )}
+                  <div 
+                    onClick={() => setPaymentMethod('upi')}
+                    className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+                      paymentMethod === 'upi' ? 'border-zinc-900 bg-zinc-50/80 ring-1 ring-zinc-900 shadow-sm' : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                  >
+                    <RadioGroupItem value="upi" id="upi" />
+                    <Label htmlFor="upi" className="text-sm sm:text-base font-semibold cursor-pointer flex-1">
+                      <div>UPI / Online Payment</div>
+                      <div className="text-xs text-green-700 font-normal mt-0.5">UPI, GPay, PhonePe, Cards (Razorpay)</div>
+                    </Label>
+                  </div>
+
+                  <div 
+                    onClick={() => setPaymentMethod('cod')}
+                    className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+                      paymentMethod === 'cod' ? 'border-zinc-900 bg-zinc-50/80 ring-1 ring-zinc-900 shadow-sm' : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                  >
+                    <RadioGroupItem value="cod" id="cod" />
+                    <Label htmlFor="cod" className="text-sm sm:text-base font-semibold cursor-pointer flex-1">
+                      <div>Cash on Delivery (COD)</div>
+                      <div className="text-xs text-amber-700 font-normal mt-0.5">Pay with cash upon delivery</div>
+                    </Label>
+                  </div>
                 </RadioGroup>
-                <div className="mt-3 p-3 bg-green-50 rounded-lg">
-                  <p className="text-sm text-green-700">
-                    UPI payment (Razorpay) for orders in India
-                  </p>
-                </div>
+
+                {paymentMethod === 'upi' && (
+                  <div className="mt-4 p-3.5 bg-green-50/80 border border-green-200/60 rounded-xl">
+                    <p className="text-sm text-green-800 font-medium flex items-center gap-2">
+                      <span className="text-base">💳</span> Fast & secure online payment via Razorpay (UPI, Credit/Debit Cards, NetBanking)
+                    </p>
+                  </div>
+                )}
+                {paymentMethod === 'cod' && (
+                  <div className="mt-4 p-3.5 bg-amber-50/80 border border-amber-200/60 rounded-xl">
+                    <p className="text-sm text-amber-900 font-medium flex items-center gap-2">
+                      <span className="text-base">💵</span> Pay cash directly to the delivery agent when your order arrives
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

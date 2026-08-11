@@ -7,13 +7,12 @@ import bcrypt from "bcryptjs";
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key-change-in-production");
 
 async function ensureAuthSchema() {
-  // Create users table with updated schema
   await sql`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
-      email VARCHAR(255) UNIQUE NOT NULL,
+      email VARCHAR(255) UNIQUE,
+      phone VARCHAR(50) UNIQUE,
       name VARCHAR(255),
-      phone VARCHAR(20),
       email_verified TIMESTAMP,
       image TEXT,
       password_hash VARCHAR(255),
@@ -21,28 +20,26 @@ async function ensureAuthSchema() {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `;
-
-  await sql`
-    CREATE TABLE IF NOT EXISTS user_otps (
-      id SERIAL PRIMARY KEY,
-      email VARCHAR(255) NOT NULL,
-      otp_code VARCHAR(6) NOT NULL,
-      expires_at TIMESTAMP NOT NULL,
-      is_used BOOLEAN DEFAULT FALSE,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(50);`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified TIMESTAMP;`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS image TEXT;`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;`;
 }
 
 export async function POST(request: Request) {
   try {
     await ensureAuthSchema();
 
-    const { email, otp, name, password } = await request.json();
-    
-    if (!email || !otp || !name || !password) {
+    const body = await request.json();
+    const name = (body.name || "").trim();
+    const identifier = (body.identifier || body.email || body.phone || "").trim();
+    const password = body.password;
+
+    if (!name || !identifier || !password) {
       return NextResponse.json({ 
-        error: "Email, OTP, name, and password are required" 
+        error: "Full Name, Email/Phone Number, and Password are required" 
       }, { status: 400 });
     }
 
@@ -52,65 +49,59 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Verify OTP
-    const [otpRecord] = await sql`
-      SELECT * FROM user_otps
-      WHERE email = ${email}
-        AND otp_code = ${otp}
-        AND expires_at > NOW()
-        AND is_used = FALSE
-      ORDER BY created_at DESC
-      LIMIT 1
-    `;
+    const isEmail = identifier.includes("@");
+    const email = isEmail ? identifier : (body.email || null);
+    const phone = !isEmail ? identifier : (body.phone || null);
 
-    if (!otpRecord) {
-      return NextResponse.json({ 
-        error: "Invalid or expired OTP" 
-      }, { status: 400 });
+    if (email) {
+      const existingEmail = await sql`
+        SELECT id FROM users WHERE LOWER(email) = LOWER(${email})
+      `;
+      if (existingEmail.length > 0) {
+        return NextResponse.json({ 
+          error: "An account with this email already exists" 
+        }, { status: 400 });
+      }
     }
 
-    // Check if user already exists
-    const [existingUser] = await sql`
-      SELECT id FROM users WHERE email = ${email}
-    `;
-
-    if (existingUser) {
-      return NextResponse.json({ 
-        error: "User with this email already exists" 
-      }, { status: 400 });
+    if (phone) {
+      const existingPhone = await sql`
+        SELECT id FROM users WHERE phone = ${phone}
+      `;
+      if (existingPhone.length > 0) {
+        return NextResponse.json({ 
+          error: "An account with this phone number already exists" 
+        }, { status: 400 });
+      }
     }
 
-    // Mark OTP as used
-    await sql`UPDATE user_otps SET is_used = TRUE WHERE id = ${otpRecord.id}`;
-
-    // Hash password
     const saltRounds = 12;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Create user - using email_verified timestamp instead of is_verified boolean
-    const [user] = await sql`
-      INSERT INTO users (email, name, password_hash, email_verified)
-      VALUES (${email}, ${name}, ${passwordHash}, CURRENT_TIMESTAMP)
-      RETURNING id, email, name, email_verified, created_at
+    const users = await sql`
+      INSERT INTO users (email, phone, name, password_hash, email_verified)
+      VALUES (${email}, ${phone}, ${name}, ${passwordHash}, CURRENT_TIMESTAMP)
+      RETURNING id, email, phone, name, email_verified, created_at
     `;
 
-    // Generate JWT token
+    const user = users[0];
+
     const token = await new SignJWT({
       userId: user.id,
       email: user.email,
+      phone: user.phone,
       name: user.name,
     })
       .setProtectedHeader({ alg: "HS256" })
       .setExpirationTime("7d")
       .sign(JWT_SECRET);
 
-    // Set cookie
     const cookieStore = await cookies();
     cookieStore.set("auth-token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: 7 * 24 * 60 * 60,
       path: "/",
     });
 
@@ -118,9 +109,10 @@ export async function POST(request: Request) {
       success: true,
       user: {
         id: user.id,
-        email: user.email,
+        email: user.email || user.phone || "",
+        phone: user.phone,
         name: user.name,
-        isVerified: !!user.email_verified, // Convert timestamp to boolean
+        isVerified: true,
         createdAt: user.created_at,
       },
     });

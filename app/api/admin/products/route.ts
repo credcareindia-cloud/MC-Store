@@ -1,37 +1,13 @@
 // app/api/admin/products/route.ts
 import { NextResponse } from "next/server"
 import { sql } from "@/lib/database"
+import { getProducts } from "@/lib/services/product-service"
 
 export async function GET() {
   try {
-    const products = await sql`
-      SELECT
-        p.*,
-        c.name AS category_name,
-        COALESCE(
-          json_agg(
-            json_build_object(
-              'id', v.id,
-              'name', v.name,
-              'price_aed', v.price_aed,
-              'price_inr', v.price_inr,
-              'discount_aed', v.discount_aed,
-              'discount_inr', v.discount_inr,
-              'available_aed', v.available_aed,
-              'available_inr', v.available_inr,
-              'stock_quantity', v.stock_quantity
-            ) ORDER BY v.id
-          ) FILTER (WHERE v.id IS NOT NULL),
-          '[]'::json
-        ) AS variants
-      FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN product_variants v ON p.id = v.product_id
-      GROUP BY p.id, c.name
-      ORDER BY p.created_at DESC;
-    `
-
-    return NextResponse.json(products)
+    // Get all products (with high limit for admin listing)
+    const result = await getProducts({ limit: 1000 })
+    return NextResponse.json(result.items)
   } catch (error) {
     console.error("Error fetching products:", error)
     return NextResponse.json(

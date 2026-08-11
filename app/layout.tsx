@@ -14,10 +14,6 @@ import CartSync from '@/components/cart-sync'
 import { Toaster } from 'react-hot-toast'
 import { Analytics } from '@vercel/analytics/next'
 
-import {
-  ClerkProvider,
-} from "@clerk/nextjs"
-
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" })
 
@@ -37,36 +33,34 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body className={`${inter.variable} ${playfair.variable} font-sans`}>
-          <AuthProvider>
-            <SettingsProvider>
-              <StoreProvider>
-                <ShopProvider>
-                  <CurrencyProvider>
-                    <WishlistSync />
-                    <CartSync />
-                    <UserNavVisibility />
-                    <Toaster 
-                      position="top-center"
-                      toastOptions={{
-                        duration: 4000,
-                        style: {
-                          background: '#363636',
-                          color: '#fff',
-                        },
-                      }}
-                    />
-                    <div className="pb-16 lg:pb-0">{children}</div>
-                  </CurrencyProvider>
-                </ShopProvider>
-              </StoreProvider>
-            </SettingsProvider>
-          </AuthProvider>
-          <Analytics />
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en">
+      <body className={`${inter.variable} ${playfair.variable} font-sans`}>
+        <AuthProvider>
+          <SettingsProvider>
+            <StoreProvider>
+              <ShopProvider>
+                <CurrencyProvider>
+                  <WishlistSync />
+                  <CartSync />
+                  <UserNavVisibility />
+                  <Toaster 
+                    position="top-center"
+                    toastOptions={{
+                      duration: 4000,
+                      style: {
+                        background: '#363636',
+                        color: '#fff',
+                      },
+                    }}
+                  />
+                  <div className="pb-16 lg:pb-0">{children}</div>
+                </CurrencyProvider>
+              </ShopProvider>
+            </StoreProvider>
+          </SettingsProvider>
+        </AuthProvider>
+        <Analytics />
+      </body>
+    </html>
   )
 }
