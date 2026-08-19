@@ -204,6 +204,11 @@ function mapProduct(row: Record<string, unknown>, variants: any[] = []): any {
     }]
   }
 
+  const firstVariant = mappedVariants[0]
+  const mrp = firstVariant?.mrp ?? price
+  const mrp_inr = firstVariant?.price_inr ?? mrp
+  const mrp_aed = firstVariant?.price_aed ?? parseFloat((mrp / 22.5).toFixed(2))
+
   return {
     id: id,
     name: String(row.name ?? ""),
@@ -211,6 +216,9 @@ function mapProduct(row: Record<string, unknown>, variants: any[] = []): any {
     price: price,
     price_aed: parseFloat((price / 22.5).toFixed(2)),
     price_inr: price,
+    mrp: mrp,
+    mrp_inr: mrp_inr,
+    mrp_aed: mrp_aed,
     primary_currency: "INR",
     image_url: main_image,
     image_urls: image_urls.length > 0 ? image_urls : (main_image ? [main_image] : []),

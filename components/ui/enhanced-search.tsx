@@ -309,52 +309,21 @@ export default function EnhancedSearch({
                           <p className="text-xs text-gray-500 mb-1">{product.brand}</p>
                         )}
                         <div className="flex items-center gap-2">
-                          {product.display_price ? (
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center gap-1">
-                                <span className="text-blue-600 flex items-center">
-                                  {getCurrencySymbol(selectedCurrency, 'text-blue-600')}
-                                </span>
-                                <span className="text-sm font-semibold text-blue-600">
-                                  {(() => {
-                                    const priceStr = String(product.display_price.price);
-                                    return priceStr.includes('.') ? priceStr : `${priceStr}.00`;
-                                  })()}
-                                </span>
-                              </div>
-                              {product.has_discount && product.display_price.original_price && (
-                                <>
-                                  <span className="text-xs text-gray-400 line-through flex items-center gap-1">
-                                    <span className="text-gray-400 flex items-center">
-                                      {getCurrencySymbol(selectedCurrency, 'text-gray-400')}
-                                    </span>
-                                    {(() => {
-                                      const originalPriceStr = String(product.display_price.original_price);
-                                      return originalPriceStr.includes('.') ? originalPriceStr : `${originalPriceStr}.00`;
-                                    })()}
-                                  </span>
-                                  <span className="text-xs text-green-600 font-medium">
-                                    {product.display_price.original_price && Math.round(((parseFloat(product.display_price.original_price) - parseFloat(product.display_price.price)) / parseFloat(product.display_price.original_price)) * 100)}% OFF
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1">
-                              <span className="text-blue-600 flex items-center">
-                                {getCurrencySymbol(selectedCurrency, 'text-blue-600')}
-                              </span>
-                              <span className="text-sm font-semibold text-blue-600">
-                                {(() => {
-                                  const rawPrice = selectedCurrency === 'AED' 
-                                    ? (product.discount_aed || product.price_aed || 0)
-                                    : (product.discount_inr || product.price_inr || 0);
-                                  const priceStr = String(rawPrice);
-                                  return priceStr.includes('.') ? priceStr : `${priceStr}.00`;
-                                })()}
-                              </span>
-                            </div>
-                          )}
+                          <div className="flex items-center gap-1">
+                            <span className="text-blue-600 flex items-center">
+                              {getCurrencySymbol(selectedCurrency, 'text-blue-600')}
+                            </span>
+                            <span className="text-sm font-semibold text-blue-600">
+                              {(() => {
+                                const variant = (product as any).variants?.[0]
+                                const mrpVal = selectedCurrency === 'AED'
+                                  ? ((product as any).mrp_aed || variant?.price_aed || product.price_aed || 0)
+                                  : ((product as any).mrp_inr || variant?.price_inr || (product as any).mrp || variant?.mrp || product.price_inr || (product as any).price || 0)
+                                const priceStr = String(mrpVal);
+                                return priceStr.includes('.') ? priceStr : `${priceStr}.00`;
+                              })()}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </motion.div>

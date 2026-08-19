@@ -353,6 +353,8 @@ function Nav() {
     return pathname === item.href
   }
 
+  const isLandingOrStaticPage = pathname === "/" || pathname === "/about" || pathname === "/contact"
+
   return (
     <>
       <div data-banner-container>
@@ -365,39 +367,45 @@ function Nav() {
         {/* Desktop Header */}
         <div className="hidden lg:block">
           <div className="max-w-7xl mx-auto px-6 py-4 lg:py-5">
-            <div className={`flex items-center justify-between ${pathname === "/" ? "" : "mb-4"}`}>
+            <div className={`flex items-center justify-between ${isLandingOrStaticPage ? "" : "mb-4"}`}>
               <div className="flex items-center gap-8 flex-1">
                 {/* Logo */}
                 <Link href="/" className="nav-logo-link flex items-center group shrink-0" aria-label="MotoCart">
                   <MotoCartLogo className="h-10 w-auto group-hover:scale-105 transition-transform duration-200" />
                 </Link>
 
-                {/* Enhanced Search Bar (Only when NOT on landing page "/") */}
-                {pathname !== "/" && (
+                {/* Enhanced Search Bar (Only when NOT on landing / static pages) */}
+                {!isLandingOrStaticPage && (
                   <EnhancedSearch 
                     className="flex-1 max-w-2xl"
                     placeholder="Search parts, brands, accessories..."
                   />
                 )}
 
-                {/* Center Nav Links on Landing Page "/" */}
-                {pathname === "/" && (
+                {/* Center Nav Links on Landing / About / Contact Pages */}
+                {isLandingOrStaticPage && (
                   <div className="flex items-center justify-center gap-12 flex-1 mx-8">
                     <Link
                       href="/home"
-                      className="text-white hover:text-red-500 font-bold text-base transition-colors px-4 py-2"
+                      className={`font-bold text-base transition-colors px-4 py-2 ${
+                        pathname === "/" ? "text-red-500 font-extrabold" : "text-white hover:text-red-500"
+                      }`}
                     >
                       Home
                     </Link>
                     <Link
                       href="/about"
-                      className="text-white hover:text-red-500 font-bold text-base transition-colors px-4 py-2"
+                      className={`font-bold text-base transition-colors px-4 py-2 ${
+                        pathname === "/about" ? "text-red-500 font-extrabold" : "text-white hover:text-red-500"
+                      }`}
                     >
                       About Us
                     </Link>
                     <Link
                       href="/contact"
-                      className="text-white hover:text-red-500 font-bold text-base transition-colors px-4 py-2"
+                      className={`font-bold text-base transition-colors px-4 py-2 ${
+                        pathname === "/contact" ? "text-red-500 font-extrabold" : "text-white hover:text-red-500"
+                      }`}
                     >
                       Contact Us
                     </Link>
@@ -528,8 +536,8 @@ function Nav() {
               </div>
             </div>
 
-            {/* Desktop Bottom Navigation Row (Only when NOT on landing page "/") */}
-            {pathname !== "/" && (
+            {/* Desktop Bottom Navigation Row (Only on catalog/product pages) */}
+            {!isLandingOrStaticPage && (
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center space-x-2 flex-1 min-w-0">
                   {loading ? (
@@ -814,13 +822,11 @@ function Nav() {
                           />
                           <div className="flex-1">
                             <p className="font-medium text-gray-900 text-sm line-clamp-1">{product.name}</p>
-                            {product.display_price ? (
-                              <p className="text-zinc-700 font-semibold text-xs">
-                                {product.display_price.symbol} {product.display_price.price}
-                              </p>
-                            ) : (
-                              <p className="text-gray-500 text-xs">Price unavailable</p>
-                            )}
+                            <p className="text-zinc-700 font-semibold text-xs">
+                              {selectedCurrency === 'AED'
+                                ? `AED ${(product as any).mrp_aed || (product as any).variants?.[0]?.price_aed || product.price_aed || 0}`
+                                : `₹ ${(product as any).mrp_inr || (product as any).variants?.[0]?.price_inr || (product as any).mrp || product.price_inr || product.price || 0}`}
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -856,41 +862,43 @@ function Nav() {
               )}
             </div>
 
-            <div className="flex overflow-x-auto scrollbar-hide gap-2">
-              {loading ? (
-                <div className="flex gap-2">
-                  <div className="animate-pulse bg-white/20 rounded-full px-3 py-1 h-6 w-12"></div>
-                  <div className="animate-pulse bg-white/20 rounded-full px-3 py-1 h-6 w-16"></div>
-                  <div className="animate-pulse bg-white/20 rounded-full px-3 py-1 h-6 w-20"></div>
-                </div>
-              ) : (
-                navigation.slice(0, 6).map((item) => {
-                  const isSpecial = (item as any).isCategory && categories.find(cat => cat.id === (item as any).categoryId)?.is_special;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={(e) => handleNavClick(item, e)}
-                      className={`rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap ${isActiveCategoryLink(item) || ((item as any).scroll && pathname === "/" && item.href.includes("#"))
-                        ? "bg-red-600 text-white font-bold"
-                        : "text-white hover:bg-white/20"
-                        }`}
-                    >
-                      <span className={`flex items-center gap-1 ${
-                        isSpecial 
-                          ? "font-semibold text-zinc-800" 
-                          : ""
-                      }`}>
-                        {item.name}
-                        {isSpecial && (
-                          <span className="text-zinc-500">★</span>
-                        )}
-                      </span>
-                    </Link>
-                  )
-                })
-              )}
-            </div>
+            {!isLandingOrStaticPage && (
+              <div className="flex overflow-x-auto scrollbar-hide gap-2">
+                {loading ? (
+                  <div className="flex gap-2">
+                    <div className="animate-pulse bg-white/20 rounded-full px-3 py-1 h-6 w-12"></div>
+                    <div className="animate-pulse bg-white/20 rounded-full px-3 py-1 h-6 w-16"></div>
+                    <div className="animate-pulse bg-white/20 rounded-full px-3 py-1 h-6 w-20"></div>
+                  </div>
+                ) : (
+                  navigation.slice(0, 6).map((item) => {
+                    const isSpecial = (item as any).isCategory && categories.find(cat => cat.id === (item as any).categoryId)?.is_special;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        onClick={(e) => handleNavClick(item, e)}
+                        className={`rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap ${isActiveCategoryLink(item) || ((item as any).scroll && pathname === "/" && item.href.includes("#"))
+                          ? "bg-red-600 text-white font-bold"
+                          : "text-white hover:bg-white/20"
+                          }`}
+                      >
+                        <span className={`flex items-center gap-1 ${
+                          isSpecial 
+                            ? "font-semibold text-zinc-800" 
+                            : ""
+                        }`}>
+                          {item.name}
+                          {isSpecial && (
+                            <span className="text-zinc-500">★</span>
+                          )}
+                        </span>
+                      </Link>
+                    )
+                  })
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -938,28 +946,41 @@ function Nav() {
                 <div className="flex gap-2">
                   <div className="animate-pulse bg-white/20 rounded-full px-3 py-1 h-6 w-12"></div>
                   <div className="animate-pulse bg-white/20 rounded-full px-3 py-1 h-6 w-16"></div>
+                  <div className="animate-pulse bg-white/20 rounded-full px-3 py-1 h-6 w-20"></div>
                 </div>
               ) : (
-                navigation.slice(0, 6).map((item) => {
+                (isLandingOrStaticPage 
+                  ? baseNavigation 
+                  : [
+                      { name: "All Products", href: "/products" },
+                      ...categories.map((category) => ({
+                        name: category.name,
+                        href: `/products?category=${category.slug || category.id}`,
+                        categoryId: category.id,
+                        isCategory: true
+                      }))
+                    ]
+                ).map((item) => {
                   const isSpecial = (item as any).isCategory && categories.find(cat => cat.id === (item as any).categoryId)?.is_special;
                   return (
                     <Link
                       key={item.name}
                       href={item.href}
                       onClick={(e) => handleNavClick(item, e)}
-                      className={`rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap ${isActiveCategoryLink(item) || ((item as any).scroll && pathname === "/" && item.href.includes("#"))
-                        ? "bg-white text-zinc-900"
-                        : "text-white hover:bg-white/20"
-                        }`}
+                      className={`rounded-full px-3.5 py-1 text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
+                        isActiveCategoryLink(item) || ((item as any).scroll && pathname === "/" && item.href.includes("#"))
+                          ? "bg-red-600 text-white font-bold shadow-md shadow-red-950/40"
+                          : "text-white hover:bg-white/20 bg-white/10"
+                      }`}
                     >
                       <span className={`flex items-center gap-1 ${
                         isSpecial 
-                          ? "font-semibold text-zinc-800" 
+                          ? "font-semibold text-amber-300" 
                           : ""
                       }`}>
                         {item.name}
                         {isSpecial && (
-                          <span className="text-zinc-500">★</span>
+                          <span className="text-amber-400">★</span>
                         )}
                       </span>
                     </Link>
@@ -968,41 +989,83 @@ function Nav() {
               )}
             </div>
 
-            {/* Mobile Navigation Menu */}
+            {/* Mobile Navigation Menu Drawer */}
             {isOpen && (
-              <div className="mt-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-xl max-h-[40vh] overflow-hidden">
+              <div className="mt-4 bg-zinc-900/95 border border-zinc-800 text-white backdrop-blur-md rounded-xl shadow-2xl max-h-[60vh] overflow-hidden">
                 {loading ? (
                   <div className="space-y-2 p-4">
-                    <div className="animate-pulse bg-gray-200 rounded-lg h-10 w-full"></div>
-                    <div className="animate-pulse bg-gray-200 rounded-lg h-10 w-3/4"></div>
-                    <div className="animate-pulse bg-gray-200 rounded-lg h-10 w-1/2"></div>
+                    <div className="animate-pulse bg-zinc-800 rounded-lg h-10 w-full"></div>
+                    <div className="animate-pulse bg-zinc-800 rounded-lg h-10 w-3/4"></div>
+                    <div className="animate-pulse bg-zinc-800 rounded-lg h-10 w-1/2"></div>
                   </div>
                 ) : (
-                  <div className="overflow-y-auto max-h-[40vh]">
-                    <div className="p-4 space-y-2">
-                      {/* All Products - Featured */}
+                  <div className="overflow-y-auto max-h-[60vh]">
+                    <div className="p-4 space-y-4">
+                      {/* Main Navigation Links */}
+                      <div>
+                        <div className="text-xs font-bold text-red-500 uppercase tracking-wider mb-2 px-1">
+                          Navigation
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          <Link
+                            href="/home"
+                            onClick={() => setIsOpen(false)}
+                            className={`flex flex-col items-center justify-center p-2.5 rounded-lg border text-center transition-all ${
+                              pathname === "/home" || pathname === "/"
+                                ? "bg-red-600 border-red-500 text-white font-bold"
+                                : "bg-zinc-800/90 border-zinc-700 text-zinc-200 hover:bg-zinc-700"
+                            }`}
+                          >
+                            <span className="text-xs font-semibold">Home</span>
+                          </Link>
+                          <Link
+                            href="/about"
+                            onClick={() => setIsOpen(false)}
+                            className={`flex flex-col items-center justify-center p-2.5 rounded-lg border text-center transition-all ${
+                              pathname === "/about"
+                                ? "bg-red-600 border-red-500 text-white font-bold"
+                                : "bg-zinc-800/90 border-zinc-700 text-zinc-200 hover:bg-zinc-700"
+                            }`}
+                          >
+                            <span className="text-xs font-semibold">About Us</span>
+                          </Link>
+                          <Link
+                            href="/contact"
+                            onClick={() => setIsOpen(false)}
+                            className={`flex flex-col items-center justify-center p-2.5 rounded-lg border text-center transition-all ${
+                              pathname === "/contact"
+                                ? "bg-red-600 border-red-500 text-white font-bold"
+                                : "bg-zinc-800/90 border-zinc-700 text-zinc-200 hover:bg-zinc-700"
+                            }`}
+                          >
+                            <span className="text-xs font-semibold">Contact Us</span>
+                          </Link>
+                        </div>
+                      </div>
+
+                      {/* All Products */}
                       <Link
                         href="/products"
                         onClick={(e) => {
-                          handleNavClick(baseNavigation[0], e)
+                          handleNavClick({ name: "All Products", href: "/products" }, e)
                           setIsOpen(false)
                         }}
-                        className={`block px-4 py-3 text-base font-semibold transition-colors rounded-lg border-2 ${
+                        className={`block px-4 py-2.5 text-sm font-semibold text-center transition-colors rounded-lg border ${
                           pathname === '/products' && !searchParams.get('category')
-                            ? "text-zinc-900 bg-zinc-50 border-zinc-200"
-                            : `text-gray-700 hover:bg-gray-50 border-gray-200`
+                            ? "bg-red-600 border-red-500 text-white"
+                            : "bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700"
                         }`}
                       >
                         All Products
-                       </Link>
+                      </Link>
 
-                       {/* Categories Section */}
-                       {categories.length > 0 && (
-                         <>
-                           <div className="px-3 py-2 mt-6 text-xs font-medium text-gray-500 uppercase tracking-wider border-t border-gray-200 pt-4">
-                             Categories
-                           </div>
-                          <div className="space-y-1 pb-4">
+                      {/* Categories Section */}
+                      {categories.length > 0 && (
+                        <div className="border-t border-zinc-800 pt-3">
+                          <div className="px-1 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                            Categories
+                          </div>
+                          <div className="space-y-1 pb-2">
                             {categories.map((category) => {
                               const item = {
                                 name: category.name,
@@ -1018,34 +1081,31 @@ function Nav() {
                                     handleNavClick(item, e)
                                     setIsOpen(false)
                                   }}
-                                  className={`block px-4 py-2 text-sm font-medium transition-all duration-300 rounded-lg relative overflow-hidden ${
+                                  className={`block px-3.5 py-2 text-sm font-medium transition-all rounded-lg ${
                                     isActiveCategoryLink(item)
-                                      ? "text-zinc-900 bg-zinc-50"
-                                      : `text-gray-600 hover:bg-gray-50`
+                                      ? "bg-red-600 text-white font-bold"
+                                      : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
                                   } ${
                                     category.is_special 
-                                      ? "border-l-4 border-zinc-400 bg-zinc-50 shadow-sm" 
+                                      ? "border-l-2 border-red-500 bg-zinc-800/50" 
                                       : ""
                                   }`}
                                 >
-                                  <div className="flex items-center justify-between relative z-10">
+                                  <div className="flex items-center justify-between">
                                     <span className={category.is_special ? "font-semibold" : ""}>{category.name}</span>
                                     {category.is_special && (
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border border-zinc-300 bg-white text-zinc-700">
-                                        Featured
-                                      </span>
+                                      <span className="text-xs text-amber-400">★</span>
                                     )}
                                   </div>
                                 </Link>
                               )
                             })}
                           </div>
-                        </>
+                        </div>
                       )}
                     </div>
                   </div>
                 )}
-
               </div>
             )}
           </div>

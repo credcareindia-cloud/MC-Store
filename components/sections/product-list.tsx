@@ -432,6 +432,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
   const startIndex = (currentPage - 1) * itemsPerPage
   const endIndex = Math.min(startIndex + itemsPerPage, filteredItems.length)
   const paginatedItems = filteredItems.slice(startIndex, endIndex)
+  const isProductListLoading = loading || categoryTransition || isSearchLoading
 
   const shouldShowSpinButton = authInitialized && !isAuthenticated && !showSpinner
 
@@ -625,26 +626,28 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
                     </span>
                     <span className="text-xs text-gray-400 font-normal">({items.length})</span>
                   </button>
-                  {categories.map((cat) => {
-                    const count = items.filter((i) => i.category_id === cat.id).length
-                    const isSelected = selectedCategory === cat.id
-                    return (
-                      <button
-                        key={cat.id}
-                        onClick={() => handleCategoryChange(cat.id)}
-                        className={`flex items-center justify-between w-full text-sm font-medium py-2 px-2.5 rounded-lg transition-colors ${
-                          isSelected
-                            ? "bg-red-50 text-red-600 font-bold"
-                            : "text-gray-700 hover:bg-gray-50 hover:text-red-600"
-                        }`}
-                      >
-                        <span className="flex items-center gap-1.5 truncate">
-                          <span className="text-red-500 font-bold">&raquo;</span> {cat.name}
-                        </span>
-                        <span className="text-xs text-gray-400 font-normal">({count})</span>
-                      </button>
-                    )
-                  })}
+                  {categories
+                    .filter((cat) => items.filter((i) => i.category_id === cat.id).length > 0)
+                    .map((cat) => {
+                      const count = items.filter((i) => i.category_id === cat.id).length
+                      const isSelected = selectedCategory === cat.id
+                      return (
+                        <button
+                          key={cat.id}
+                          onClick={() => handleCategoryChange(cat.id)}
+                          className={`flex items-center justify-between w-full text-sm font-medium py-2 px-2.5 rounded-lg transition-colors ${
+                            isSelected
+                              ? "bg-red-50 text-red-600 font-bold"
+                              : "text-gray-700 hover:bg-gray-50 hover:text-red-600"
+                          }`}
+                        >
+                          <span className="flex items-center gap-1.5 truncate">
+                            <span className="text-red-500 font-bold">&raquo;</span> {cat.name}
+                          </span>
+                          <span className="text-xs text-gray-400 font-normal">({count})</span>
+                        </button>
+                      )
+                    })}
                 </div>
               </div>
 
@@ -715,8 +718,17 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
             <div className="lg:col-span-3">
               {/* Header Bar with Count and Sort Dropdown (Matching Zytheme Screenshot 1) */}
               <div id="product-catalog-grid" className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-sm font-semibold text-gray-800">
-                  Showing <span className="text-red-600 font-bold">{filteredItems.length > 0 ? startIndex + 1 : 0} : {endIndex}</span> Of <span className="font-bold">{filteredItems.length}</span> Products
+                <div className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                  {isProductListLoading ? (
+                    <div className="flex items-center gap-2 text-red-600 font-medium">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Loading products...</span>
+                    </div>
+                  ) : (
+                    <>
+                      Showing <span className="text-red-600 font-bold">{filteredItems.length > 0 ? startIndex + 1 : 0} : {endIndex}</span> Of <span className="font-bold">{filteredItems.length}</span> Products
+                    </>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -735,10 +747,17 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
               </div>
 
               {/* Product Grid (2-Column on Mobile like real-world e-commerce apps) */}
-              {loading ? (
+              {isProductListLoading ? (
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-6">
                   {[...Array(6)].map((_, i) => (
-                    <div key={i} className="animate-pulse bg-white p-3 sm:p-4 rounded-xl border border-gray-200 h-64 sm:h-72"></div>
+                    <div key={i} className="animate-pulse bg-white p-3 sm:p-4 rounded-xl border border-gray-200 h-64 sm:h-72 flex flex-col justify-between">
+                      <div className="bg-gray-200 h-36 rounded-lg w-full"></div>
+                      <div className="space-y-2 mt-3">
+                        <div className="bg-gray-200 h-3 rounded w-1/3 mx-auto"></div>
+                        <div className="bg-gray-200 h-4 rounded w-3/4 mx-auto"></div>
+                        <div className="bg-gray-200 h-4 rounded w-1/2 mx-auto"></div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -921,7 +940,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
               )}
 
               {/* No items state */}
-              {filteredItems.length === 0 && !loading && (
+              {filteredItems.length === 0 && !isProductListLoading && (
                 <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
                   <div className="text-5xl mb-3">🚗</div>
                   <h3 className="text-lg font-bold text-gray-900 mb-1">No products found</h3>

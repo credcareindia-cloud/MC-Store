@@ -36,10 +36,8 @@ export default function BottomTabs() {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 block lg:hidden">
-        <div className="relative rounded-t-xl border-t border-zinc-200 bg-white shadow-[0_-4px_24px_rgba(0,0,0,0.06)] transition-all duration-300">
-
-          <div className="relative flex items-center justify-between px-5 py-3">
+      <div className="fixed bottom-0 left-0 right-0 z-[100] block lg:hidden bg-white border-t border-zinc-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] transform-gpu">
+        <div className="flex items-center justify-between px-5 py-2">
             {navItems.map((item) => {
               if (item.type === "profile") {
                 return (
@@ -146,9 +144,8 @@ export default function BottomTabs() {
             })}
           </div>
 
-          <div className="h-[env(safe-area-inset-bottom)]" />
+          <div className="h-[env(safe-area-inset-bottom,0px)]" />
         </div>
-      </div>
 
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
     </>

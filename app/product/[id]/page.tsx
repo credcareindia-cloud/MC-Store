@@ -584,10 +584,7 @@ export default function ProductPage() {
                     <span className="font-semibold text-gray-700">Product : </span>
                     <span className="text-gray-600">{product.category_name}</span>
                   </div>
-                  <div>
-                    <span className="font-semibold text-gray-700">Code : </span>
-                    <span className="text-gray-600">#{product.sku || product.id}</span>
-                  </div>
+
                   <div>
                     <span className="font-semibold text-gray-700">Availability : </span>
                     <span className={stockQty > 0 ? "text-red-600 font-bold" : "text-gray-400 font-bold"}>
@@ -695,17 +692,7 @@ export default function ProductPage() {
                 )}
               </div>
 
-              {/* SHARE PRODUCT Section */}
-              <div className="pt-4 border-t border-gray-200">
-                <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">
-                  SHARE PRODUCT :
-                </h4>
-                <div className="flex gap-2">
-                  <button onClick={() => toast.success('Shared!')} className="w-8 h-8 bg-blue-600 text-white rounded flex items-center justify-center font-bold text-xs">f</button>
-                  <button onClick={() => toast.success('Shared!')} className="w-8 h-8 bg-sky-400 text-white rounded flex items-center justify-center font-bold text-xs">t</button>
-                  <button onClick={() => toast.success('Shared!')} className="w-8 h-8 bg-red-600 text-white rounded flex items-center justify-center font-bold text-xs">g+</button>
-                </div>
-              </div>
+
             </div>
           </div>
         </div>
@@ -719,7 +706,7 @@ export default function ProductPage() {
 
       {/* Mobile sticky bottom bar */}
       {product && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 p-3 lg:hidden safe-area-pb">
+        <div className="fixed bottom-[52px] left-0 right-0 z-30 bg-white border-t border-gray-100 p-2.5 lg:hidden shadow-md">
           {stockQty <= 0 || !product.is_available ? (
             <Button
               onClick={(e) => handleWhatsAppProductRequest(e, {
