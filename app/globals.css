@@ -131,10 +131,6 @@
   background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%);
 }
 
-.admin-gradient {
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
-}
-
 @layer utilities {
   .scrollbar-hide {
     -ms-overflow-style: none;

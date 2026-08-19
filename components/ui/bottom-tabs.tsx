@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ShoppingBag, User, Home, ShoppingCart, LogOut } from "lucide-react"
+import { ShoppingBag, User, Home, ShoppingCart, LogOut, Heart } from "lucide-react"
 import { useSelector } from "react-redux"
 import { useAuth } from "@/lib/contexts/auth-context"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -19,7 +19,8 @@ export default function BottomTabs() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
 
   const navItems = [
-    { href: "/products", icon: Home, label: "Home", isActive: pathname === "/" },
+    { href: "/", icon: Home, label: "Home", isActive: pathname === "/" || pathname === "/home" },
+    { href: "/wishlist", icon: Heart, label: "Wishlist", isActive: pathname === "/wishlist" },
     { href: "/orders", icon: ShoppingBag, label: "Orders", isActive: pathname === "/orders" },
     { href: "/order", icon: ShoppingCart, label: "Cart", isActive: pathname === "/order", badge: cartCount || null },
     { type: "profile" as const },
@@ -35,7 +36,7 @@ export default function BottomTabs() {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-50 md:block lg:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-50 block lg:hidden">
         <div className="relative rounded-t-xl border-t border-zinc-200 bg-white shadow-[0_-4px_24px_rgba(0,0,0,0.06)] transition-all duration-300">
 
           <div className="relative flex items-center justify-between px-5 py-3">

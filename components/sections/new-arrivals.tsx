@@ -12,8 +12,9 @@ import { useSettings } from "@/lib/contexts/settings-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, ChevronRight, Tag, Grid3X3, List, SlidersHorizontal } from "lucide-react"
+import { Star, ChevronRight, Tag, Grid3X3, List, SlidersHorizontal, MessageCircle } from "lucide-react"
 import Image from "next/image"
+import { handleWhatsAppProductRequest } from "@/lib/whatsapp-request"
 
 const NewArrivals: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
@@ -169,13 +170,28 @@ const NewArrivals: React.FC = () => {
                         <span className="text-xs text-gray-500 ml-1">(4.8) • New</span>
                       </div>
 
-                      <Button
-                        onClick={() => handleAddToCart(item)}
-                        className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-full py-2 lg:py-3 text-sm lg:text-base font-medium shadow-lg"
-                        disabled={!item.is_available}
-                      >
-                        {item.is_available ? "Add to Cart" : "Unavailable"}
-                      </Button>
+                      {item.is_available ? (
+                        <Button
+                          onClick={() => handleAddToCart(item)}
+                          className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-full py-2 lg:py-3 text-sm lg:text-base font-medium shadow-lg"
+                        >
+                          Add to Cart
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={(e) => handleWhatsAppProductRequest(e, {
+                            productName: item.name,
+                            productId: item.id,
+                            brand: item.brand,
+                            priceText: formatPrice(item.price),
+                            productUrl: typeof window !== 'undefined' ? `${window.location.origin}/product/${item.id}` : undefined
+                          })}
+                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-full py-2 lg:py-3 text-sm font-medium shadow-lg flex items-center justify-center gap-2"
+                        >
+                          <MessageCircle className="w-4 h-4 fill-white" />
+                          Request Product
+                        </Button>
+                      )}
                     </CardContent>
                   </Card>
                 ))}

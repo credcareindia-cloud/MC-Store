@@ -31,11 +31,22 @@ export async function GET(request: Request) {
       limit,
     })
 
+    const suggestionsSet = new Set<string>()
+    result.items.forEach((item) => {
+      if (item.category_name && item.category_name !== "General" && item.category_name !== "Common") {
+        suggestionsSet.add(item.category_name)
+      }
+      if (item.brand) {
+        suggestionsSet.add(item.brand)
+      }
+    })
+    const suggestions = Array.from(suggestionsSet).slice(0, 5)
+
     return NextResponse.json({
       items: result.items,
       total: result.total,
       query: result.query,
-      suggestions: [], // Simple placeholder or dynamic suggestions could be added if needed
+      suggestions,
     })
   } catch (error) {
     console.error("[/api/products/search] Error:", error)

@@ -87,25 +87,14 @@ export default function TrendingProducts({
     const variant = product.variants?.[0]
 
     let price = isAED ? (product.price_aed ?? product.price / 22.5) : (product.price_inr ?? product.price)
-    let originalPrice = price
-    let hasDiscount = false
-
     if (variant) {
       const isAvailable = isAED ? variant.available_aed : variant.available_inr
       if (isAvailable) {
-        const vOriginal = isAED ? variant.price_aed : variant.price_inr
-        const vDiscount = isAED ? (variant.discount_aed || 0) : (variant.discount_inr || 0)
-        if (vDiscount > 0 && vDiscount < vOriginal) {
-          price = vDiscount
-          originalPrice = vOriginal
-          hasDiscount = true
-        } else {
-          price = vOriginal
-        }
+        price = isAED ? variant.price_aed : variant.price_inr
       }
     }
 
-    return { price, originalPrice, hasDiscount }
+    return { price, originalPrice: price, hasDiscount: false }
   }
 
   return (
@@ -208,11 +197,6 @@ export default function TrendingProducts({
                       <span className="bg-zinc-900 text-white text-[10px] lg:text-xs font-bold px-2 py-0.5 rounded-md leading-none shadow-sm">
                         TRENDING
                       </span>
-                      {hasDiscount && discountPercent > 0 && (
-                        <span className="bg-rose-500 text-white text-[10px] lg:text-xs font-extrabold px-2 py-0.5 rounded-md leading-none shadow-sm">
-                          -{discountPercent}%
-                        </span>
-                      )}
                     </div>
                   </div>
 
@@ -228,7 +212,7 @@ export default function TrendingProducts({
                       {product.name}
                     </h3>
 
-                    {/* Pricing */}
+                    {/* Pricing - ONLY MRP */}
                     <div className="mt-auto pt-2 border-t border-zinc-100 flex items-center justify-between gap-2">
                       <div>
                         <div className="flex items-baseline gap-1.5">
@@ -241,17 +225,6 @@ export default function TrendingProducts({
                               "#18181b"
                             )}
                           </span>
-                          {hasDiscount && originalPrice > price && (
-                            <span className="text-xs text-zinc-400 line-through">
-                              {formatPriceWithSmallDecimals(
-                                selectedCurrency === "AED" ? originalPrice : undefined,
-                                selectedCurrency === "INR" ? originalPrice : undefined,
-                                selectedCurrency,
-                                true,
-                                "#a1a1aa"
-                              )}
-                            </span>
-                          )}
                         </div>
                         {/* Stock status */}
                         <div className="mt-0.5">

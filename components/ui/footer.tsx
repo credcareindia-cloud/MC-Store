@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import MotoCartLogo from "@/components/ui/logo"
 import {
   MapPin,
   Phone,
@@ -65,15 +66,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="sm:col-span-2 xl:col-span-5 space-y-5">
             <Link href="/" className="inline-flex items-center group">
-              <div className="flex items-center text-3xl font-black italic tracking-tighter select-none py-1 group-hover:scale-105 transition-transform duration-200">
-                <span className="text-white tracking-wider drop-shadow-md">
-                  Moto
-                </span>
-                <span className="text-red-600 relative ml-0.5 inline-block">
-                  cart
-                  <span className="absolute -bottom-1 left-0 right-0 h-1 bg-red-600 rounded-full transform -skew-x-12"></span>
-                </span>
-              </div>
+              <MotoCartLogo className="h-10 w-auto group-hover:scale-105 transition-transform duration-200" />
             </Link>
 
             <p className="text-sm sm:text-base text-zinc-400 leading-relaxed max-w-md">

@@ -10,19 +10,21 @@ import { Button } from "@/components/ui/button"
 import { useLoginModal } from '@/lib/stores/useLoginModal'
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, ChevronRight, Zap, Grid3X3, List, SlidersHorizontal, Tag, Heart, ChevronDown, ShoppingCart, Loader2, Flame, ArrowRight, Bookmark } from "lucide-react"
+import { Star, ChevronLeft, ChevronRight, Zap, Grid3X3, List, SlidersHorizontal, Tag, Heart, ChevronDown, ShoppingCart, Loader2, Flame, ArrowRight, Bookmark, MessageCircle } from "lucide-react"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/contexts/auth-context"
 import { addToWishlistAPI, removeFromWishlistAPI } from '@/lib/store/slices/wishlistSlice'
 import SearchFilters from "@/components/ui/search-filters"
+import { handleWhatsAppProductRequest } from "@/lib/whatsapp-request"
 
 interface ProductListProps {
   showSpinner?: boolean
   onCloseSpinner?: () => void
+  showTopPicks?: boolean
 }
 
-export default function ProductList({ showSpinner = false, onCloseSpinner }: ProductListProps) {
+export default function ProductList({ showSpinner = false, onCloseSpinner, showTopPicks = false }: ProductListProps) {
   const { user, isAuthenticated } = useAuth()
   const [authInitialized, setAuthInitialized] = useState(false)
   const { openModal } = useLoginModal()
@@ -30,6 +32,8 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
   const [showFilters, setShowFilters] = useState(false)
   const [categoryTransition, setCategoryTransition] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(12)
   
   // Animation states
   const [showBlur, setShowBlur] = useState(false)
@@ -419,6 +423,16 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
   
   const filteredItems = applyFilters(sortedBaseItems, activeFilters)
 
+  // Reset pagination to page 1 when filters or sorting change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedCategory, activeFilters, searchSortBy, searchParams])
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage) || 1
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredItems.length)
+  const paginatedItems = filteredItems.slice(startIndex, endIndex)
+
   const shouldShowSpinButton = authInitialized && !isAuthenticated && !showSpinner
 
   // Updated getCurrentCategoryName function
@@ -508,7 +522,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
         </div>
 
         {/* Top Picks */}
-    {lightningDeals.length > 0 && !isSearchActive && (
+    {showTopPicks && lightningDeals.length > 0 && !isSearchActive && (
   <div className="px-4 lg:px-6 mt-6 lg:mt-8">
     <div className="max-w-7xl mx-auto">
 
@@ -589,15 +603,15 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 pb-12">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             
-            {/* Left Sidebar (Desktop & Tablet Collapsible) */}
-            <div className="lg:col-span-1 space-y-8">
+            {/* Left Sidebar (Hidden on mobile so products render first; sticky on desktop) */}
+            <div className="hidden lg:block lg:col-span-1 space-y-6 lg:sticky lg:top-24 self-start">
               {/* CATEGORIES Section */}
               <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                 <h2 className="text-base font-bold text-gray-900 uppercase tracking-wide mb-4 pb-2 border-b border-gray-200 flex items-center justify-between">
                   <span>Categories</span>
                   <span className="h-0.5 w-6 bg-red-600"></span>
                 </h2>
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 max-h-[380px] overflow-y-auto pr-1">
                   <button
                     onClick={() => handleCategoryChange(null)}
                     className={`flex items-center justify-between w-full text-sm font-medium py-2 px-2.5 rounded-lg transition-colors ${
@@ -664,7 +678,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
                             </h4>
                             <p className="text-xs font-bold text-red-600 mt-1">
                               {v
-                                ? formatPriceWithSmallDecimals(v.discount_aed || v.price_aed, v.discount_inr || v.price_inr, "AED", true, "#dc2626")
+                                ? formatPriceWithSmallDecimals(v.price_aed, v.price_inr, "AED", true, "#dc2626")
                                 : `₹ ${item.price}`}
                             </p>
                           </div>
@@ -700,9 +714,9 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
             {/* Right Main Grid Area */}
             <div className="lg:col-span-3">
               {/* Header Bar with Count and Sort Dropdown (Matching Zytheme Screenshot 1) */}
-              <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div id="product-catalog-grid" className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="text-sm font-semibold text-gray-800">
-                  Showing <span className="text-red-600 font-bold">1 : {filteredItems.length}</span> Of <span className="font-bold">{items.length}</span> Products
+                  Showing <span className="text-red-600 font-bold">{filteredItems.length > 0 ? startIndex + 1 : 0} : {endIndex}</span> Of <span className="font-bold">{filteredItems.length}</span> Products
                 </div>
 
                 <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -716,30 +730,21 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
                     <option value="price_low">Price: Low to High</option>
                     <option value="price_high">Price: High to Low</option>
                     <option value="newest">Newest First</option>
-                    <option value="discount">Highest Discount</option>
                   </select>
                 </div>
               </div>
 
-              {/* Product Grid */}
+              {/* Product Grid (2-Column on Mobile like real-world e-commerce apps) */}
               {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-6">
                   {[...Array(6)].map((_, i) => (
-                    <div key={i} className="animate-pulse bg-white p-4 rounded-xl border border-gray-200 h-72"></div>
+                    <div key={i} className="animate-pulse bg-white p-3 sm:p-4 rounded-xl border border-gray-200 h-64 sm:h-72"></div>
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredItems.map((item) => {
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-6">
+                  {paginatedItems.map((item) => {
                     const availableVariant = item.variants?.find((v: any) => v.available_aed || v.available_inr) || item.variants?.[0]
-                    let discountPercent = 0
-                    if (availableVariant) {
-                      if (selectedCurrency === 'AED' && availableVariant.price_aed && availableVariant.discount_aed && availableVariant.price_aed > availableVariant.discount_aed) {
-                        discountPercent = Math.round(((availableVariant.price_aed - availableVariant.discount_aed) / availableVariant.price_aed) * 100)
-                      } else if (selectedCurrency === 'INR' && availableVariant.price_inr && availableVariant.discount_inr && availableVariant.price_inr > availableVariant.discount_inr) {
-                        discountPercent = Math.round(((availableVariant.price_inr - availableVariant.discount_inr) / availableVariant.price_inr) * 100)
-                      }
-                    }
 
                     return (
                       <div
@@ -747,14 +752,14 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
                         className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group flex flex-col cursor-pointer"
                         onClick={() => router.push(`/product/${item.id}`)}
                       >
-                        {/* Image Container (Zytheme Light Gray Box) */}
-                        <div className="relative bg-stone-100 p-6 flex items-center justify-center h-52 group-hover:bg-stone-200/60 transition-colors">
+                        {/* Image Container (Responsive Height for 2-column mobile grid) */}
+                        <div className="relative bg-stone-100 p-3 sm:p-6 flex items-center justify-center h-36 sm:h-52 group-hover:bg-stone-200/60 transition-colors">
                           <Image
                             src={item.image_urls?.[0] || item.image_url || "/placeholder.svg"}
                             alt={item.name}
                             width={200}
                             height={200}
-                            className="object-contain h-44 w-full group-hover:scale-105 transition-transform duration-300"
+                            className="object-contain h-28 sm:h-44 w-full group-hover:scale-105 transition-transform duration-300"
                           />
 
                           {/* Wishlist Button */}
@@ -763,74 +768,155 @@ export default function ProductList({ showSpinner = false, onCloseSpinner }: Pro
                               e.stopPropagation()
                               handleToggleWishlist(item)
                             }}
-                            className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-colors ${
+                            className={`absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-md transition-colors ${
                               isInWishlist(item.id) ? "bg-red-50 text-red-600" : "bg-white text-gray-400 hover:text-red-600"
                             }`}
                           >
-                            <Heart className={`w-4 h-4 ${isInWishlist(item.id) ? "fill-current" : ""}`} />
+                            <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isInWishlist(item.id) ? "fill-current" : ""}`} />
                           </button>
-
-                          {/* Discount Badge */}
-                          {discountPercent > 0 && (
-                            <Badge className="absolute top-3 left-3 bg-red-600 text-white text-xs px-2 py-0.5 rounded-md font-bold">
-                              {discountPercent}% OFF
-                            </Badge>
-                          )}
                         </div>
 
                         {/* Card Content (Brand, Title, Price, Add to Cart) */}
-                        <div className="p-4 flex-1 flex flex-col justify-between text-center">
+                        <div className="p-2.5 sm:p-4 flex-1 flex flex-col justify-between text-center">
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+                            <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 truncate">
                               {item.brand || item.category_name || "Spare Parts"}
                             </p>
-                            <h3 className="font-bold text-gray-900 text-sm uppercase line-clamp-2 min-h-[2.5rem] group-hover:text-red-600 transition-colors">
+                            <h3 className="font-bold text-gray-900 text-xs sm:text-sm uppercase line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] group-hover:text-red-600 transition-colors">
                               {item.name}
                             </h3>
                           </div>
 
-                          <div className="mt-3 pt-3 border-t border-gray-100">
-                            <div className="flex items-center justify-center gap-2 mb-3">
-                              <span className="text-base font-extrabold text-red-600">
+                          <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-100">
+                            <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
+                              <span className="text-sm sm:text-base font-extrabold text-red-600">
                                 {availableVariant
                                   ? formatPriceWithSmallDecimals(
-                                      availableVariant.discount_aed || availableVariant.price_aed,
-                                      availableVariant.discount_inr || availableVariant.price_inr,
+                                      availableVariant.price_aed,
+                                      availableVariant.price_inr,
                                       "AED",
                                       true,
                                       "#dc2626"
                                     )
                                   : `₹ ${item.price}`}
                               </span>
-                              {discountPercent > 0 && availableVariant && (
-                                <span className="text-xs text-gray-400 line-through font-normal">
-                                  {formatPriceWithSmallDecimals(
-                                    availableVariant.price_aed,
-                                    availableVariant.price_inr,
-                                    "AED",
-                                    true,
-                                    "#9ca3af"
-                                  )}
-                                </span>
-                              )}
                             </div>
 
-                            <Button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                handleAddToCart(item)
-                              }}
-                              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
-                              disabled={item.stock_quantity <= 0}
-                            >
-                              <ShoppingCart className="w-3.5 h-3.5" />
-                              {item.stock_quantity > 0 ? "Add To Cart" : "Out of Stock"}
-                            </Button>
+                            {item.stock_quantity > 0 ? (
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleAddToCart(item)
+                                }}
+                                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-[10px] sm:text-xs uppercase tracking-wider py-1.5 sm:py-2 rounded-lg transition-colors flex items-center justify-center gap-1 sm:gap-2"
+                              >
+                                <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                Add To Cart
+                              </Button>
+                            ) : (
+                              <Button
+                                onClick={(e) => {
+                                  handleWhatsAppProductRequest(e, {
+                                    productName: item.name,
+                                    productId: item.id,
+                                    sku: item.sku,
+                                    brand: item.brand || item.category_name,
+                                    priceText: availableVariant
+                                      ? `AED ${availableVariant.price_aed || ''} / ₹ ${availableVariant.price_inr || ''}`
+                                      : `₹ ${item.price}`,
+                                    productUrl: typeof window !== 'undefined' ? `${window.location.origin}/product/${item.id}` : undefined
+                                  })
+                                }}
+                                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] sm:text-xs uppercase tracking-wider py-1.5 sm:py-2 rounded-lg transition-colors flex items-center justify-center gap-1 shadow-sm"
+                              >
+                                <MessageCircle className="w-3.5 h-3.5 fill-white shrink-0" />
+                                Request Stock
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
                     )
                   })}
+                </div>
+              )}
+
+              {/* Interactive Pagination Bar */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="text-xs text-gray-500 font-medium">
+                    Page <span className="font-bold text-gray-900">{currentPage}</span> of{" "}
+                    <span className="font-bold text-gray-900">{totalPages}</span> ({filteredItems.length} items total)
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === 1}
+                      onClick={() => {
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        const el = document.getElementById("product-catalog-grid")
+                        if (el) el.scrollIntoView({ behavior: "smooth" })
+                      }}
+                      className="text-xs font-semibold px-3 py-1.5 h-8 border-gray-300"
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-1" />
+                      Previous
+                    </Button>
+
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((page) => {
+                          return (
+                            page === 1 ||
+                            page === totalPages ||
+                            Math.abs(page - currentPage) <= 1
+                          )
+                        })
+                        .map((page, index, array) => {
+                          const showEllipsis = index > 0 && page - array[index - 1] > 1
+                          return (
+                            <div key={page} className="flex items-center">
+                              {showEllipsis && (
+                                <span className="px-1.5 text-xs text-gray-400">...</span>
+                              )}
+                              <Button
+                                variant={currentPage === page ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => {
+                                  setCurrentPage(page)
+                                  const el = document.getElementById("product-catalog-grid")
+                                  if (el) el.scrollIntoView({ behavior: "smooth" })
+                                }}
+                                className={`w-8 h-8 p-0 text-xs font-bold ${
+                                  currentPage === page
+                                    ? "bg-red-600 hover:bg-red-700 text-white"
+                                    : "text-gray-700 hover:bg-gray-50 border-gray-300"
+                                }`}
+                              >
+                                {page}
+                              </Button>
+                            </div>
+                          )
+                        })}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === totalPages}
+                      onClick={() => {
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                        const el = document.getElementById("product-catalog-grid")
+                        if (el) el.scrollIntoView({ behavior: "smooth" })
+                      }}
+                      className="text-xs font-semibold px-3 py-1.5 h-8 border-gray-300"
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
                 </div>
               )}
 

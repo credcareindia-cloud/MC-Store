@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { useLoginModal } from '@/lib/stores/useLoginModal'
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, ShoppingCart, Heart, Share2, AlertCircle, Plus, Minus, Truck, Shield, Zap, ChevronRight, Sparkles, Verified, Check, Package, Info, Star } from "lucide-react"
+import { ArrowLeft, ShoppingCart, Heart, Share2, AlertCircle, Plus, Minus, Truck, Shield, Zap, ChevronRight, Sparkles, Verified, Check, Package, Info, Star, MessageCircle } from "lucide-react"
 import Image from "next/image"
 import Navbar from "@/components/ui/navbar"
 import Footer from "@/components/ui/footer"
@@ -21,6 +21,7 @@ import toast from 'react-hot-toast'
 import LoginModal from "@/components/auth/login-modal"
 import RecommendedProducts from "@/components/sections/recommended-products"
 import { Metadata } from 'next'
+import { handleWhatsAppProductRequest } from "@/lib/whatsapp-request"
 
 interface Variant {
   id: number
@@ -160,9 +161,10 @@ export default function ProductPage() {
 
   const fetchProduct = async () => {
     try {
-      const response = await fetch(`/api/admin/products/${params.id}`)
+      const response = await fetch(`/api/products/${params.id}`)
       if (response.ok) {
-        const data = await response.json()
+        const resData = await response.json()
+        const data = resData.product || resData
         setProduct(data)
         const defaultVariant = data.variants?.find((v: Variant) =>
           selectedCurrency === 'AED' ? v.available_aed : v.available_inr
@@ -460,11 +462,6 @@ export default function ProductPage() {
                         {conditionLabels[product.condition_type]}
                       </span>
                     )}
-                    {discountPercent > 0 && (
-                      <span className="bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                        -{discountPercent}%
-                      </span>
-                    )}
                   </div>
 
                   {/* Top-right actions */}
@@ -553,31 +550,18 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {/* Price block */}
+              {/* Price block - ONLY MRP */}
               <div className="flex items-baseline gap-3">
                 {currencyAvailable && selectedVariant ? (
-                  <>
-                    {discountPercent > 0 && (
-                      <span className="text-lg text-gray-400 line-through">
-                        {formatPriceWithSmallDecimals(
-                          selectedVariant.price_aed,
-                          selectedVariant.price_inr,
-                          selectedCurrency,
-                          true,
-                          "#9ca3af"
-                        )}
-                      </span>
+                  <span className="text-3xl font-extrabold text-red-600">
+                    {formatPriceWithSmallDecimals(
+                      selectedVariant.price_aed,
+                      selectedVariant.price_inr,
+                      selectedCurrency,
+                      true,
+                      "#dc2626"
                     )}
-                    <span className="text-3xl font-extrabold text-red-600">
-                      {formatPriceWithSmallDecimals(
-                        selectedVariant.discount_aed || selectedVariant.price_aed,
-                        selectedVariant.discount_inr || selectedVariant.price_inr,
-                        selectedCurrency,
-                        true,
-                        "#dc2626"
-                      )}
-                    </span>
-                  </>
+                  </span>
                 ) : (
                   <span className="text-lg text-gray-500">Not available in {selectedCurrency}</span>
                 )}
@@ -617,56 +601,98 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {/* Quantity + Add To Cart + Wishlist */}
+              {/* Quantity + Add To Cart + Wishlist OR WhatsApp Request */}
               <div className="space-y-4 pt-2">
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase text-gray-700">Quantity :</span>
-                    <div className="flex items-center border border-gray-300 rounded-lg bg-white overflow-hidden">
-                      <button
-                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold"
-                        disabled={!currencyAvailable || stockQty === 0}
+                {stockQty > 0 && product.is_available ? (
+                  <>
+                    <div className="flex flex-wrap items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold uppercase text-gray-700">Quantity :</span>
+                        <div className="flex items-center border border-gray-300 rounded-lg bg-white overflow-hidden">
+                          <button
+                            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                            className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold"
+                            disabled={!currencyAvailable}
+                          >
+                            -
+                          </button>
+                          <span className="w-10 h-8 flex items-center justify-center text-xs font-bold border-x border-gray-300">
+                            {quantity}
+                          </span>
+                          <button
+                            onClick={() => setQuantity(Math.min(stockQty, quantity + 1))}
+                            className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold"
+                            disabled={!currencyAvailable}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={handleAddToCart}
+                        className="bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-xs tracking-wider px-6 py-2.5 rounded-lg shadow-sm transition-colors"
                       >
-                        -
-                      </button>
-                      <span className="w-10 h-8 flex items-center justify-center text-xs font-bold border-x border-gray-300">
-                        {quantity}
-                      </span>
-                      <button
-                        onClick={() => setQuantity(Math.min(stockQty, quantity + 1))}
-                        className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold"
-                        disabled={!currencyAvailable || stockQty === 0}
+                        Add To Cart
+                      </Button>
+
+                      <Button
+                        onClick={() => handleToggleWishlist(product)}
+                        variant="outline"
+                        className="border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-xs py-2.5 rounded-lg"
                       >
-                        +
-                      </button>
+                        Wishlist
+                      </Button>
+                    </div>
+
+                    <Button
+                      onClick={handleBuyNow}
+                      className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold uppercase text-xs tracking-wider py-3 rounded-lg shadow-sm transition-colors mt-2"
+                    >
+                      Buy Now
+                    </Button>
+                  </>
+                ) : (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3">
+                    <div className="flex items-start gap-2.5">
+                      <MessageCircle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-bold text-emerald-900">Currently Out of Stock</h4>
+                        <p className="text-xs text-emerald-700 mt-0.5 leading-relaxed">
+                          Is it possible to get this product? Click below to send product details to our team on WhatsApp (<strong>8075191055</strong>) to check if we can order it for you!
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={(e) => handleWhatsAppProductRequest(e, {
+                        productName: product.name,
+                        productId: product.id,
+                        sku: product.sku,
+                        brand: product.brand,
+                        priceText: selectedVariant
+                          ? selectedCurrency === 'AED' && selectedVariant.price_aed
+                            ? `AED ${selectedVariant.price_aed}`
+                            : `₹ ${selectedVariant.price_inr || product.price}`
+                          : `₹ ${product.price}`,
+                        productUrl: typeof window !== 'undefined' ? window.location.href : undefined
+                      })}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-lg shadow-md flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+                    >
+                      <MessageCircle className="w-4.5 h-4.5 fill-white" />
+                      Request Product via WhatsApp
+                    </Button>
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="text-[11px] text-emerald-800 font-medium">Fast inquiry response</span>
+                      <Button
+                        onClick={() => handleToggleWishlist(product)}
+                        variant="ghost"
+                        className="text-xs text-gray-600 hover:text-gray-900 underline p-0 h-auto font-medium"
+                      >
+                        {isInWishlist(product.id) ? 'In Wishlist' : 'Add to Wishlist'}
+                      </Button>
                     </div>
                   </div>
-
-                  <Button
-                    onClick={handleAddToCart}
-                    className="bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-xs tracking-wider px-6 py-2.5 rounded-lg shadow-sm transition-colors"
-                    disabled={!product.is_available || stockQty === 0}
-                  >
-                    Add To Cart
-                  </Button>
-
-                  <Button
-                    onClick={() => handleToggleWishlist(product)}
-                    variant="outline"
-                    className="border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold text-xs py-2.5 rounded-lg"
-                  >
-                    Wishlist
-                  </Button>
-                </div>
-
-                <Button
-                  onClick={handleBuyNow}
-                  className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold uppercase text-xs tracking-wider py-3 rounded-lg shadow-sm transition-colors mt-2"
-                  disabled={!product.is_available || stockQty === 0}
-                >
-                  Buy Now
-                </Button>
+                )}
               </div>
 
               {/* SHARE PRODUCT Section */}
@@ -692,25 +718,48 @@ export default function ProductPage() {
       />
 
       {/* Mobile sticky bottom bar */}
-      {product && currencyAvailable && stockQty > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 p-3 flex gap-3 lg:hidden safe-area-pb">
-          <Button
-            onClick={handleAddToCart}
-            variant="outline"
-            className="flex-1 h-12 rounded-xl border-gray-200 text-sm font-semibold"
-            disabled={!product.is_available || !selectedVariant || stockQty === 0}
-          >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Cart
-          </Button>
-          <Button
-            onClick={handleBuyNow}
-            className="flex-[2] h-12 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-sm font-semibold shadow-sm"
-            disabled={!product.is_available || !selectedVariant || stockQty === 0}
-          >
-            <Zap className="w-4 h-4 mr-2" />
-            Buy Now
-          </Button>
+      {product && (
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 p-3 lg:hidden safe-area-pb">
+          {stockQty <= 0 || !product.is_available ? (
+            <Button
+              onClick={(e) => handleWhatsAppProductRequest(e, {
+                productName: product.name,
+                productId: product.id,
+                sku: product.sku,
+                brand: product.brand,
+                priceText: selectedVariant
+                  ? selectedCurrency === 'AED' && selectedVariant.price_aed
+                    ? `AED ${selectedVariant.price_aed}`
+                    : `₹ ${selectedVariant.price_inr || product.price}`
+                  : `₹ ${product.price}`,
+                productUrl: typeof window !== 'undefined' ? window.location.href : undefined
+              })}
+              className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-md flex items-center justify-center gap-2"
+            >
+              <MessageCircle className="w-4 h-4 fill-white" />
+              Request Product via WhatsApp
+            </Button>
+          ) : (
+            <div className="flex gap-3">
+              <Button
+                onClick={handleAddToCart}
+                variant="outline"
+                className="flex-1 h-12 rounded-xl border-gray-200 text-sm font-semibold"
+                disabled={!currencyAvailable || !selectedVariant}
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Cart
+              </Button>
+              <Button
+                onClick={handleBuyNow}
+                className="flex-[2] h-12 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-sm font-semibold shadow-sm"
+                disabled={!currencyAvailable || !selectedVariant}
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Buy Now
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

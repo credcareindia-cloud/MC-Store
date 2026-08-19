@@ -11,12 +11,25 @@ export async function GET() {
         subtitle VARCHAR(255),
         description TEXT NOT NULL,
         image_url VARCHAR(500),
-        button_text VARCHAR(100) DEFAULT 'Reserve a Table',
-        button_link VARCHAR(255) DEFAULT '/reservations',
+        button_text VARCHAR(100) DEFAULT 'Explore Spare Parts Catalog',
+        button_link VARCHAR(255) DEFAULT '/products',
         is_active BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `
+
+    // Update any legacy content in DB if it exists
+    await sql`
+      UPDATE about_content
+      SET 
+        title = 'Premium Vehicle Spare Parts & Accessories',
+        subtitle = 'Affordable Prices, Uncompromising Quality',
+        description = 'Welcome to MotoClub, your trusted destination for genuine vehicle spare parts and high-grade automotive components. We specialize in bringing you top-quality replacement parts, engine components, body fittings, and accessories at highly affordable prices.\n\nEvery part in our catalog is rigorously tested for durability, performance, and exact fit—ensuring your vehicle remains safe, reliable, and performing at its best on every road.',
+        image_url = '/vehicle-spare-parts.jpg',
+        button_text = 'Explore Spare Parts Catalog',
+        button_link = '/products'
+      WHERE title LIKE '%Culinary%' OR title LIKE '%Beauty%' OR title LIKE '%Legacy%' OR description LIKE '%skin%' OR description LIKE '%dining%' OR image_url LIKE '%unsplash%';
     `
 
     // Get active about content (latest first)
@@ -32,21 +45,19 @@ export async function GET() {
       const defaultContent = await sql`
         INSERT INTO about_content (title, subtitle, description, image_url, button_text, button_link) 
         VALUES (
-          'A Legacy of Culinary Excellence', 
-          'Our Story', 
-          'Founded by passionate chefs and hospitality experts, Lumière combines timeless techniques with modern innovation to deliver unforgettable dining experiences. Every ingredient is hand-selected, every plate meticulously crafted—because you deserve nothing less than perfection.
-
-Join us for an evening of sophistication, where ambiance, service, and taste converge into a single, unforgettable memory.', 
-          '/placeholder.svg?height=800&width=800', 
-          'Reserve a Table', 
-          '/reservations'
+          'Premium Vehicle Spare Parts & Accessories', 
+          'Affordable Prices, Uncompromising Quality', 
+          'Welcome to MotoClub, your trusted destination for genuine vehicle spare parts and high-grade automotive components. We specialize in bringing you top-quality replacement parts, engine components, body fittings, and accessories at highly affordable prices.\n\nEvery part in our catalog is rigorously tested for durability, performance, and exact fit—ensuring your vehicle remains safe, reliable, and performing at its best on every road.', 
+          '/vehicle-spare-parts.jpg', 
+          'Explore Spare Parts Catalog', 
+          '/products'
         )
         RETURNING *
       `
-      return NextResponse.json(defaultContent[0])
+      return NextResponse.json([defaultContent[0]])
     }
 
-    return NextResponse.json(aboutContent[0])
+    return NextResponse.json(aboutContent)
   } catch (error) {
     console.error("Error fetching about content:", error)
     return NextResponse.json({ error: "Failed to fetch about content" }, { status: 500 })

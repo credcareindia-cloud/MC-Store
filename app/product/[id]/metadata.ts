@@ -7,7 +7,7 @@ interface ProductMetadataProps {
 export async function generateMetadata({ params }: ProductMetadataProps): Promise<Metadata> {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://motoclub.in'
-    const response = await fetch(`${baseUrl}/api/admin/products/${params.id}`, {
+    const response = await fetch(`${baseUrl}/api/products/${params.id}`, {
       cache: 'no-store'
     })
     
@@ -18,7 +18,8 @@ export async function generateMetadata({ params }: ProductMetadataProps): Promis
       }
     }
 
-    const product = await response.json()
+    const data = await response.json()
+    const product = data.product || data
     
     const productImage = product.image_urls?.[0] || '/logo.png'
     const productName = product.name || 'Product'

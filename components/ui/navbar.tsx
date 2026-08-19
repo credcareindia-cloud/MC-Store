@@ -16,6 +16,7 @@ import { useAuth } from "@/lib/contexts/auth-context"
 import { useCurrency } from "@/lib/contexts/currency-context"
 import type { RootState } from "@/lib/store"
 import Image from "next/image"
+import MotoCartLogo from "@/components/ui/logo"
 import Banner from "@/components/ui/banner"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -24,7 +25,9 @@ import LoginModal from "@/components/auth/login-modal"
 import { NavbarSkeleton } from "@/components/ui/navbar-skeleton"
 
 const baseNavigation = [
-  { name: "All Products", href: "/products" },
+  { name: "Home", href: "/home" },
+  { name: "About Us", href: "/about" },
+  { name: "Contact Us", href: "/contact" },
 ]
 
 interface Category {
@@ -163,11 +166,11 @@ function Nav() {
         const categoriesResponse = await fetch('/api/categories')
         const categoriesData = await categoriesResponse.json()
         
-        const productsResponse = await fetch('/api/admin/products')
+        const productsResponse = await fetch('/api/products?limit=100')
         const productsData = await productsResponse.json()
         
-      const shopFilteredCategories = categoriesData
-      const shopFilteredProducts = productsData
+        const shopFilteredCategories = categoriesData
+        const shopFilteredProducts = Array.isArray(productsData) ? productsData : (productsData.items || [])
         
         const productCounts = shopFilteredProducts.reduce((acc: any, product: any) => {
           const categoryId = product.category_id?.toString()
@@ -362,26 +365,44 @@ function Nav() {
         {/* Desktop Header */}
         <div className="hidden lg:block">
           <div className="max-w-7xl mx-auto px-6 py-4 lg:py-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-8">
+            <div className={`flex items-center justify-between ${pathname === "/" ? "" : "mb-4"}`}>
+              <div className="flex items-center gap-8 flex-1">
                 {/* Logo */}
                 <Link href="/" className="nav-logo-link flex items-center group shrink-0" aria-label="MotoCart">
-                  <div className="flex items-center text-3xl font-black italic tracking-tighter select-none py-1 group-hover:scale-105 transition-transform duration-200">
-                    <span className="text-white tracking-wider drop-shadow-md">
-                      Moto
-                    </span>
-                    <span className="text-red-600 relative ml-0.5 inline-block">
-                      cart
-                      <span className="absolute -bottom-1 left-0 right-0 h-1 bg-red-600 rounded-full transform -skew-x-12"></span>
-                    </span>
-                  </div>
+                  <MotoCartLogo className="h-10 w-auto group-hover:scale-105 transition-transform duration-200" />
                 </Link>
 
-                {/* Enhanced Search Bar */}
-                <EnhancedSearch 
-                  className="flex-1 max-w-2xl"
-                  placeholder="Search parts, brands, accessories..."
-                />
+                {/* Enhanced Search Bar (Only when NOT on landing page "/") */}
+                {pathname !== "/" && (
+                  <EnhancedSearch 
+                    className="flex-1 max-w-2xl"
+                    placeholder="Search parts, brands, accessories..."
+                  />
+                )}
+
+                {/* Center Nav Links on Landing Page "/" */}
+                {pathname === "/" && (
+                  <div className="flex items-center justify-center gap-12 flex-1 mx-8">
+                    <Link
+                      href="/home"
+                      className="text-white hover:text-red-500 font-bold text-base transition-colors px-4 py-2"
+                    >
+                      Home
+                    </Link>
+                    <Link
+                      href="/about"
+                      className="text-white hover:text-red-500 font-bold text-base transition-colors px-4 py-2"
+                    >
+                      About Us
+                    </Link>
+                    <Link
+                      href="/contact"
+                      className="text-white hover:text-red-500 font-bold text-base transition-colors px-4 py-2"
+                    >
+                      Contact Us
+                    </Link>
+                  </div>
+                )}
               </div>
 
               {/* Right side buttons */}
@@ -507,153 +528,153 @@ function Nav() {
               </div>
             </div>
 
-            {/* Desktop Navigation with Icon Toggle */}
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center space-x-2 flex-1 min-w-0">
-                {loading ? (
-                  <div className="flex gap-4">
-                    <div className="animate-pulse bg-white/20 rounded-full px-6 py-2 h-10 w-16 flex-shrink-0"></div>
-                    <div className="animate-pulse bg-white/20 rounded-full px-6 py-2 h-10 w-20 flex-shrink-0"></div>
-                    <div className="animate-pulse bg-white/20 rounded-full px-6 py-2 h-10 w-24 flex-shrink-0"></div>
-                  </div>
-                ) : (
-                  <>
-                    {/* All Products - Always visible and constant with hover dropdown */}
-                    <div className="relative group">
-                      <Link
-                        key="all-products"
-                        href="/products"
-                        onClick={(e) => handleNavClick(baseNavigation[0], e)}
-                        className={`hidden lg:flex items-center rounded-full px-6 py-2 font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
-                          pathname === '/products' && !searchParams.get('category')
-                            ? "bg-red-600 text-white font-bold shadow-md shadow-red-950/40"
-                            : "text-gray-200 hover:text-white hover:bg-white/10"
-                        }`}
-                      >
-                        All Products
-                        <span className="ml-1 text-xs opacity-70">▼</span>
-                      </Link>
-                      <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                        <div className="p-3">
-                          <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
-                            Categories
-                          </div>
-                          {categories.length > 0 ? (
-                            <div className="space-y-1 max-h-80 overflow-y-auto">
-                              {categories.map((category) => (
-                                <Link
-                                  key={category.id}
-                                  href={`/products?category=${category.slug || category.id}`}
-                                  className={`block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors ${
-                                    category.is_special 
-                                      ? "border-l-2 border-zinc-400 hover:bg-zinc-50" 
-                                      : ""
-                                  }`}
-                                  onClick={(e) => {
-                                    const item = {
-                                      name: category.name,
-                                      href: `/products?category=${category.slug || category.id}`,
-                                      categoryId: category.id,
-                                      isCategory: true
-                                    }
-                                    handleNavClick(item, e)
-                                  }}
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <span>{category.name}</span>
-                                    {category.is_special && (
-                                      <span className="text-xs text-zinc-500">★</span>
-                                    )}
-                                  </div>
-                                </Link>
-                              ))}
+            {/* Desktop Bottom Navigation Row (Only when NOT on landing page "/") */}
+            {pathname !== "/" && (
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center space-x-2 flex-1 min-w-0">
+                  {loading ? (
+                    <div className="flex gap-4">
+                      <div className="animate-pulse bg-white/20 rounded-full px-6 py-2 h-10 w-16 flex-shrink-0"></div>
+                      <div className="animate-pulse bg-white/20 rounded-full px-6 py-2 h-10 w-20 flex-shrink-0"></div>
+                      <div className="animate-pulse bg-white/20 rounded-full px-6 py-2 h-10 w-24 flex-shrink-0"></div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* All Products - Dropdown */}
+                      <div className="relative group">
+                        <Link
+                          key="all-products"
+                          href="/products"
+                          onClick={(e) => handleNavClick({ name: "All Products", href: "/products" }, e)}
+                          className={`hidden lg:flex items-center rounded-full px-6 py-2 font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
+                            pathname === '/products' && !searchParams.get('category')
+                              ? "bg-red-600 text-white font-bold shadow-md shadow-red-950/40"
+                              : "text-gray-200 hover:text-white hover:bg-white/10"
+                          }`}
+                        >
+                          All Products
+                          <span className="ml-1 text-xs opacity-70">▼</span>
+                        </Link>
+                        <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                          <div className="p-3">
+                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+                              Categories
                             </div>
-                          ) : (
-                            <div className="px-3 py-4 text-sm text-gray-400 text-center">
-                              No categories available
+                            {categories.length > 0 ? (
+                              <div className="space-y-1 max-h-80 overflow-y-auto">
+                                {categories.map((category) => (
+                                  <Link
+                                    key={category.id}
+                                    href={`/products?category=${category.slug || category.id}`}
+                                    className={`block px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-md transition-colors ${
+                                      category.is_special 
+                                        ? "border-l-2 border-zinc-400 hover:bg-zinc-50" 
+                                        : ""
+                                    }`}
+                                    onClick={(e) => {
+                                      const item = {
+                                        name: category.name,
+                                        href: `/products?category=${category.slug || category.id}`,
+                                        categoryId: category.id,
+                                        isCategory: true
+                                      }
+                                      handleNavClick(item, e)
+                                    }}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span>{category.name}</span>
+                                      {category.is_special && (
+                                        <span className="text-xs text-zinc-500">★</span>
+                                      )}
+                                    </div>
+                                  </Link>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="px-3 py-4 text-sm text-gray-400 text-center">
+                                No categories available
+                              </div>
+                            )}
+                            <div className="border-t border-gray-100 mt-3 pt-3">
+                              <Link
+                                href="/products"
+                                className="block px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                                onClick={(e) => handleNavClick({ name: "All Products", href: "/products" }, e)}
+                              >
+                                View All Products
+                              </Link>
                             </div>
-                          )}
-                          <div className="border-t border-gray-100 mt-3 pt-3">
-                            <Link
-                              href="/products"
-                              className="block px-3 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
-                              onClick={(e) => handleNavClick(baseNavigation[0], e)}
-                            >
-                              View All Products
-                            </Link>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Scrolling Categories Container */}
-                    <div 
-                      className={`hidden lg:flex items-center space-x-2 categories-scroll-container ${
-                        categories.length > 5 
-                          ? 'overflow-x-auto scrollbar-hide' 
-                          : ''
-                      }`}
-                      style={{
-                        maxWidth: categories.length > 5 ? '1100px' : 'auto',
-                        scrollBehavior: 'smooth',
-                        WebkitOverflowScrolling: 'touch'
-                      }}
-                      onMouseEnter={() => {
-                        if (categories.length > 5 && autoScrollInterval) {
-                          clearInterval(autoScrollInterval)
-                          setIsAutoScrolling(false)
-                        }
-                      }}
-                      onMouseLeave={() => {
-                        if (categories.length > 5) {
-                          setTimeout(() => startAutoScroll(), 1000) // Delay restart
-                        }
-                      }}
-                    >
-                      {/* Category links only */}
-                      {categories.map(category => {
-                        const item = {
-                          name: category.name,
-                          href: `/products?category=${category.slug || category.id}`,
-                          categoryId: category.id,
-                          isCategory: true
-                        }
-                        return (
-                          <Link
-                            key={category.id}
-                            href={item.href}
-                            onClick={(e) => handleNavClick(item, e)}
-                            className={`rounded-full px-6 py-2 font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0 relative ${
-                              isActiveCategoryLink(item)
-                                ? "bg-red-600 text-white font-bold shadow-md shadow-red-950/40"
-                                : "text-gray-200 hover:text-white hover:bg-white/10"
-                            } ${
-                              category.is_special 
-                                ? "border-2 border-red-500 shadow-sm" 
-                                : ""
-                            }`}
-                          >
-                            <span className="flex items-center gap-2">
-                              {category.name}
-                              {category.is_special && (
-                                <span className={`inline-flex items-center justify-center w-5 h-5 text-xs rounded-full font-bold ${
-                                  shop === "A" 
-                                    ? "bg-zinc-900 text-white"
-                                    : "bg-zinc-600 text-white"
-                                }`}>
-                                  ✨
-                                </span>
-                              )}
-                            </span>
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  </>
-                )}
+                      {/* Scrolling Categories Container */}
+                      <div 
+                        className={`hidden lg:flex items-center space-x-2 categories-scroll-container ${
+                          categories.length > 5 
+                            ? 'overflow-x-auto scrollbar-hide' 
+                            : ''
+                        }`}
+                        style={{
+                          maxWidth: categories.length > 5 ? '900px' : 'auto',
+                          scrollBehavior: 'smooth',
+                          WebkitOverflowScrolling: 'touch'
+                        }}
+                        onMouseEnter={() => {
+                          if (categories.length > 5 && autoScrollInterval) {
+                            clearInterval(autoScrollInterval)
+                            setIsAutoScrolling(false)
+                          }
+                        }}
+                        onMouseLeave={() => {
+                          if (categories.length > 5) {
+                            setTimeout(() => startAutoScroll(), 1000)
+                          }
+                        }}
+                      >
+                        {categories.map(category => {
+                          const item = {
+                            name: category.name,
+                            href: `/products?category=${category.slug || category.id}`,
+                            categoryId: category.id,
+                            isCategory: true
+                          }
+                          return (
+                            <Link
+                              key={category.id}
+                              href={item.href}
+                              onClick={(e) => handleNavClick(item, e)}
+                              className={`rounded-full px-6 py-2 font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0 relative ${
+                                isActiveCategoryLink(item)
+                                  ? "bg-red-600 text-white font-bold shadow-md shadow-red-950/40"
+                                  : "text-gray-200 hover:text-white hover:bg-white/10"
+                              } ${
+                                category.is_special 
+                                  ? "border-2 border-red-500 shadow-sm" 
+                                  : ""
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                {category.name}
+                                {category.is_special && (
+                                  <span className={`inline-flex items-center justify-center w-5 h-5 text-xs rounded-full font-bold ${
+                                    shop === "A" 
+                                      ? "bg-zinc-900 text-white"
+                                      : "bg-zinc-600 text-white"
+                                  }`}>
+                                    ✨
+                                  </span>
+                                )}
+                              </span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
-
-            </div>
+            )}
           </div>
         </div>
 
@@ -662,15 +683,7 @@ function Nav() {
           <div className="px-4 py-3">
             <div className="flex items-center justify-between mb-3">
               <Link href="/" className="nav-logo-link flex items-center group shrink-0" aria-label="MotoCart">
-                <div className="flex items-center text-2xl font-black italic tracking-tighter select-none py-1 group-hover:scale-105 transition-transform duration-200">
-                  <span className="text-white tracking-wider drop-shadow-md">
-                    Moto
-                  </span>
-                  <span className="text-red-600 relative ml-0.5 inline-block">
-                    cart
-                    <span className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-red-600 rounded-full transform -skew-x-12"></span>
-                  </span>
-                </div>
+                <MotoCartLogo className="h-8 w-auto group-hover:scale-105 transition-transform duration-200" />
               </Link>
               <div className="flex items-center gap-3">
                 <Button variant="ghost" className="text-white hover:bg-white/20 rounded-full p-2">
@@ -891,16 +904,8 @@ function Nav() {
                 </Button>
               </div>
               <div className="flex justify-center min-w-0">
-                <Link href="/" className="nav-logo-link flex items-center justify-center group" aria-label="MotoCart">
-                  <div className="flex items-center text-xl font-black italic tracking-tighter select-none py-0.5 group-hover:scale-105 transition-transform duration-200">
-                    <span className="text-white tracking-wider drop-shadow-md">
-                      Moto
-                    </span>
-                    <span className="text-red-600 relative ml-0.5 inline-block">
-                      cart
-                      <span className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-red-600 rounded-full transform -skew-x-12"></span>
-                    </span>
-                  </div>
+                <Link href="/" className="nav-logo-link flex items-center justify-center group shrink-0" aria-label="MotoCart">
+                  <MotoCartLogo className="h-8 sm:h-9 w-auto group-hover:scale-105 transition-transform duration-200 shrink-0" />
                 </Link>
               </div>
               <div className="flex items-center justify-end gap-2 min-w-0">

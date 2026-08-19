@@ -7,10 +7,15 @@ import { useLoginModal } from '@/lib/stores/useLoginModal'
 import Footer from "@/components/ui/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ShoppingBag, Clock, CheckCircle, XCircle, Truck, ChefHat, Package, Send, Box, ChevronDown, ChevronUp, ExternalLink, PackageCheck, Zap, MapPin, Home } from "lucide-react"
+import { ShoppingBag, Clock, CheckCircle, XCircle, Truck, ChefHat, Package, Send, Box, ChevronDown, ChevronUp, ExternalLink, PackageCheck, Zap, MapPin, Home, RotateCcw } from "lucide-react"
 import Image from "next/image"
 import { useAuth } from "@/lib/contexts/auth-context"
 import { format } from "path"
+import { Button } from "@/components/ui/button"
+import { isOrderEligibleForReturn, isItemEligibleForReturn } from "@/lib/utils/return-eligibility"
+import { ReturnStatusBadge } from "@/components/returns/return-status-badge"
+import { ReturnRequestModal } from "@/components/returns/return-request-modal"
+import { ViewReturnModal, ReturnRequestDetails } from "@/components/returns/view-return-modal"
 
 function formatCurrency(value: unknown, _currency?: string) {
   const num = typeof value === "number" ? value : Number.parseFloat(String(value ?? 0))
@@ -252,6 +257,9 @@ interface Order {
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
+  const [returnRequests, setReturnRequests] = useState<ReturnRequestDetails[]>([])
+  const [activeReturnModalOrder, setActiveReturnModalOrder] = useState<Order | null>(null)
+  const [activeViewReturn, setActiveViewReturn] = useState<ReturnRequestDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set())
@@ -309,6 +317,17 @@ export default function OrdersPage() {
         const errorData = await response.json()
         setError(errorData.error || "Failed to fetch orders")
         setOrders([])
+      }
+
+      // Fetch customer return requests
+      try {
+        const returnsRes = await fetch("/api/returns")
+        if (returnsRes.ok) {
+          const returnsData = await returnsRes.json()
+          setReturnRequests(returnsData)
+        }
+      } catch (rErr) {
+        console.error("Error fetching returns:", rErr)
       }
     } catch (error) {
       console.error("Error fetching orders:", error)
@@ -503,6 +522,24 @@ export default function OrdersPage() {
               const isExpanded = isOrderExpanded(order.id)
               const shouldShowContent = !isCollapsible || isExpanded
 
+              const activeReturnItemsForOrder = returnRequests
+                .filter((r) => Number(r.order_id) === Number(order.id) && r.status.toLowerCase() !== 'cancelled')
+                .flatMap((r) => {
+                  const rawItems = Array.isArray(r.items) ? r.items : typeof r.items === 'string' ? JSON.parse(r.items || '[]') : []
+                  return rawItems.map((i: any) => ({
+                    order_item_id: i.order_item_id || i.id,
+                    quantity: i.quantity,
+                    status: r.status
+                  }))
+                })
+
+              const isDeliveredOrder = ['delivered', 'completed'].includes((order.status || '').toLowerCase())
+              const allItemsRequested = order.items && order.items.length > 0 && order.items.every(
+                (item) => !isItemEligibleForReturn(item, activeReturnItemsForOrder).canReturn
+              )
+              const activeOrderReturn = returnRequests.find((r) => Number(r.order_id) === Number(order.id) && r.status.toLowerCase() !== 'cancelled')
+              const hasActiveOrderReturn = !!activeOrderReturn
+
               return (
                 <Card key={order.id} className="hover:shadow-lg transition-shadow overflow-hidden">
                   <CardHeader
@@ -527,7 +564,7 @@ export default function OrdersPage() {
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
+                      <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-wrap">
                         <div className="text-left sm:text-right">
                           <p className="font-bold text-base sm:text-lg lg:text-xl">
                             {formatCurrency(order.final_total || order.total_amount, order.currency)}
@@ -540,6 +577,62 @@ export default function OrdersPage() {
                           {getStatusIcon(order.status)}
                           <span className="ml-1">{getDisplayStatus(order.status)}</span>
                         </Badge>
+                        {isDeliveredOrder && (() => {
+                          if (hasActiveOrderReturn || allItemsRequested) {
+                            const statusLower = (activeOrderReturn?.status || 'pending').toLowerCase()
+
+                            if (statusLower === 'approved' || statusLower === 'completed') {
+                              return (
+                                <Button
+                                  disabled
+                                  className="bg-emerald-50 border border-emerald-300 text-emerald-800 font-semibold text-xs px-3 py-1.5 h-auto cursor-not-allowed gap-1.5 shadow-none opacity-95"
+                                >
+                                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                                  Returned
+                                </Button>
+                              )
+                            }
+
+                            if (statusLower === 'rejected') {
+                              return (
+                                <Button
+                                  disabled
+                                  className="bg-rose-50 border border-rose-300 text-rose-800 font-semibold text-xs px-3 py-1.5 h-auto cursor-not-allowed gap-1.5 shadow-none opacity-95"
+                                >
+                                  <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                                  Return Rejected
+                                </Button>
+                              )
+                            }
+
+                            return (
+                              <Button
+                                disabled
+                                className="bg-amber-50 border border-amber-300 text-amber-800 font-semibold text-xs px-3 py-1.5 h-auto cursor-not-allowed gap-1.5 shadow-none opacity-95"
+                              >
+                                <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+                                Return Requested
+                              </Button>
+                            )
+                          }
+
+                          if (isOrderEligibleForReturn(order).canReturn) {
+                            return (
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setActiveReturnModalOrder(order)
+                                }}
+                                className="bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-xs px-3 py-1.5 h-auto transition-colors gap-1.5 shadow-sm"
+                              >
+                                <RotateCcw className="w-3.5 h-3.5" />
+                                Request Return
+                              </Button>
+                            )
+                          }
+
+                          return null
+                        })()}
                       </div>
                     </div>
                     {isCollapsible && !isExpanded && (
@@ -615,55 +708,127 @@ export default function OrdersPage() {
                   <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
                     <h4 className="font-semibold text-gray-800 text-base sm:text-lg">Order Items</h4>
                     <div className="grid gap-2 sm:gap-3">
-                      {order.items?.map((item) => (
-                        <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg sm:rounded-xl border shadow-sm hover:shadow-md transition-shadow">
-                          {/* Product Image */}
-                          <div className="flex-shrink-0 self-start sm:self-center">
-                            {item.product_image_url ? (
-                              <Image
-                                src={item.product_image_url}
-                                alt={item.menu_item_name}
-                                width={80}
-                                height={80}
-                                className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 object-cover rounded-lg shadow-sm"
-                              />
-                            ) : (
-                              <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-zinc-100 border border-zinc-200 rounded-lg flex items-center justify-center">
-                                <Box className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-zinc-500" />
-                              </div>
-                            )}
-                          </div>
+                      {order.items?.map((item) => {
+                        const itemElig = isItemEligibleForReturn(item, activeReturnItemsForOrder)
+                        const itemActiveReturn = returnRequests.find(
+                          (r) =>
+                            Number(r.order_id) === Number(order.id) &&
+                            r.status.toLowerCase() !== 'cancelled' &&
+                            (Array.isArray(r.items) ? r.items : typeof r.items === 'string' ? JSON.parse(r.items || '[]') : []).some(
+                              (ri: any) => Number(ri.order_item_id || ri.id) === Number(item.id)
+                            )
+                        )
 
-                          <div className="flex-1 min-w-0 w-full">
-                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
-                              <div className="flex-1 min-w-0">
-                                <h5 className="font-semibold text-gray-900 text-sm sm:text-base lg:text-lg leading-tight">
-                                  {item.menu_item_name}
-                                </h5>
-                                {item.variant_name && item.variant_name !== 'Default' && (
-                                  <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                                    Variant: {item.variant_name}
-                                  </p>
-                                )}
-                                <div className="flex flex-wrap items-center gap-2 mt-2">
-                                  <span className="bg-zinc-100 text-zinc-800 border border-zinc-200 text-xs font-medium px-2 py-1 rounded-full">
-                                    Qty: {item.quantity}
-                                  </span>
-                                  <span className="text-xs sm:text-sm text-gray-600">
-                                    {formatCurrency(item.unit_price, order.currency)} each
-                                  </span>
+                        return (
+                          <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg sm:rounded-xl border shadow-sm hover:shadow-md transition-shadow">
+                            {/* Product Image */}
+                            <div className="flex-shrink-0 self-start sm:self-center">
+                              {item.product_image_url ? (
+                                <Image
+                                  src={item.product_image_url}
+                                  alt={item.menu_item_name}
+                                  width={80}
+                                  height={80}
+                                  className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 object-cover rounded-lg shadow-sm"
+                                />
+                              ) : (
+                                <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-zinc-100 border border-zinc-200 rounded-lg flex items-center justify-center">
+                                  <Box className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-zinc-500" />
                                 </div>
-                              </div>
-                              <div className="text-left sm:text-right sm:ml-4 mt-2 sm:mt-0 flex-shrink-0">
-                                <p className="font-semibold text-base sm:text-lg lg:text-xl text-zinc-900">
-                                  {formatCurrency(item.total_price, order.currency)}
-                                </p>
-                                <p className="text-xs text-gray-500">total</p>
+                              )}
+                            </div>
+
+                            <div className="flex-1 min-w-0 w-full">
+                              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+                                <div className="flex-1 min-w-0">
+                                  <h5 className="font-semibold text-gray-900 text-sm sm:text-base lg:text-lg leading-tight">
+                                    {item.menu_item_name}
+                                  </h5>
+                                  {item.variant_name && item.variant_name !== 'Default' && (
+                                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                                      Variant: {item.variant_name}
+                                    </p>
+                                  )}
+                                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                                    <span className="bg-zinc-100 text-zinc-800 border border-zinc-200 text-xs font-medium px-2 py-1 rounded-full">
+                                      Qty: {item.quantity}
+                                    </span>
+                                    <span className="text-xs sm:text-sm text-gray-600">
+                                      {formatCurrency(item.unit_price, order.currency)} each
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="text-left sm:text-right sm:ml-4 mt-2 sm:mt-0 flex-shrink-0">
+                                  <p className="font-semibold text-base sm:text-lg lg:text-xl text-zinc-900">
+                                    {formatCurrency(item.total_price, order.currency)}
+                                  </p>
+                                  <p className="text-xs text-gray-500">total</p>
+                                  {isDeliveredOrder && (() => {
+                                    if (!itemElig.canReturn || itemActiveReturn) {
+                                      const statusLower = (itemActiveReturn?.status || 'pending').toLowerCase()
+
+                                      if (statusLower === 'approved' || statusLower === 'completed') {
+                                        return (
+                                          <Button
+                                            disabled
+                                            variant="outline"
+                                            size="sm"
+                                            className="mt-2 bg-emerald-50 border-emerald-300 text-emerald-800 font-semibold text-xs py-1 px-2.5 h-auto cursor-not-allowed opacity-95"
+                                          >
+                                            <CheckCircle className="w-3 h-3 mr-1 text-emerald-600" />
+                                            Returned
+                                          </Button>
+                                        )
+                                      }
+
+                                      if (statusLower === 'rejected') {
+                                        return (
+                                          <Button
+                                            disabled
+                                            variant="outline"
+                                            size="sm"
+                                            className="mt-2 bg-rose-50 border-rose-300 text-rose-800 font-semibold text-xs py-1 px-2.5 h-auto cursor-not-allowed opacity-95"
+                                          >
+                                            <XCircle className="w-3 h-3 mr-1 text-rose-600" />
+                                            Return Rejected
+                                          </Button>
+                                        )
+                                      }
+
+                                      return (
+                                        <Button
+                                          disabled
+                                          variant="outline"
+                                          size="sm"
+                                          className="mt-2 bg-amber-50 border-amber-300 text-amber-800 font-semibold text-xs py-1 px-2.5 h-auto cursor-not-allowed opacity-95"
+                                        >
+                                          <Clock className="w-3 h-3 mr-1 text-amber-600 animate-pulse" />
+                                          Return Requested
+                                        </Button>
+                                      )
+                                    }
+
+                                    return (
+                                      <Button
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          setActiveReturnModalOrder(order)
+                                        }}
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-2 border-zinc-900 text-zinc-900 hover:bg-zinc-900 hover:text-white font-semibold text-xs py-1 px-2.5 h-auto transition-colors"
+                                      >
+                                        <RotateCcw className="w-3 h-3 mr-1" />
+                                        Request Return
+                                      </Button>
+                                    )
+                                  })()}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
 
@@ -703,6 +868,69 @@ export default function OrdersPage() {
 
 
 
+                  {/* Existing Return Requests & Request Return Action */}
+                  {(() => {
+                    const orderReturns = returnRequests.filter((r) => Number(r.order_id) === Number(order.id))
+                    const eligibility = isOrderEligibleForReturn(order, user?.id, user?.email)
+
+                    return (
+                      <div className="space-y-3 mb-4">
+                        {/* Display existing return requests for this order */}
+                        {orderReturns.map((ret) => (
+                          <div
+                            key={ret.id}
+                            className="bg-amber-50/60 border border-amber-200/90 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center flex-shrink-0 text-amber-800">
+                                <RotateCcw className="w-4.5 h-4.5" />
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-semibold text-zinc-900 text-sm">Return Request</span>
+                                  <ReturnStatusBadge status={ret.status} />
+                                </div>
+                                <p className="text-xs text-zinc-600 mt-0.5">
+                                  Ref: <span className="font-mono text-zinc-800 font-medium">{ret.ecommerce_return_request_id}</span> • Requested {new Date(ret.created_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setActiveViewReturn(ret)}
+                              className="text-xs bg-white hover:bg-amber-100 border-amber-300 font-medium w-full sm:w-auto"
+                            >
+                              View Return Request
+                            </Button>
+                          </div>
+                        ))}
+
+                        {/* Request Return Button for Eligible Orders */}
+                        {eligibility.canReturn && (
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-zinc-50 border border-zinc-200 rounded-xl">
+                            <div className="text-xs text-zinc-600">
+                              <span className="font-semibold text-zinc-900">Eligible for Return</span>
+                              {eligibility.remainingWindowDays !== undefined && (
+                                <span className="ml-1 text-zinc-500">
+                                  ({eligibility.remainingWindowDays} day{eligibility.remainingWindowDays !== 1 ? 's' : ''} left in return window)
+                                </span>
+                              )}
+                            </div>
+                            <Button
+                              onClick={() => setActiveReturnModalOrder(order)}
+                              variant="outline"
+                              className="border-zinc-900 text-zinc-900 hover:bg-zinc-900 hover:text-white font-semibold text-xs py-1.5 px-3.5 h-auto transition-colors w-full sm:w-auto"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                              Request Return
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
+
                   {order.special_instructions && (
                     <div className="mt-3 sm:mt-4 p-3 bg-gray-50 rounded-lg">
                       <p className="text-xs sm:text-sm">
@@ -718,6 +946,35 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
+
+      {/* Return Request Submission Modal */}
+      <ReturnRequestModal
+        isOpen={!!activeReturnModalOrder}
+        onClose={() => setActiveReturnModalOrder(null)}
+        order={activeReturnModalOrder}
+        existingReturnItems={
+          activeReturnModalOrder
+            ? returnRequests
+                .filter((r) => Number(r.order_id) === Number(activeReturnModalOrder.id))
+                .flatMap((r) =>
+                  r.items.map((i: any) => ({
+                    order_item_id: i.order_item_id || i.id,
+                    quantity: i.quantity,
+                    status: r.status
+                  }))
+                )
+            : []
+        }
+        onSuccess={fetchUserOrders}
+      />
+
+      {/* View Return Request Details Modal */}
+      <ViewReturnModal
+        isOpen={!!activeViewReturn}
+        onClose={() => setActiveViewReturn(null)}
+        returnRequest={activeViewReturn}
+        onStatusChange={fetchUserOrders}
+      />
 
       <Footer />
     </div>

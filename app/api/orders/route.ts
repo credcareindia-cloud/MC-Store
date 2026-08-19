@@ -648,42 +648,62 @@ export async function POST(request: Request) {
       if (variantId) {
         const vRes = await sql.query(`
           SELECT (
-            COALESCE((
-              SELECT SUM(pbds.stock)::int 
-              FROM product_batches pb 
-              JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
-              WHERE pb.product_variant_id = $1
-            ), (
-              SELECT SUM(pb.remaining_quantity)::int 
-              FROM product_batches pb 
-              WHERE pb.product_variant_id = $1
-            ), 0) +
-            COALESCE((
-              SELECT SUM(pds.stock)::int 
-              FROM product_device_stock pds 
-              WHERE pds.product_id = (SELECT product_id FROM product_variants WHERE id = $1)
-            ), 0)
+            CASE 
+              WHEN EXISTS (
+                SELECT 1 FROM product_batches pb 
+                JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
+                WHERE pb.product_variant_id = $1
+              ) THEN (
+                SELECT COALESCE(SUM(GREATEST(0, pbds.stock))::int, 0)
+                FROM product_batches pb 
+                JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
+                WHERE pb.product_variant_id = $1
+              )
+              WHEN EXISTS (
+                SELECT 1 FROM product_batches pb 
+                WHERE pb.product_variant_id = $1
+              ) THEN (
+                SELECT COALESCE(SUM(GREATEST(0, pb.remaining_quantity))::int, 0)
+                FROM product_batches pb 
+                WHERE pb.product_variant_id = $1
+              )
+              ELSE (
+                SELECT COALESCE(SUM(GREATEST(0, pds.stock))::int, 0)
+                FROM product_device_stock pds 
+                WHERE pds.product_id = (SELECT product_id FROM product_variants WHERE id = $1)
+              )
+            END
           )::int AS live_stock
         `, [variantId])
         availableStock = Number(vRes[0]?.live_stock ?? 0)
       } else if (menuItemId) {
         const pRes = await sql.query(`
           SELECT (
-            COALESCE((
-              SELECT SUM(pbds.stock)::int 
-              FROM product_batches pb 
-              JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
-              WHERE pb.product_id = $1 OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = $1)
-            ), (
-              SELECT SUM(pb.remaining_quantity)::int 
-              FROM product_batches pb 
-              WHERE pb.product_id = $1 OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = $1)
-            ), 0) +
-            COALESCE((
-              SELECT SUM(pds.stock)::int 
-              FROM product_device_stock pds 
-              WHERE pds.product_id = $1
-            ), 0)
+            CASE 
+              WHEN EXISTS (
+                SELECT 1 FROM product_batches pb 
+                JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
+                WHERE pb.product_id = $1 OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = $1)
+              ) THEN (
+                SELECT COALESCE(SUM(GREATEST(0, pbds.stock))::int, 0)
+                FROM product_batches pb 
+                JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
+                WHERE pb.product_id = $1 OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = $1)
+              )
+              WHEN EXISTS (
+                SELECT 1 FROM product_batches pb 
+                WHERE pb.product_id = $1 OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = $1)
+              ) THEN (
+                SELECT COALESCE(SUM(GREATEST(0, pb.remaining_quantity))::int, 0)
+                FROM product_batches pb 
+                WHERE pb.product_id = $1 OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = $1)
+              )
+              ELSE (
+                SELECT COALESCE(SUM(GREATEST(0, pds.stock))::int, 0)
+                FROM product_device_stock pds 
+                WHERE pds.product_id = $1
+              )
+            END
           )::int AS live_stock
         `, [menuItemId])
         availableStock = Number(pRes[0]?.live_stock ?? 0)

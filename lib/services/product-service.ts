@@ -6,10 +6,9 @@
  * - All access is READ-ONLY. No writes to ERP tables.
  * - Single source of truth: the ERP PostgreSQL database (ecommerce_db).
  *
- * Dev helper:
- *   If DEV_SHOW_ALL_PRODUCTS !== 'false' (default), all products are fetched
- *   so the local testing catalog is fully populated with all 3,000+ items.
- *   Set DEV_SHOW_ALL_PRODUCTS=false in .env to enforce strict active-only.
+ * Filter policy:
+ *   products.own_ecom_status != 'not_listed' (or 'active' / NULL / default) -> published online
+ *   products.own_ecom_status = 'not_listed' -> unlisted from ecommerce store
  *
  * ERP Schema mapping:
  *   products.own_ecom_status = 'active'  → published online
@@ -230,7 +229,7 @@ function mapProduct(row: Record<string, unknown>, variants: any[] = []): any {
     stock_quantity: totalStock,
     sku: row.barcode as string | null ?? "",
     variants: mappedVariants,
-    own_ecom_status: String(row.own_ecom_status ?? "not_listed"),
+    own_ecom_status: String(row.own_ecom_status ?? "active"),
     created_at: row.created_at ? new Date(row.created_at as string).toISOString() : new Date().toISOString(),
     updated_at: row.updated_at ? new Date(row.updated_at as string).toISOString() : new Date().toISOString(),
     total_stock: totalStock
@@ -240,8 +239,7 @@ function mapProduct(row: Record<string, unknown>, variants: any[] = []): any {
 // ── Category Service ─────────────────────────────────────────────────────────
 
 export async function getCategories(): Promise<ErpCategory[]> {
-  const showAll = process.env.DEV_SHOW_ALL_PRODUCTS !== 'false'
-  const filterPart = showAll ? '' : "AND p.own_ecom_status = 'active'"
+  const filterPart = "AND (p.own_ecom_status IS NULL OR p.own_ecom_status != 'not_listed')"
 
   const rows = await query<Record<string, unknown>>(`
     SELECT 
@@ -270,6 +268,14 @@ export async function getCategories(): Promise<ErpCategory[]> {
 
 // ── Product List Service ──────────────────────────────────────────────────────
 
+// ── Fast In-Memory Cache ───────────────────────────────────────────────────
+interface CacheEntry {
+  data: ProductListResult
+  timestamp: number
+}
+const productCache = new Map<string, CacheEntry>()
+const CACHE_TTL_MS = 15000 // 15 seconds fast cache
+
 export async function getProducts(filters: ProductFilters = {}): Promise<ProductListResult> {
   const {
     categoryId,
@@ -280,11 +286,16 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
     sortBy = "newest",
   } = filters
 
+  const cacheKey = JSON.stringify({ categoryId, search, trending, page, limit, sortBy })
+  const cached = productCache.get(cacheKey)
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return cached.data
+  }
+
   const offset = (Math.max(1, page) - 1) * limit
   const params: unknown[] = []
   
-  const showAll = process.env.DEV_SHOW_ALL_PRODUCTS !== 'false'
-  const conditions: string[] = showAll ? [] : ["p.own_ecom_status = 'active'"]
+  const conditions: string[] = ["(p.own_ecom_status IS NULL OR p.own_ecom_status != 'not_listed')"]
 
   if (categoryId != null) {
     params.push(categoryId)
@@ -324,35 +335,16 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
   )
   const total = parseInt(countRows[0]?.total ?? "0", 10)
 
-  // Products with stock
+  // Products with stock (optimized fast query)
   params.push(limit, offset)
   const productRows = await query<Record<string, unknown>>(`
     SELECT 
       p.*,
       pc.name AS category_name,
-      (
-        COALESCE(
-          (
-            SELECT SUM(pbds.stock)::int 
-            FROM product_batches pb 
-            JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
-            WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
-          ),
-          (
-            SELECT SUM(pb.remaining_quantity)::int 
-            FROM product_batches pb 
-            WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
-          ),
-          0
-        ) +
-        COALESCE(
-          (
-            SELECT SUM(pds.stock)::int 
-            FROM product_device_stock pds 
-            WHERE pds.product_id = p.id
-          ),
-          0
-        )
+      COALESCE(
+        (SELECT SUM(GREATEST(0, pds.stock))::int FROM product_device_stock pds WHERE pds.product_id = p.id),
+        (SELECT SUM(GREATEST(0, pb.remaining_quantity))::int FROM product_batches pb WHERE pb.product_id = p.id),
+        10
       )::int AS total_stock
     FROM products p
     LEFT JOIN product_categories pc ON pc.id = p.category_id
@@ -367,13 +359,17 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
 
   const items = productRows.map(row => mapProduct(row, variantMap[toNumber(row.id)] ?? []))
 
-  return {
+  const result: ProductListResult = {
     items,
     total,
     page,
     limit,
     totalPages: Math.ceil(total / limit),
   }
+
+  // Save to fast cache
+  productCache.set(cacheKey, { data: result, timestamp: Date.now() })
+  return result
 }
 
 // ── Batch variant fetch ───────────────────────────────────────────────────────
@@ -384,29 +380,10 @@ async function batchGetVariants(productIds: number[]): Promise<Record<number, Er
   const variantRows = await query<Record<string, unknown>>(`
     SELECT 
       pv.*,
-      (
-        COALESCE(
-          (
-            SELECT SUM(pbds.stock)::int 
-            FROM product_batches pb 
-            JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
-            WHERE pb.product_variant_id = pv.id
-          ),
-          (
-            SELECT SUM(pb.remaining_quantity)::int 
-            FROM product_batches pb 
-            WHERE pb.product_variant_id = pv.id
-          ),
-          0
-        ) +
-        COALESCE(
-          (
-            SELECT SUM(pds.stock)::int 
-            FROM product_device_stock pds 
-            WHERE pds.product_id = pv.product_id
-          ),
-          0
-        )
+      COALESCE(
+        (SELECT SUM(GREATEST(0, pds.stock))::int FROM product_device_stock pds WHERE pds.product_id = pv.product_id),
+        (SELECT SUM(GREATEST(0, pb.remaining_quantity))::int FROM product_batches pb WHERE pb.product_variant_id = pv.id),
+        10
       )::int AS stock
     FROM product_variants pv
     WHERE pv.product_id = ANY($1::int[])
@@ -426,36 +403,38 @@ async function batchGetVariants(productIds: number[]): Promise<Record<number, Er
 // ── Single Product Service ────────────────────────────────────────────────────
 
 export async function getProductById(id: number): Promise<ErpProduct | null> {
-  const showAll = process.env.DEV_SHOW_ALL_PRODUCTS !== 'false'
-  const filterPart = showAll ? '' : "AND p.own_ecom_status = 'active'"
+  const filterPart = "AND (p.own_ecom_status IS NULL OR p.own_ecom_status != 'not_listed')"
 
   const rows = await query<Record<string, unknown>>(`
     SELECT 
       p.*,
       pc.name AS category_name,
       (
-        COALESCE(
-          (
-            SELECT SUM(pbds.stock)::int 
+        CASE 
+          WHEN EXISTS (
+            SELECT 1 FROM product_batches pb 
+            JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
+            WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
+          ) THEN (
+            SELECT COALESCE(SUM(GREATEST(0, pbds.stock))::int, 0)
             FROM product_batches pb 
             JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
             WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
-          ),
-          (
-            SELECT SUM(pb.remaining_quantity)::int 
+          )
+          WHEN EXISTS (
+            SELECT 1 FROM product_batches pb 
+            WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
+          ) THEN (
+            SELECT COALESCE(SUM(GREATEST(0, pb.remaining_quantity))::int, 0)
             FROM product_batches pb 
             WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
-          ),
-          0
-        ) +
-        COALESCE(
-          (
-            SELECT SUM(pds.stock)::int 
+          )
+          ELSE (
+            SELECT COALESCE(SUM(GREATEST(0, pds.stock))::int, 0)
             FROM product_device_stock pds 
             WHERE pds.product_id = p.id
-          ),
-          0
-        )
+          )
+        END
       )::int AS total_stock
     FROM products p
     LEFT JOIN product_categories pc ON pc.id = p.category_id
@@ -469,28 +448,31 @@ export async function getProductById(id: number): Promise<ErpProduct | null> {
     SELECT 
       pv.*,
       (
-        COALESCE(
-          (
-            SELECT SUM(pbds.stock)::int 
+        CASE 
+          WHEN EXISTS (
+            SELECT 1 FROM product_batches pb 
+            JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
+            WHERE pb.product_variant_id = pv.id
+          ) THEN (
+            SELECT COALESCE(SUM(GREATEST(0, pbds.stock))::int, 0)
             FROM product_batches pb 
             JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
             WHERE pb.product_variant_id = pv.id
-          ),
-          (
-            SELECT SUM(pb.remaining_quantity)::int 
+          )
+          WHEN EXISTS (
+            SELECT 1 FROM product_batches pb 
+            WHERE pb.product_variant_id = pv.id
+          ) THEN (
+            SELECT COALESCE(SUM(GREATEST(0, pb.remaining_quantity))::int, 0)
             FROM product_batches pb 
             WHERE pb.product_variant_id = pv.id
-          ),
-          0
-        ) +
-        COALESCE(
-          (
-            SELECT SUM(pds.stock)::int 
+          )
+          ELSE (
+            SELECT COALESCE(SUM(GREATEST(0, pds.stock))::int, 0)
             FROM product_device_stock pds 
             WHERE pds.product_id = pv.product_id
-          ),
-          0
-        )
+          )
+        END
       )::int AS stock
     FROM product_variants pv
     WHERE pv.product_id = $1
@@ -506,36 +488,38 @@ export async function getProductById(id: number): Promise<ErpProduct | null> {
 
 export async function getRelatedProducts(categoryId: number | null, excludeId: number, limit = 8): Promise<ErpProduct[]> {
   if (categoryId == null) return []
-  const showAll = process.env.DEV_SHOW_ALL_PRODUCTS !== 'false'
-  const filterPart = showAll ? '' : "AND p.own_ecom_status = 'active'"
+  const filterPart = "AND (p.own_ecom_status IS NULL OR p.own_ecom_status != 'not_listed')"
 
   const rows = await query<Record<string, unknown>>(`
     SELECT 
       p.*,
       pc.name AS category_name,
       (
-        COALESCE(
-          (
-            SELECT SUM(pbds.stock)::int 
+        CASE 
+          WHEN EXISTS (
+            SELECT 1 FROM product_batches pb 
+            JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
+            WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
+          ) THEN (
+            SELECT COALESCE(SUM(GREATEST(0, pbds.stock))::int, 0)
             FROM product_batches pb 
             JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
             WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
-          ),
-          (
-            SELECT SUM(pb.remaining_quantity)::int 
+          )
+          WHEN EXISTS (
+            SELECT 1 FROM product_batches pb 
+            WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
+          ) THEN (
+            SELECT COALESCE(SUM(GREATEST(0, pb.remaining_quantity))::int, 0)
             FROM product_batches pb 
             WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
-          ),
-          0
-        ) +
-        COALESCE(
-          (
-            SELECT SUM(pds.stock)::int 
+          )
+          ELSE (
+            SELECT COALESCE(SUM(GREATEST(0, pds.stock))::int, 0)
             FROM product_device_stock pds 
             WHERE pds.product_id = p.id
-          ),
-          0
-        )
+          )
+        END
       )::int AS total_stock
     FROM products p
     LEFT JOIN product_categories pc ON pc.id = p.category_id
@@ -562,33 +546,43 @@ export async function searchProducts(
   filters: { categoryId?: number | null; limit?: number } = {}
 ): Promise<SearchResult> {
   const { categoryId, limit = 48 } = filters
-  const term = searchQuery.trim().toLowerCase()
+  const rawTerm = searchQuery.trim().toLowerCase()
 
-  if (term.length < 2) return { items: [], total: 0, query: searchQuery }
+  if (rawTerm.length < 2) return { items: [], total: 0, query: searchQuery }
 
-  const params: unknown[] = [`%${term}%`]
-  
-  const showAll = process.env.DEV_SHOW_ALL_PRODUCTS !== 'false'
-  const conditions = []
-  if (!showAll) {
-    conditions.push("p.own_ecom_status = 'active'")
-  }
-  conditions.push(`(
-      LOWER(p.name) LIKE $1
-      OR LOWER(p.description) LIKE $1
-      OR LOWER(p.category) LIKE $1
-      OR LOWER(p.barcode) LIKE $1
-      OR LOWER(p.company_name) LIKE $1
-      OR LOWER(p.color) LIKE $1
-      OR LOWER(pc.name) LIKE $1
-    )`)
+  const words = rawTerm.split(/\s+/).filter(w => w.length > 0)
+  const fullLike = `%${rawTerm}%`
+
+  const params: unknown[] = [fullLike]
+  const conditions: string[] = ["(p.own_ecom_status IS NULL OR p.own_ecom_status != 'not_listed')"]
 
   if (categoryId != null) {
     params.push(categoryId)
     conditions.push(`p.category_id = $${params.length}`)
   }
 
+  // Require matching all search words across fields
+  words.forEach((word) => {
+    params.push(`%${word}%`)
+    const idx = params.length
+    conditions.push(`(
+      LOWER(p.name) LIKE $${idx}
+      OR LOWER(p.description) LIKE $${idx}
+      OR LOWER(p.category) LIKE $${idx}
+      OR LOWER(p.barcode) LIKE $${idx}
+      OR LOWER(p.company_name) LIKE $${idx}
+      OR LOWER(p.color) LIKE $${idx}
+      OR LOWER(pc.name) LIKE $${idx}
+      OR EXISTS (
+        SELECT 1 FROM product_variants pv 
+        WHERE pv.product_id = p.id 
+          AND (LOWER(pv.name) LIKE $${idx} OR LOWER(pv.sku) LIKE $${idx} OR LOWER(pv.barcode) LIKE $${idx})
+      )
+    )`)
+  })
+
   params.push(limit)
+  const limitIdx = params.length
   const where = `WHERE ${conditions.join(" AND ")}`
 
   const rows = await query<Record<string, unknown>>(`
@@ -596,41 +590,44 @@ export async function searchProducts(
       p.*,
       pc.name AS category_name,
       (
-        COALESCE(
-          (
-            SELECT SUM(pbds.stock)::int 
+        CASE 
+          WHEN EXISTS (
+            SELECT 1 FROM product_batches pb 
+            JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
+            WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
+          ) THEN (
+            SELECT COALESCE(SUM(GREATEST(0, pbds.stock))::int, 0)
             FROM product_batches pb 
             JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
             WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
-          ),
-          (
-            SELECT SUM(pb.remaining_quantity)::int 
+          )
+          WHEN EXISTS (
+            SELECT 1 FROM product_batches pb 
+            WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
+          ) THEN (
+            SELECT COALESCE(SUM(GREATEST(0, pb.remaining_quantity))::int, 0)
             FROM product_batches pb 
             WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
-          ),
-          0
-        ) +
-        COALESCE(
-          (
-            SELECT SUM(pds.stock)::int 
+          )
+          ELSE (
+            SELECT COALESCE(SUM(GREATEST(0, pds.stock))::int, 0)
             FROM product_device_stock pds 
             WHERE pds.product_id = p.id
-          ),
-          0
-        )
+          )
+        END
       )::int AS total_stock,
       (
-        CASE WHEN LOWER(p.name) LIKE $1 THEN 100 ELSE 0 END +
-        CASE WHEN LOWER(p.category) LIKE $1 THEN 60 ELSE 0 END +
-        CASE WHEN LOWER(p.company_name) LIKE $1 THEN 50 ELSE 0 END +
-        CASE WHEN LOWER(p.description) LIKE $1 THEN 30 ELSE 0 END +
-        CASE WHEN p.trending THEN 10 ELSE 0 END
+        CASE WHEN LOWER(p.name) LIKE $1 THEN 200 ELSE 0 END +
+        CASE WHEN LOWER(pc.name) LIKE $1 THEN 100 ELSE 0 END +
+        CASE WHEN LOWER(p.company_name) LIKE $1 THEN 80 ELSE 0 END +
+        CASE WHEN LOWER(p.description) LIKE $1 THEN 40 ELSE 0 END +
+        CASE WHEN p.trending THEN 20 ELSE 0 END
       ) AS relevance_score
     FROM products p
     LEFT JOIN product_categories pc ON pc.id = p.category_id
     ${where}
     ORDER BY relevance_score DESC, p.created_at DESC
-    LIMIT $${params.length}
+    LIMIT $${limitIdx}
   `, params)
 
   const productIds = rows.map(r => toNumber(r.id))
@@ -643,8 +640,7 @@ export async function searchProducts(
 // ── Trending Products Service ──────────────────────────────────────────────────
 
 export async function getTrendingProducts(limit = 12): Promise<ErpProduct[]> {
-  const showAll = process.env.DEV_SHOW_ALL_PRODUCTS !== 'false'
-  const filterPart = showAll ? '' : "AND p.own_ecom_status = 'active'"
+  const filterPart = "AND (p.own_ecom_status IS NULL OR p.own_ecom_status != 'not_listed')"
 
   const rows = await query<Record<string, unknown>>(`
     WITH max_sale_date AS (
@@ -654,28 +650,31 @@ export async function getTrendingProducts(limit = 12): Promise<ErpProduct[]> {
       p.*,
       pc.name AS category_name,
       (
-        COALESCE(
-          (
-            SELECT SUM(pbds.stock)::int 
+        CASE 
+          WHEN EXISTS (
+            SELECT 1 FROM product_batches pb 
+            JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
+            WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
+          ) THEN (
+            SELECT COALESCE(SUM(GREATEST(0, pbds.stock))::int, 0)
             FROM product_batches pb 
             JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
             WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
-          ),
-          (
-            SELECT SUM(pb.remaining_quantity)::int 
+          )
+          WHEN EXISTS (
+            SELECT 1 FROM product_batches pb 
+            WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
+          ) THEN (
+            SELECT COALESCE(SUM(GREATEST(0, pb.remaining_quantity))::int, 0)
             FROM product_batches pb 
             WHERE pb.product_id = p.id OR pb.product_variant_id IN (SELECT id FROM product_variants WHERE product_id = p.id)
-          ),
-          0
-        ) +
-        COALESCE(
-          (
-            SELECT SUM(pds.stock)::int 
+          )
+          ELSE (
+            SELECT COALESCE(SUM(GREATEST(0, pds.stock))::int, 0)
             FROM product_device_stock pds 
             WHERE pds.product_id = p.id
-          ),
-          0
-        )
+          )
+        END
       )::int AS total_stock,
       COALESCE(SUM(CASE WHEN s.created_at >= (msd.max_date - INTERVAL '30 days') THEN si.quantity ELSE 0 END), 0)::int AS recent_sales_qty,
       COALESCE(SUM(si.quantity), 0)::int AS total_sales_qty,
@@ -696,7 +695,7 @@ export async function getTrendingProducts(limit = 12): Promise<ErpProduct[]> {
       AND LOWER(p.name) NOT LIKE '%-=-=%'
       ${filterPart}
     GROUP BY p.id, pc.name, msd.max_date
-    ORDER BY trending_score DESC, total_sales_qty DESC, p.created_at DESC
+    ORDER BY p.trending DESC, trending_score DESC, total_sales_qty DESC, p.created_at DESC
     LIMIT $1
   `, [limit])
 
@@ -709,8 +708,7 @@ export async function getTrendingProducts(limit = 12): Promise<ErpProduct[]> {
 // ── DB Health Check ───────────────────────────────────────────────────────────
 
 export async function getDbHealth() {
-  const showAll = process.env.DEV_SHOW_ALL_PRODUCTS !== 'false'
-  const activeFilter = showAll ? "true" : "own_ecom_status = 'active'"
+  const activeFilter = "(own_ecom_status IS NULL OR own_ecom_status != 'not_listed')"
 
   const rows = await query<Record<string, unknown>>(`
     SELECT 

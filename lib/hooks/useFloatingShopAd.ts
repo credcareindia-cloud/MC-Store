@@ -30,27 +30,9 @@ export function useFloatingShopAd({
   const [settings, setSettings] = useState<ShopFeaturesSettings | null>(null)
   const { shop, setShop } = useShop()
 
-  // Fetch settings from admin panel
+  // Use default settings
   useEffect(() => {
-    const fetchSettings = async () => {
-      try {
-        const response = await fetch('/api/admin/shop-features', {
-          cache: 'no-store' // Ensure fresh data
-        })
-        if (response.ok) {
-          const data = await response.json()
-          setSettings(data)
-        }
-      } catch (error) {
-        console.error('Failed to fetch shop features settings:', error)
-      }
-    }
-    
-    fetchSettings()
-    
-    // Refresh settings every 30 seconds to catch admin changes
-    const interval = setInterval(fetchSettings, 30000)
-    return () => clearInterval(interval)
+    setSettings(null)
   }, [])
 
   // Use admin settings or fallback to defaults

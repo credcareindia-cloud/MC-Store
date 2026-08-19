@@ -10,8 +10,9 @@ import { useSettings } from "@/lib/contexts/settings-context"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, ShoppingCart, Eye } from "lucide-react"
+import { Star, ShoppingCart, Eye, MessageCircle } from "lucide-react"
 import Image from "next/image"
+import { handleWhatsAppProductRequest } from "@/lib/whatsapp-request"
 
 interface ProductProps {
   product: {
@@ -135,15 +136,30 @@ export default function Product({ product, viewMode = "grid", showShopBadge = tr
           <span className="text-xs text-gray-500 ml-1">(4.8) • 2.1k sold</span>
         </div>
 
-        {/* Add to cart button */}
-        <Button
-          onClick={handleAddToCart}
-          className="w-full bg-zinc-900 hover:bg-zinc-800 text-white rounded-md py-2 lg:py-3 text-sm lg:text-base font-medium shadow-sm"
-          disabled={!product.is_available}
-        >
-          <ShoppingCart className="w-4 h-4 mr-2" />
-          {product.is_available ? "Add to Cart" : "Unavailable"}
-        </Button>
+        {/* Add to cart / Request product button */}
+        {product.is_available ? (
+          <Button
+            onClick={handleAddToCart}
+            className="w-full bg-zinc-900 hover:bg-zinc-800 text-white rounded-md py-2 lg:py-3 text-sm lg:text-base font-medium shadow-sm"
+          >
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            Add to Cart
+          </Button>
+        ) : (
+          <Button
+            onClick={(e) => handleWhatsAppProductRequest(e, {
+              productName: product.name,
+              productId: product.id,
+              brand: product.brand,
+              priceText: formatPrice(product.price),
+              productUrl: typeof window !== 'undefined' ? `${window.location.origin}/product/${product.id}` : undefined
+            })}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-md py-2 lg:py-3 text-sm font-medium shadow-sm flex items-center justify-center gap-2"
+          >
+            <MessageCircle className="w-4 h-4 fill-white" />
+            Request Product
+          </Button>
+        )}
       </CardContent>
     </Card>
   )

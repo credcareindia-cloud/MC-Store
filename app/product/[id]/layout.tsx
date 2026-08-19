@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     
     // Fetch product data for metadata
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://motoclub.in'
-    const response = await fetch(`${baseUrl}/api/admin/products/${id}`, {
+    const response = await fetch(`${baseUrl}/api/products/${id}`, {
       cache: 'no-store' // Ensure fresh data for metadata
     })
     
@@ -25,7 +25,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       }
     }
 
-    const product = await response.json()
+    const data = await response.json()
+    const product = data.product || data
     
     // Get the first image or fallback
     const productImage = product.image_urls?.[0] || '/logo.png'

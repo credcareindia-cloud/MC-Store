@@ -17,6 +17,7 @@ interface AuthContextType {
   loading: boolean
   loginWithPassword: (identifier: string, password: string) => Promise<void>
   registerWithPassword: (name: string, identifier: string, password: string) => Promise<void>
+  loginWithGoogle: (data: { credential?: string; token?: string; email?: string; name?: string; image?: string }) => Promise<void>
   login: (email: string, otp: string, name?: string) => Promise<void>
   register: (email: string, otp: string, name: string, password: string) => Promise<void>
   logout: () => Promise<void>
@@ -68,6 +69,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error(data.error || "Failed to register")
     }
     setUser(data.user)
+  }
+
+  const loginWithGoogle = async (data: { credential?: string; token?: string; email?: string; name?: string; image?: string }) => {
+    const response = await fetch("/api/auth/google", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+    const resData = await response.json()
+    if (!response.ok) {
+      throw new Error(resData.error || "Google Sign-In failed")
+    }
+    setUser(resData.user)
   }
 
   const sendOTP = async (email: string) => {
@@ -122,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         loginWithPassword,
         registerWithPassword,
+        loginWithGoogle,
         login,
         register,
         logout,

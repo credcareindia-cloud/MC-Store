@@ -1,15 +1,39 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/lib/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Mail, MessageSquare, Shield, CheckCircle, Eye, EyeOff, Lock, User, Phone } from "lucide-react"
+import { Mail, MessageSquare, Shield, CheckCircle, Eye, EyeOff, Lock, User } from "lucide-react"
 import { SITE_WHATSAPP_E164_DIGITS } from "@/lib/site-contact"
+import toast from "react-hot-toast"
+
+function GoogleIcon({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+        fill="#EA4335"
+      />
+    </svg>
+  )
+}
 
 interface LoginModalProps {
   isOpen: boolean
@@ -24,19 +48,34 @@ export default function LoginModal({
   onClose,
   onWhatsAppRedirect,
   title = "Welcome Back",
-  description = "Log in or register with your email or phone number to continue",
+  description = "Log in or register to continue",
 }: LoginModalProps) {
-  const { loginWithPassword, registerWithPassword } = useAuth()
+  const { loginWithPassword, registerWithPassword, loginWithGoogle } = useAuth()
   const [mode, setMode] = useState<"login" | "register" | "forgot-password">("login")
   const [identifier, setIdentifier] = useState("")
   const [name, setName] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [resetEmailSent, setResetEmailSent] = useState(false)
+
+  // Load Google Identity Services SDK script dynamically
+  useEffect(() => {
+    if (!isOpen) return
+    const scriptId = "google-gsi-client"
+    if (typeof window !== "undefined" && !document.getElementById(scriptId)) {
+      const script = document.createElement("script")
+      script.id = scriptId
+      script.src = "https://accounts.google.com/gsi/client"
+      script.async = true
+      script.defer = true
+      document.body.appendChild(script)
+    }
+  }, [isOpen])
 
   const resetForm = () => {
     setIdentifier("")
@@ -54,6 +93,131 @@ export default function LoginModal({
     resetForm()
   }
 
+  const handleGoogleSignIn = useCallback(async () => {
+    setGoogleLoading(true)
+    setError("")
+
+    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "1084283457912-df759e6j2h8j3k4l5m6n7p8q9r0s.apps.googleusercontent.com"
+
+    try {
+      // 1. Try Google Identity Services (GIS) Token Client (Opens official Google Account Chooser popup window)
+      if (typeof window !== "undefined" && (window as any).google?.accounts?.oauth2) {
+        const tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
+          client_id: googleClientId,
+          scope: "openid email profile",
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse.error) {
+              console.error("Google Auth error:", tokenResponse.error)
+              setError("Google authentication was cancelled.")
+              setGoogleLoading(false)
+              return
+            }
+
+            try {
+              // Fetch user profile info from Google UserInfo API
+              const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+              })
+              const userInfo = await userInfoRes.json()
+
+              if (userInfo.email) {
+                await loginWithGoogle({
+                  email: userInfo.email,
+                  name: userInfo.name || userInfo.given_name || userInfo.email.split("@")[0],
+                  image: userInfo.picture,
+                })
+                toast.success("Successfully signed in with Google!")
+                onClose()
+                resetForm()
+              } else {
+                setError("Failed to retrieve Google account details.")
+              }
+            } catch (err: any) {
+              setError(err.message || "Failed to log in with Google account.")
+            } finally {
+              setGoogleLoading(false)
+            }
+          },
+        })
+
+        // Force 'select_account' prompt to display official Google Account Chooser screen
+        tokenClient.requestAccessToken({ prompt: "select_account" })
+        return
+      }
+
+      // 2. Fallback: Launch Official Google OAuth 2.0 Popup Window directly
+      const redirectUri = typeof window !== "undefined" ? window.location.origin : ""
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
+        googleClientId
+      )}&redirect_uri=${encodeURIComponent(
+        redirectUri
+      )}&response_type=token&scope=${encodeURIComponent(
+        "openid email profile"
+      )}&prompt=select_account`
+
+      const width = 520
+      const height = 650
+      const left = window.screenX + (window.outerWidth - width) / 2
+      const top = window.screenY + (window.outerHeight - height) / 2
+
+      const popup = window.open(
+        googleAuthUrl,
+        "GoogleSignInPopup",
+        `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`
+      )
+
+      if (!popup) {
+        setError("Popup was blocked by your browser. Please allow popups to sign in with Google.")
+        setGoogleLoading(false)
+        return
+      }
+
+      const checkPopupInterval = setInterval(() => {
+        try {
+          if (!popup || popup.closed) {
+            clearInterval(checkPopupInterval)
+            setGoogleLoading(false)
+            return
+          }
+
+          if (popup.location.href.includes("access_token=")) {
+            const hash = popup.location.hash || popup.location.search
+            const params = new URLSearchParams(hash.replace("#", "?"))
+            const accessToken = params.get("access_token")
+            popup.close()
+            clearInterval(checkPopupInterval)
+
+            if (accessToken) {
+              fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                headers: { Authorization: `Bearer ${accessToken}` },
+              })
+                .then((res) => res.json())
+                .then(async (userInfo) => {
+                  if (userInfo.email) {
+                    await loginWithGoogle({
+                      email: userInfo.email,
+                      name: userInfo.name || userInfo.email.split("@")[0],
+                      image: userInfo.picture,
+                    })
+                    toast.success("Successfully signed in with Google!")
+                    onClose()
+                    resetForm()
+                  }
+                })
+                .catch((err) => setError(err.message || "Failed to process Google sign-in"))
+                .finally(() => setGoogleLoading(false))
+            }
+          }
+        } catch {
+          // Cross-origin access ignored until popup redirects to origin
+        }
+      }, 500)
+    } catch (err: any) {
+      setError(err.message || "Google Sign-In failed")
+      setGoogleLoading(false)
+    }
+  }, [loginWithGoogle, onClose])
+
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -61,6 +225,7 @@ export default function LoginModal({
 
     try {
       await loginWithPassword(identifier, password)
+      toast.success("Successfully logged in!")
       onClose()
       resetForm()
     } catch (err: any) {
@@ -89,6 +254,7 @@ export default function LoginModal({
 
     try {
       await registerWithPassword(name, identifier, password)
+      toast.success("Account created successfully!")
       onClose()
       resetForm()
     } catch (err: any) {
@@ -239,6 +405,26 @@ export default function LoginModal({
 
                   {/* LOGIN FORM */}
                   <TabsContent value="login" className="space-y-4">
+                    {/* Google Sign In Button */}
+                    <Button
+                      type="button"
+                      onClick={handleGoogleSignIn}
+                      disabled={googleLoading || loading}
+                      className="w-full h-11 border border-slate-300 hover:border-slate-400 bg-white text-slate-800 hover:bg-slate-50 font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-3"
+                    >
+                      <GoogleIcon className="w-5 h-5 shrink-0" />
+                      <span>{googleLoading ? "Connecting Google..." : "Continue with Google"}</span>
+                    </Button>
+
+                    <div className="relative my-3">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-slate-200" />
+                      </div>
+                      <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+                        <span className="bg-slate-50 px-3 text-slate-400 font-bold">Or with email / phone</span>
+                      </div>
+                    </div>
+
                     <form onSubmit={handlePasswordLogin} className="space-y-4">
                       <div className="space-y-1.5">
                         <Label htmlFor="login-identifier" className="text-sm font-medium text-slate-700">
@@ -310,6 +496,26 @@ export default function LoginModal({
 
                   {/* REGISTER FORM */}
                   <TabsContent value="register" className="space-y-4">
+                    {/* Google Sign In Button */}
+                    <Button
+                      type="button"
+                      onClick={handleGoogleSignIn}
+                      disabled={googleLoading || loading}
+                      className="w-full h-11 border border-slate-300 hover:border-slate-400 bg-white text-slate-800 hover:bg-slate-50 font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-3"
+                    >
+                      <GoogleIcon className="w-5 h-5 shrink-0" />
+                      <span>{googleLoading ? "Connecting Google..." : "Sign up with Google"}</span>
+                    </Button>
+
+                    <div className="relative my-3">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-slate-200" />
+                      </div>
+                      <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+                        <span className="bg-slate-50 px-3 text-slate-400 font-bold">Or register with email / phone</span>
+                      </div>
+                    </div>
+
                     <form onSubmit={handleRegister} className="space-y-4">
                       <div className="space-y-1.5">
                         <Label htmlFor="register-name" className="text-sm font-medium text-slate-700">

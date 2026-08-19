@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <rect width="128" height="128" rx="28" fill="#0F0F0F" />
+  
+  <!-- Red top-left accent slash -->
+  <polygon points="20,24 60,24 35,44 10,44" fill="#E50914" />
+  
+  <!-- White italic M -->
+  <text
+    x="24"
+    y="92"
+    fill="#FFFFFF"
+    font-family="system-ui, -apple-system, 'Arial Black', sans-serif"
+    font-weight="900"
+    font-style="italic"
+    font-size="82"
+    letter-spacing="-2"
+  >M</text>
+
+  <!-- Red sharp slash accent on top right -->
+  <polygon points="85,28 115,28 95,40 75,40" fill="#E50914" />
+
+  <!-- Solid Red Underline Bar -->
+  <polygon points="20,102 75,102 69,110 14,110" fill="#E50914" />
+
+  <!-- Slanted Red Dashes -->
+  <polygon points="82,102 98,102 92,110 76,110" fill="#E50914" />
+  <polygon points="103,102 119,102 113,110 97,110" fill="#E50914" />
+</svg>
