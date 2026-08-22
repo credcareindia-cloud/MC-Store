@@ -113,22 +113,58 @@ function extractSlidesFromBanners(banners: EcommerceBanner[]): CarouselSlide[] {
 
 function MobileCarouselSkeleton() {
   return (
-    <div className="px-4 pt-3 pb-4 md:hidden">
-      <div className="aspect-[2.15/1] w-full animate-pulse rounded-2xl bg-zinc-200" />
-      <div className="mt-3 flex justify-center gap-1.5">
-        <div className="h-1.5 w-6 rounded-full bg-zinc-200" />
-        <div className="h-1.5 w-1.5 rounded-full bg-zinc-200" />
-        <div className="h-1.5 w-1.5 rounded-full bg-zinc-200" />
+    <section className="bg-white px-4 pt-3 pb-1 md:hidden">
+      <div className="overflow-hidden rounded-2xl ring-1 ring-black/[0.06]">
+        <div className="aspect-[2.15/1] w-full animate-pulse bg-gradient-to-br from-zinc-200 via-zinc-100 to-zinc-200" />
+        <div className="flex items-end justify-between gap-3 bg-zinc-100 px-3.5 py-3">
+          <div className="flex-1 space-y-2">
+            <div className="h-3.5 w-4/5 animate-pulse rounded bg-zinc-200" />
+            <div className="h-3.5 w-3/5 animate-pulse rounded bg-zinc-200" />
+          </div>
+          <div className="h-7 w-20 shrink-0 animate-pulse rounded-full bg-zinc-200" />
+        </div>
       </div>
-    </div>
+      <div className="mt-3 flex justify-center gap-1.5">
+        <div className="h-1.5 w-5 animate-pulse rounded-full bg-zinc-300" />
+        <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-zinc-200" />
+        <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-zinc-200" />
+      </div>
+    </section>
   )
 }
 
 function DesktopCarouselSkeleton() {
   return (
-    <div className="hidden h-[calc(100dvh-var(--landing-header-height,5.75rem))] min-h-[480px] max-h-[920px] items-center justify-center bg-zinc-950 md:flex">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-    </div>
+    <section className="relative hidden w-full overflow-hidden bg-zinc-950 md:block md:h-[calc(100dvh-var(--landing-header-height,5.75rem))] md:min-h-[480px] md:max-h-[920px]">
+      <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+
+      <div className="relative z-10 flex h-full flex-col justify-center">
+        <div className="mx-auto w-full max-w-7xl px-6 lg:px-10">
+          <div className="max-w-2xl space-y-4 md:space-y-6">
+            <div className="h-3 w-40 animate-pulse rounded-full bg-white/15 md:h-3.5 md:w-52" />
+            <div className="space-y-3">
+              <div className="h-10 w-full max-w-xl animate-pulse rounded-lg bg-white/15 md:h-12" />
+              <div className="h-10 w-4/5 max-w-lg animate-pulse rounded-lg bg-white/12 md:h-12" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 w-full max-w-xl animate-pulse rounded bg-white/10" />
+              <div className="h-4 w-5/6 max-w-lg animate-pulse rounded bg-white/10" />
+            </div>
+            <div className="pt-2">
+              <div className="h-11 w-36 animate-pulse rounded-full bg-white/15 md:w-40" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 md:bottom-8">
+        <div className="h-1.5 w-8 animate-pulse rounded-full bg-white/40" />
+        <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/20" />
+        <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/20" />
+      </div>
+    </section>
   )
 }
 
