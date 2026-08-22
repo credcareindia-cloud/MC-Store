@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { sql } from "@/lib/database"
 import { cookies } from "next/headers"
 import { jwtVerify } from "jose"
-import { ensureReturnTablesExist } from "@/lib/db/returns-schema"
+import { ensureReturnTablesExist } from "@/lib/returns-schema"
 import {
   isOrderEligibleForReturn,
   isItemEligibleForReturn,

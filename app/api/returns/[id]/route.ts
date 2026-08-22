@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { sql } from "@/lib/database"
 import { cookies } from "next/headers"
 import { jwtVerify } from "jose"
-import { ensureReturnTablesExist } from "@/lib/db/returns-schema"
+import { ensureReturnTablesExist } from "@/lib/returns-schema"
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "your-secret-key-change-in-production"

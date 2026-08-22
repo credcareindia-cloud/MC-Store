@@ -6,15 +6,15 @@ import { useAuth } from "@/lib/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Mail, MessageSquare, Shield, CheckCircle, Eye, EyeOff, Lock, User } from "lucide-react"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { MessageSquare, CheckCircle, Eye, EyeOff, ArrowLeft } from "lucide-react"
 import { SITE_WHATSAPP_E164_DIGITS } from "@/lib/site-contact"
+import MotoCartLogo from "@/components/ui/logo"
 import toast from "react-hot-toast"
 
-function GoogleIcon({ className = "w-5 h-5" }: { className?: string }) {
+function GoogleIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden>
       <path
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
         fill="#4285F4"
@@ -43,12 +43,15 @@ interface LoginModalProps {
   description?: string
 }
 
+const inputClassName =
+  "h-11 rounded-xl border-zinc-200 bg-zinc-50 text-sm text-zinc-900 placeholder:text-zinc-400 focus-visible:border-red-500 focus-visible:ring-red-500/20"
+
 export default function LoginModal({
   isOpen,
   onClose,
   onWhatsAppRedirect,
-  title = "Welcome Back",
-  description = "Log in or register to continue",
+  title = "Welcome back",
+  description = "Sign in to continue shopping",
 }: LoginModalProps) {
   const { loginWithPassword, registerWithPassword, loginWithGoogle } = useAuth()
   const [mode, setMode] = useState<"login" | "register" | "forgot-password">("login")
@@ -63,7 +66,6 @@ export default function LoginModal({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [resetEmailSent, setResetEmailSent] = useState(false)
 
-  // Load Google Identity Services SDK script dynamically
   useEffect(() => {
     if (!isOpen) return
     const scriptId = "google-gsi-client"
@@ -97,24 +99,23 @@ export default function LoginModal({
     setGoogleLoading(true)
     setError("")
 
-    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "1084283457912-df759e6j2h8j3k4l5m6n7p8q9r0s.apps.googleusercontent.com"
+    const googleClientId =
+      process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
+      "1084283457912-df759e6j2h8j3k4l5m6n7p8q9r0s.apps.googleusercontent.com"
 
     try {
-      // 1. Try Google Identity Services (GIS) Token Client (Opens official Google Account Chooser popup window)
       if (typeof window !== "undefined" && (window as any).google?.accounts?.oauth2) {
         const tokenClient = (window as any).google.accounts.oauth2.initTokenClient({
           client_id: googleClientId,
           scope: "openid email profile",
           callback: async (tokenResponse: any) => {
             if (tokenResponse.error) {
-              console.error("Google Auth error:", tokenResponse.error)
-              setError("Google authentication was cancelled.")
+              setError("Google sign-in was cancelled.")
               setGoogleLoading(false)
               return
             }
 
             try {
-              // Fetch user profile info from Google UserInfo API
               const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
                 headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
               })
@@ -126,32 +127,28 @@ export default function LoginModal({
                   name: userInfo.name || userInfo.given_name || userInfo.email.split("@")[0],
                   image: userInfo.picture,
                 })
-                toast.success("Successfully signed in with Google!")
+                toast.success("Signed in with Google")
                 onClose()
                 resetForm()
               } else {
-                setError("Failed to retrieve Google account details.")
+                setError("Could not load Google account details.")
               }
             } catch (err: any) {
-              setError(err.message || "Failed to log in with Google account.")
+              setError(err.message || "Google sign-in failed.")
             } finally {
               setGoogleLoading(false)
             }
           },
         })
 
-        // Force 'select_account' prompt to display official Google Account Chooser screen
         tokenClient.requestAccessToken({ prompt: "select_account" })
         return
       }
 
-      // 2. Fallback: Launch Official Google OAuth 2.0 Popup Window directly
       const redirectUri = typeof window !== "undefined" ? window.location.origin : ""
       const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
         googleClientId
-      )}&redirect_uri=${encodeURIComponent(
-        redirectUri
-      )}&response_type=token&scope=${encodeURIComponent(
+      )}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(
         "openid email profile"
       )}&prompt=select_account`
 
@@ -167,7 +164,7 @@ export default function LoginModal({
       )
 
       if (!popup) {
-        setError("Popup was blocked by your browser. Please allow popups to sign in with Google.")
+        setError("Allow popups to sign in with Google.")
         setGoogleLoading(false)
         return
       }
@@ -199,21 +196,21 @@ export default function LoginModal({
                       name: userInfo.name || userInfo.email.split("@")[0],
                       image: userInfo.picture,
                     })
-                    toast.success("Successfully signed in with Google!")
+                    toast.success("Signed in with Google")
                     onClose()
                     resetForm()
                   }
                 })
-                .catch((err) => setError(err.message || "Failed to process Google sign-in"))
+                .catch((err) => setError(err.message || "Google sign-in failed."))
                 .finally(() => setGoogleLoading(false))
             }
           }
         } catch {
-          // Cross-origin access ignored until popup redirects to origin
+          // cross-origin until redirect
         }
       }, 500)
     } catch (err: any) {
-      setError(err.message || "Google Sign-In failed")
+      setError(err.message || "Google sign-in failed.")
       setGoogleLoading(false)
     }
   }, [loginWithGoogle, onClose])
@@ -225,11 +222,11 @@ export default function LoginModal({
 
     try {
       await loginWithPassword(identifier, password)
-      toast.success("Successfully logged in!")
+      toast.success("Welcome back!")
       onClose()
       resetForm()
     } catch (err: any) {
-      setError(err.message || "Failed to login")
+      setError(err.message || "Sign in failed")
     } finally {
       setLoading(false)
     }
@@ -247,18 +244,18 @@ export default function LoginModal({
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long")
+      setError("Password must be at least 6 characters")
       setLoading(false)
       return
     }
 
     try {
       await registerWithPassword(name, identifier, password)
-      toast.success("Account created successfully!")
+      toast.success("Account created")
       onClose()
       resetForm()
     } catch (err: any) {
-      setError(err.message || "Failed to register")
+      setError(err.message || "Registration failed")
     } finally {
       setLoading(false)
     }
@@ -270,16 +267,16 @@ export default function LoginModal({
     setError("")
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: identifier })
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: identifier }),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to send reset email')
+        throw new Error(data.error || "Failed to send reset email")
       }
 
       setResetEmailSent(true)
@@ -292,357 +289,300 @@ export default function LoginModal({
 
   const handleWhatsApp = () => {
     const message = encodeURIComponent("Hi! I'd like to place an order. Can you help me?")
-    const whatsappUrl = `https://wa.me/${SITE_WHATSAPP_E164_DIGITS}?text=${message}`
-    window.open(whatsappUrl, "_blank")
+    window.open(`https://wa.me/${SITE_WHATSAPP_E164_DIGITS}?text=${message}`, "_blank")
     onWhatsAppRedirect?.()
     onClose()
   }
 
-  const dialogTitle = mode === "register" ? "Create an Account" : mode === "forgot-password" ? "Reset Password" : title
+  const dialogTitle =
+    mode === "register" ? "Create account" : mode === "forgot-password" ? "Reset password" : title
+
+  const ErrorMessage = error ? (
+    <p className="rounded-xl bg-red-50 px-3 py-2.5 text-sm font-medium text-red-600">{error}</p>
+  ) : null
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[420px] max-h-[90vh] border-0 p-0 bg-transparent shadow-2xl overflow-hidden">
-        <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-200/60 shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-5 text-white flex-shrink-0">
-            <DialogHeader className="space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <Shield className="w-5 h-5 text-amber-400" />
-                </div>
-                <DialogTitle className="text-xl font-bold text-white">{dialogTitle}</DialogTitle>
-              </div>
-              <p className="text-slate-300 text-sm leading-relaxed">{description}</p>
-            </DialogHeader>
-          </div>
+      <DialogContent className="gap-0 overflow-hidden rounded-2xl border border-zinc-200 bg-white p-0 shadow-2xl sm:max-w-[400px]">
+        <div className="border-b border-zinc-100 px-6 pb-5 pt-6 text-center">
+          <MotoCartLogo className="mx-auto h-8 w-auto" variant="light" />
+          <DialogTitle className="mt-4 text-xl font-bold tracking-tight text-zinc-900">
+            {dialogTitle}
+          </DialogTitle>
+          {mode !== "forgot-password" && (
+            <p className="mt-1 text-sm text-zinc-500">{description}</p>
+          )}
+        </div>
 
-          {/* Form Body */}
-          <div className="p-6 overflow-y-auto flex-1">
-            {mode === "forgot-password" ? (
-              <div className="space-y-5">
-                {!resetEmailSent ? (
-                  <>
-                    <div className="text-center space-y-2">
-                      <h3 className="text-lg font-semibold text-slate-900">Reset your password</h3>
-                      <p className="text-sm text-slate-600">
-                        Enter your email address and we'll send you a link to reset your password.
-                      </p>
+        <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
+          {mode === "forgot-password" ? (
+            <div className="space-y-4">
+              {!resetEmailSent ? (
+                <>
+                  <p className="text-center text-sm text-zinc-500">
+                    Enter your email and we&apos;ll send a reset link.
+                  </p>
+                  <form onSubmit={handleForgotPassword} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="reset-email" className="text-xs font-medium text-zinc-600">
+                        Email
+                      </Label>
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        value={identifier}
+                        onChange={(e) => setIdentifier(e.target.value)}
+                        placeholder="you@email.com"
+                        required
+                        className={inputClassName}
+                      />
                     </div>
-
-                    <form onSubmit={handleForgotPassword} className="space-y-4">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="reset-email" className="text-sm font-medium text-slate-700">
-                          Email Address
-                        </Label>
-                        <div className="relative">
-                          <Input
-                            id="reset-email"
-                            type="email"
-                            value={identifier}
-                            onChange={(e) => setIdentifier(e.target.value)}
-                            placeholder="your@email.com"
-                            required
-                            className="h-10 pl-4 pr-10 border-slate-300 focus:border-amber-500 focus:ring-amber-500 rounded-lg text-slate-900 placeholder:text-slate-400 bg-white shadow-sm"
-                          />
-                          <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        </div>
-                      </div>
-
-                      {error && (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-2.5">
-                          <p className="text-sm text-red-700 font-medium">{error}</p>
-                        </div>
-                      )}
-
-                      <Button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full h-10 bg-slate-900 hover:bg-slate-800 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
-                      >
-                        {loading ? "Sending reset link..." : "Send Reset Link"}
-                      </Button>
-                    </form>
-
-                    <div className="text-center">
-                      <button
-                        onClick={() => handleModeChange("login")}
-                        className="text-sm text-slate-600 hover:text-slate-900 underline"
-                      >
-                        Back to login
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center space-y-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                      <CheckCircle className="w-6 h-6 text-green-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-slate-900">Reset link sent!</h3>
-                    <p className="text-sm text-slate-600">
-                      We've sent a password reset link to
-                      <br />
-                      <span className="font-medium text-slate-900">{identifier}</span>
-                    </p>
+                    {ErrorMessage}
                     <Button
-                      onClick={() => handleModeChange("login")}
-                      variant="outline"
-                      className="w-full h-10 border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg font-medium"
+                      type="submit"
+                      disabled={loading}
+                      className="h-11 w-full rounded-full bg-red-600 font-semibold text-white hover:bg-red-700"
                     >
-                      Back to login
+                      {loading ? "Sending…" : "Send reset link"}
                     </Button>
+                  </form>
+                  <button
+                    type="button"
+                    onClick={() => handleModeChange("login")}
+                    className="flex w-full items-center justify-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-800"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to sign in
+                  </button>
+                </>
+              ) : (
+                <div className="space-y-4 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50">
+                    <CheckCircle className="h-6 w-6 text-emerald-600" />
                   </div>
-                )}
+                  <p className="text-sm text-zinc-600">
+                    Reset link sent to <span className="font-semibold text-zinc-900">{identifier}</span>
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleModeChange("login")}
+                    className="h-11 w-full rounded-full border-zinc-200"
+                  >
+                    Back to sign in
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="mb-5 flex rounded-full bg-zinc-100 p-1">
+                <button
+                  type="button"
+                  onClick={() => handleModeChange("login")}
+                  className={`flex-1 rounded-full py-2 text-sm font-semibold transition-colors ${
+                    mode === "login" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
+                  }`}
+                >
+                  Sign in
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleModeChange("register")}
+                  className={`flex-1 rounded-full py-2 text-sm font-semibold transition-colors ${
+                    mode === "register" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
+                  }`}
+                >
+                  Sign up
+                </button>
               </div>
-            ) : (
-              <div className="space-y-5">
-                {/* Tabs */}
-                <Tabs value={mode} onValueChange={(value) => handleModeChange(value as "login" | "register")} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-4 bg-slate-100 p-1 rounded-xl">
-                    <TabsTrigger value="login" className="rounded-lg py-2 font-semibold">Login</TabsTrigger>
-                    <TabsTrigger value="register" className="rounded-lg py-2 font-semibold">Register</TabsTrigger>
-                  </TabsList>
 
-                  {/* LOGIN FORM */}
-                  <TabsContent value="login" className="space-y-4">
-                    {/* Google Sign In Button */}
-                    <Button
-                      type="button"
-                      onClick={handleGoogleSignIn}
-                      disabled={googleLoading || loading}
-                      className="w-full h-11 border border-slate-300 hover:border-slate-400 bg-white text-slate-800 hover:bg-slate-50 font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-3"
-                    >
-                      <GoogleIcon className="w-5 h-5 shrink-0" />
-                      <span>{googleLoading ? "Connecting Google..." : "Continue with Google"}</span>
-                    </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGoogleSignIn}
+                disabled={googleLoading || loading}
+                className="mb-4 flex h-11 w-full items-center justify-center gap-2.5 rounded-full border-zinc-200 bg-white font-medium text-zinc-800 hover:bg-zinc-50"
+              >
+                <GoogleIcon />
+                {googleLoading ? "Connecting…" : "Continue with Google"}
+              </Button>
 
-                    <div className="relative my-3">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-slate-200" />
-                      </div>
-                      <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
-                        <span className="bg-slate-50 px-3 text-slate-400 font-bold">Or with email / phone</span>
-                      </div>
-                    </div>
+              <div className="relative mb-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-zinc-100" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-white px-3 text-xs text-zinc-400">or</span>
+                </div>
+              </div>
 
-                    <form onSubmit={handlePasswordLogin} className="space-y-4">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="login-identifier" className="text-sm font-medium text-slate-700">
-                          Email or Phone Number
-                        </Label>
-                        <div className="relative">
-                          <Input
-                            id="login-identifier"
-                            type="text"
-                            value={identifier}
-                            onChange={(e) => setIdentifier(e.target.value)}
-                            placeholder="your@email.com or +91 9876543210"
-                            required
-                            className="h-11 pl-10 pr-4 border-slate-300 focus:border-amber-500 focus:ring-amber-500 rounded-lg text-slate-900 placeholder:text-slate-400 bg-white shadow-sm"
-                          />
-                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        </div>
-                      </div>
+              {mode === "login" ? (
+                <form onSubmit={handlePasswordLogin} className="space-y-3.5">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="login-identifier" className="text-xs font-medium text-zinc-600">
+                      Email or phone
+                    </Label>
+                    <Input
+                      id="login-identifier"
+                      type="text"
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      placeholder="you@email.com"
+                      required
+                      className={inputClassName}
+                    />
+                  </div>
 
-                      <div className="space-y-1.5">
-                        <Label htmlFor="login-password" className="text-sm font-medium text-slate-700">
-                          Password
-                        </Label>
-                        <div className="relative">
-                          <Input
-                            id="login-password"
-                            type={showPassword ? "text" : "password"}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
-                            required
-                            className="h-11 pl-10 pr-10 border-slate-300 focus:border-amber-500 focus:ring-amber-500 rounded-lg text-slate-900 placeholder:text-slate-400 bg-white shadow-sm"
-                          />
-                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                          >
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      {error && (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-2.5">
-                          <p className="text-sm text-red-700 font-medium">{error}</p>
-                        </div>
-                      )}
-
-                      <Button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
-                      >
-                        {loading ? "Logging in..." : "Log In"}
-                      </Button>
-                    </form>
-
-                    <div className="text-center pt-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="login-password" className="text-xs font-medium text-zinc-600">
+                      Password
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="login-password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        className={`${inputClassName} pr-10`}
+                      />
                       <button
-                        onClick={() => handleModeChange("forgot-password")}
-                        className="text-xs text-slate-600 hover:text-slate-900 underline"
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
                       >
-                        Forgot password?
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
-                  </TabsContent>
+                  </div>
 
-                  {/* REGISTER FORM */}
-                  <TabsContent value="register" className="space-y-4">
-                    {/* Google Sign In Button */}
-                    <Button
-                      type="button"
-                      onClick={handleGoogleSignIn}
-                      disabled={googleLoading || loading}
-                      className="w-full h-11 border border-slate-300 hover:border-slate-400 bg-white text-slate-800 hover:bg-slate-50 font-semibold rounded-xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center gap-3"
-                    >
-                      <GoogleIcon className="w-5 h-5 shrink-0" />
-                      <span>{googleLoading ? "Connecting Google..." : "Sign up with Google"}</span>
-                    </Button>
+                  {ErrorMessage}
 
-                    <div className="relative my-3">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-slate-200" />
-                      </div>
-                      <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
-                        <span className="bg-slate-50 px-3 text-slate-400 font-bold">Or register with email / phone</span>
-                      </div>
-                    </div>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="h-11 w-full rounded-full bg-red-600 font-semibold text-white hover:bg-red-700"
+                  >
+                    {loading ? "Signing in…" : "Sign in"}
+                  </Button>
 
-                    <form onSubmit={handleRegister} className="space-y-4">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="register-name" className="text-sm font-medium text-slate-700">
-                          Full Name
-                        </Label>
-                        <div className="relative">
-                          <Input
-                            id="register-name"
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="John Doe"
-                            required
-                            className="h-10 pl-10 pr-4 border-slate-300 focus:border-amber-500 focus:ring-amber-500 rounded-lg text-slate-900 placeholder:text-slate-400 bg-white shadow-sm"
-                          />
-                          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        </div>
-                      </div>
+                  <button
+                    type="button"
+                    onClick={() => handleModeChange("forgot-password")}
+                    className="w-full text-center text-xs font-medium text-zinc-500 hover:text-red-600"
+                  >
+                    Forgot password?
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={handleRegister} className="space-y-3.5">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="register-name" className="text-xs font-medium text-zinc-600">
+                      Full name
+                    </Label>
+                    <Input
+                      id="register-name"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Your name"
+                      required
+                      className={inputClassName}
+                    />
+                  </div>
 
-                      <div className="space-y-1.5">
-                        <Label htmlFor="register-identifier" className="text-sm font-medium text-slate-700">
-                          Email or Phone Number
-                        </Label>
-                        <div className="relative">
-                          <Input
-                            id="register-identifier"
-                            type="text"
-                            value={identifier}
-                            onChange={(e) => setIdentifier(e.target.value)}
-                            placeholder="your@email.com or +91 9876543210"
-                            required
-                            className="h-10 pl-10 pr-4 border-slate-300 focus:border-amber-500 focus:ring-amber-500 rounded-lg text-slate-900 placeholder:text-slate-400 bg-white shadow-sm"
-                          />
-                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        </div>
-                      </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="register-identifier" className="text-xs font-medium text-zinc-600">
+                      Email or phone
+                    </Label>
+                    <Input
+                      id="register-identifier"
+                      type="text"
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      placeholder="you@email.com"
+                      required
+                      className={inputClassName}
+                    />
+                  </div>
 
-                      <div className="space-y-1.5">
-                        <Label htmlFor="register-password" className="text-sm font-medium text-slate-700">
-                          Password
-                        </Label>
-                        <div className="relative">
-                          <Input
-                            id="register-password"
-                            type={showPassword ? "text" : "password"}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Min 6 characters"
-                            required
-                            minLength={6}
-                            className="h-10 pl-10 pr-10 border-slate-300 focus:border-amber-500 focus:ring-amber-500 rounded-lg text-slate-900 placeholder:text-slate-400 bg-white shadow-sm"
-                          />
-                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                          >
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label htmlFor="confirm-password" className="text-sm font-medium text-slate-700">
-                          Confirm Password
-                        </Label>
-                        <div className="relative">
-                          <Input
-                            id="confirm-password"
-                            type={showConfirmPassword ? "text" : "password"}
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="Re-enter password"
-                            required
-                            minLength={6}
-                            className="h-10 pl-10 pr-10 border-slate-300 focus:border-amber-500 focus:ring-amber-500 rounded-lg text-slate-900 placeholder:text-slate-400 bg-white shadow-sm"
-                          />
-                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                          >
-                            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      {error && (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-2.5">
-                          <p className="text-sm text-red-700 font-medium">{error}</p>
-                        </div>
-                      )}
-
-                      <Button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+                  <div className="space-y-1.5">
+                    <Label htmlFor="register-password" className="text-xs font-medium text-zinc-600">
+                      Password
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="register-password"
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Min. 6 characters"
+                        required
+                        minLength={6}
+                        className={`${inputClassName} pr-10`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
                       >
-                        {loading ? "Creating account..." : "Create Account"}
-                      </Button>
-                    </form>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            )}
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
 
-            {/* WhatsApp Option */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-4 text-slate-500 font-medium">Need help?</span>
-              </div>
-            </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="confirm-password" className="text-xs font-medium text-zinc-600">
+                      Confirm password
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        id="confirm-password"
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Repeat password"
+                        required
+                        minLength={6}
+                        className={`${inputClassName} pr-10`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
 
-            <Button
-              onClick={handleWhatsApp}
-              variant="outline"
-              className="w-full h-10 border-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 bg-green-50/50 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md"
-            >
-              <MessageSquare className="w-5 h-5 mr-3 text-green-600" />
-              Order / Inquire via WhatsApp
-            </Button>
-          </div>
+                  {ErrorMessage}
+
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="h-11 w-full rounded-full bg-red-600 font-semibold text-white hover:bg-red-700"
+                  >
+                    {loading ? "Creating account…" : "Create account"}
+                  </Button>
+                </form>
+              )}
+            </>
+          )}
+
+          <button
+            type="button"
+            onClick={handleWhatsApp}
+            className="mt-6 flex w-full items-center justify-center gap-2 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-800"
+          >
+            <MessageSquare className="h-4 w-4 text-emerald-600" />
+            Order via WhatsApp
+          </button>
         </div>
       </DialogContent>
     </Dialog>

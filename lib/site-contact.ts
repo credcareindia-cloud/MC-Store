@@ -26,3 +26,13 @@ export const SITE_POSTAL_CODE = "676503"
 
 /** Single line for JSON-LD / meta */
 export const SITE_ADDRESS_SINGLE_LINE = `${SITE_ADDRESS_LINES.join(", ")}, Pin ${SITE_POSTAL_CODE}, India`
+
+const SITE_MAPS_QUERY = encodeURIComponent(
+  "Moto club Kottakkal, Thoppil tower, Parakkori, Puthoor, Kottakkal, Malappuram, Kerala 676503"
+)
+
+/** Google Maps embed (no API key required) */
+export const SITE_GOOGLE_MAPS_EMBED_URL = `https://maps.google.com/maps?q=${SITE_MAPS_QUERY}&t=&z=16&ie=UTF8&iwloc=&output=embed`
+
+/** Opens Google Maps directions in a new tab */
+export const SITE_GOOGLE_MAPS_DIRECTIONS_URL = `https://www.google.com/maps/dir/?api=1&destination=${SITE_MAPS_QUERY}`

@@ -2,10 +2,11 @@
 
 export const dynamic = "force-dynamic"
 
-import Navbar from "@/components/ui/navbar"
+import LandingNavbar from "@/components/ui/landing-navbar"
 import Footer from "@/components/ui/footer"
 import EcommerceHeroCarousel from "@/components/sections/ecommerce-hero-carousel"
 import TrendingProducts from "@/components/sections/trending-products"
+import VisitShopSection from "@/components/sections/visit-shop-section"
 import AboutSection from "@/components/sections/about-section"
 import TrustHighlights from "@/components/sections/trust-highlights"
 import NewUserSpinnerSection from "@/components/sections/new-user-spinner-section"
@@ -15,26 +16,16 @@ export default function RootLandingPage() {
   const { isAuthenticated } = useAuth()
 
   return (
-    <main className="min-h-screen bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased">
-      {/* Top Navbar: Clean navbar with Home (/home), About Us, Contact Us & Icons (No category scrolling bar) */}
-      <Navbar />
-
-      {/* Optional New User Promo Spinner Modal */}
-      {!isAuthenticated && <NewUserSpinnerSection />}
-
-      {/* Full-Width Auto-Sliding Image Banner Carousel from master_data (PostgreSQL) */}
+    <main className="min-h-screen bg-white text-zinc-900 antialiased">
+      <LandingNavbar />
       <EcommerceHeroCarousel />
 
-      {/* Trending Products Section */}
+      {!isAuthenticated && <NewUserSpinnerSection />}
+
       <TrendingProducts limit={8} />
-
-      {/* About Company & Description Section */}
+      <VisitShopSection />
       <AboutSection />
-
-      {/* Trust Badges & Highlights */}
       <TrustHighlights />
-
-      {/* Main Footer */}
       <Footer />
     </main>
   )

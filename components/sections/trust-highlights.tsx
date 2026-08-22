@@ -27,24 +27,18 @@ const HIGHLIGHTS = [
 
 export default function TrustHighlights() {
   return (
-    <section className="w-full bg-slate-50/80 dark:bg-slate-900/50 border-t border-slate-200/80 dark:border-slate-800 py-8 my-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+    <section className="border-t border-zinc-100 bg-zinc-50 py-14">
+      <div className="mx-auto max-w-7xl px-6 lg:px-10">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {HIGHLIGHTS.map((item, index) => {
             const Icon = item.icon
             return (
-              <div key={index} className="flex items-center gap-4 p-3 rounded-2xl bg-white/60 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800/60 shadow-sm">
-                <div className="p-3 rounded-full bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex-shrink-0">
-                  <Icon className="w-6 h-6" />
+              <div key={index} className="text-center sm:text-left">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-700 sm:mx-0">
+                  <Icon className="h-5 w-5" />
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                    {item.title}
-                  </h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                    {item.description}
-                  </p>
-                </div>
+                <h4 className="text-sm font-semibold text-zinc-900">{item.title}</h4>
+                <p className="mt-1 text-sm text-zinc-500">{item.description}</p>
               </div>
             )
           })}

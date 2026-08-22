@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "@/lib/store"
 import { fetchProducts, fetchCategories, setSelectedCategory } from "@/lib/store/slices/productSlice"
@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button"
 import { useLoginModal } from '@/lib/stores/useLoginModal'
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, ChevronLeft, ChevronRight, Zap, Grid3X3, List, SlidersHorizontal, Tag, Heart, ChevronDown, ShoppingCart, Loader2, Flame, ArrowRight, Bookmark, MessageCircle } from "lucide-react"
+import { Star, ChevronLeft, ChevronRight, Zap, Grid3X3, List, SlidersHorizontal, Tag, Heart, ChevronDown, ShoppingCart, Loader2, Flame, ArrowUpDown, Bookmark, MessageCircle, Search, X } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Slider } from "@/components/ui/slider"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/contexts/auth-context"
@@ -24,6 +26,35 @@ interface ProductListProps {
   showTopPicks?: boolean
 }
 
+function getProductSellingPrice(product: any, currency: string) {
+  const availableVariant =
+    product.variants?.find((v: any) =>
+      currency === "AED" ? v.available_aed : v.available_inr
+    ) || product.variants?.[0]
+
+  if (!availableVariant) return 0
+
+  const originalPrice =
+    currency === "AED" ? availableVariant.price_aed || 0 : availableVariant.price_inr || 0
+  const discountPrice =
+    currency === "AED" ? availableVariant.discount_aed || 0 : availableVariant.discount_inr || 0
+
+  const hasDiscount =
+    originalPrice > 0 &&
+    discountPrice > 0 &&
+    discountPrice < originalPrice &&
+    (originalPrice - discountPrice) / originalPrice >= 0.01
+
+  return hasDiscount ? discountPrice : originalPrice
+}
+
+function formatSidebarPrice(amount: number, currency: string) {
+  if (currency === "INR") {
+    return `₹ ${amount.toLocaleString("en-IN")}`
+  }
+  return `AED ${amount.toLocaleString()}`
+}
+
 export default function ProductList({ showSpinner = false, onCloseSpinner, showTopPicks = false }: ProductListProps) {
   const { user, isAuthenticated } = useAuth()
   const [authInitialized, setAuthInitialized] = useState(false)
@@ -32,6 +63,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
   const [showFilters, setShowFilters] = useState(false)
   const [categoryTransition, setCategoryTransition] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [categorySearchTerm, setCategorySearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(12)
   
@@ -185,6 +217,9 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
   const [searchSortBy, setSearchSortBy] = useState("relevance")
   const [isSearchLoading, setIsSearchLoading] = useState(false)
   const [activeFilters, setActiveFilters] = useState<any>({})
+  const [sidebarPriceRange, setSidebarPriceRange] = useState<[number, number]>([0, 50000])
+  const [showPriceFilter, setShowPriceFilter] = useState(false)
+  const [showCategoryPanel, setShowCategoryPanel] = useState(false)
 
   // Apply filters to search results
   const applyFilters = (items: any[], filters: any) => {
@@ -360,6 +395,95 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
     router.push('/products')
   }
 
+  const categoriesWithProducts = categories.filter(
+    (cat) => items.filter((i) => i.category_id === cat.id).length > 0
+  )
+
+  const filteredCategories = categorySearchTerm.trim()
+    ? categoriesWithProducts.filter((cat) =>
+        cat.name.toLowerCase().includes(categorySearchTerm.trim().toLowerCase())
+      )
+    : categoriesWithProducts
+
+  const selectedCategoryName =
+    selectedCategory === null
+      ? "All Products"
+      : categories.find((cat) => cat.id === selectedCategory)?.name ?? "Category"
+
+  const handleCategorySelect = (categoryId: number | null) => {
+    handleCategoryChange(categoryId)
+    setShowCategoryPanel(false)
+  }
+
+  const renderCategoryPicker = (onSelect: (categoryId: number | null) => void) => (
+    <>
+      <div className="relative mb-3">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <Input
+          type="search"
+          value={categorySearchTerm}
+          onChange={(e) => setCategorySearchTerm(e.target.value)}
+          placeholder="Search categories..."
+          className="h-9 border-gray-200 bg-white pl-9 pr-8 text-sm focus-visible:ring-red-500"
+        />
+        {categorySearchTerm && (
+          <button
+            type="button"
+            onClick={() => setCategorySearchTerm("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-gray-400 transition-colors hover:text-gray-600"
+            aria-label="Clear category search"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="max-h-[240px] space-y-1 overflow-y-auto pr-1 sm:max-h-[280px] lg:max-h-[380px]">
+        <button
+          type="button"
+          onClick={() => onSelect(null)}
+          className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${
+            selectedCategory === null
+              ? "bg-red-50 font-bold text-red-600"
+              : "text-gray-700 hover:bg-gray-100 hover:text-red-600"
+          }`}
+        >
+          <span className="flex items-center gap-1.5">
+            <span className="font-bold text-red-500">&raquo;</span> All Products
+          </span>
+          <span className="text-xs font-normal text-gray-400">({items.length})</span>
+        </button>
+        {filteredCategories.length === 0 ? (
+          <p className="px-2.5 py-3 text-center text-xs text-gray-500">
+            No categories match &ldquo;{categorySearchTerm}&rdquo;
+          </p>
+        ) : (
+          filteredCategories.map((cat) => {
+            const count = items.filter((i) => i.category_id === cat.id).length
+            const isSelected = selectedCategory === cat.id
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => onSelect(cat.id)}
+                className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ${
+                  isSelected
+                    ? "bg-red-50 font-bold text-red-600"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-red-600"
+                }`}
+              >
+                <span className="flex items-center gap-1.5 truncate">
+                  <span className="font-bold text-red-500">&raquo;</span> {cat.name}
+                </span>
+                <span className="shrink-0 text-xs font-normal text-gray-400">({count})</span>
+              </button>
+            )
+          })
+        )}
+      </div>
+    </>
+  )
+
   // Updated filteredItems logic with filters applied
   const baseFilteredItems = isSearchActive ? searchResults : currencyFilteredItems.filter((item) => {
     return selectedCategory === null || item.category_id === selectedCategory
@@ -422,6 +546,72 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
     }) : baseFilteredItems
   
   const filteredItems = applyFilters(sortedBaseItems, activeFilters)
+
+  const catalogPriceBounds = useMemo((): [number, number] => {
+    let min = Infinity
+    let max = 0
+
+    for (const item of sortedBaseItems) {
+      const price = getProductSellingPrice(item, selectedCurrency)
+      if (price > 0) {
+        min = Math.min(min, price)
+        max = Math.max(max, price)
+      }
+    }
+
+    if (min === Infinity) {
+      return selectedCurrency === "AED" ? [0, 500] : [0, 50000]
+    }
+
+    const padding = Math.max((max - min) * 0.05, selectedCurrency === "AED" ? 5 : 100)
+    return [Math.max(0, Math.floor(min - padding)), Math.ceil(max + padding)]
+  }, [sortedBaseItems, selectedCurrency])
+
+  const catalogMin = catalogPriceBounds[0]
+  const catalogMax = catalogPriceBounds[1]
+  const isPriceFilterActive = Boolean(activeFilters.priceRange)
+
+  useEffect(() => {
+    setSidebarPriceRange((prev) =>
+      prev[0] === catalogMin && prev[1] === catalogMax ? prev : [catalogMin, catalogMax]
+    )
+  }, [catalogMin, catalogMax])
+
+  useEffect(() => {
+    setActiveFilters((prev: Record<string, unknown>) => {
+      if (!prev.priceRange) return prev
+      const { priceRange, ...rest } = prev
+      return rest
+    })
+  }, [selectedCategory, selectedCurrency])
+
+  const handleApplyPriceFilter = () => {
+    const [min, max] = sidebarPriceRange
+    const [catalogMin, catalogMax] = catalogPriceBounds
+
+    if (min <= catalogMin && max >= catalogMax) {
+      setActiveFilters((prev: Record<string, unknown>) => {
+        const { priceRange, ...rest } = prev
+        return rest
+      })
+      return
+    }
+
+    setActiveFilters((prev: Record<string, unknown>) => ({
+      ...prev,
+      priceRange: sidebarPriceRange,
+    }))
+    setShowPriceFilter(false)
+  }
+
+  const handleResetPriceFilter = () => {
+    setSidebarPriceRange([catalogMin, catalogMax])
+    setActiveFilters((prev: Record<string, unknown>) => {
+      const { priceRange, ...rest } = prev
+      return rest
+    })
+    setShowPriceFilter(false)
+  }
 
   // Reset pagination to page 1 when filters or sorting change
   useEffect(() => {
@@ -612,43 +802,8 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
                   <span>Categories</span>
                   <span className="h-0.5 w-6 bg-red-600"></span>
                 </h2>
-                <div className="space-y-1.5 max-h-[380px] overflow-y-auto pr-1">
-                  <button
-                    onClick={() => handleCategoryChange(null)}
-                    className={`flex items-center justify-between w-full text-sm font-medium py-2 px-2.5 rounded-lg transition-colors ${
-                      selectedCategory === null
-                        ? "bg-red-50 text-red-600 font-bold"
-                        : "text-gray-700 hover:bg-gray-50 hover:text-red-600"
-                    }`}
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <span className="text-red-500 font-bold">&raquo;</span> All Products
-                    </span>
-                    <span className="text-xs text-gray-400 font-normal">({items.length})</span>
-                  </button>
-                  {categories
-                    .filter((cat) => items.filter((i) => i.category_id === cat.id).length > 0)
-                    .map((cat) => {
-                      const count = items.filter((i) => i.category_id === cat.id).length
-                      const isSelected = selectedCategory === cat.id
-                      return (
-                        <button
-                          key={cat.id}
-                          onClick={() => handleCategoryChange(cat.id)}
-                          className={`flex items-center justify-between w-full text-sm font-medium py-2 px-2.5 rounded-lg transition-colors ${
-                            isSelected
-                              ? "bg-red-50 text-red-600 font-bold"
-                              : "text-gray-700 hover:bg-gray-50 hover:text-red-600"
-                          }`}
-                        >
-                          <span className="flex items-center gap-1.5 truncate">
-                            <span className="text-red-500 font-bold">&raquo;</span> {cat.name}
-                          </span>
-                          <span className="text-xs text-gray-400 font-normal">({count})</span>
-                        </button>
-                      )
-                    })}
-                </div>
+
+                {renderCategoryPicker(handleCategoryChange)}
               </div>
 
               {/* RECENT ITEMS Section */}
@@ -692,58 +847,169 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
                 </div>
               )}
 
-              {/* FILTER BY PRICE Section */}
-              <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <h2 className="text-base font-bold text-gray-900 uppercase tracking-wide mb-4 pb-2 border-b border-gray-200 flex items-center justify-between">
-                  <span>Filter By Price</span>
-                  <span className="h-0.5 w-6 bg-red-600"></span>
-                </h2>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center text-xs font-semibold text-gray-600">
-                    <span>Price: ₹ 50 - ₹ 50,000</span>
-                  </div>
-                  <Button
-                    onClick={() => {
-                      // Apply price filter or trigger reset
-                    }}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-xs tracking-wider py-2 rounded-lg transition-colors"
-                  >
-                    Filter
-                  </Button>
-                </div>
-              </div>
             </div>
 
             {/* Right Main Grid Area */}
             <div className="lg:col-span-3">
               {/* Header Bar with Count and Sort Dropdown (Matching Zytheme Screenshot 1) */}
-              <div id="product-catalog-grid" className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                  {isProductListLoading ? (
-                    <div className="flex items-center gap-2 text-red-600 font-medium">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Loading products...</span>
+              <div
+                id="product-catalog-grid"
+                className="mb-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+              >
+                <div className="border-b border-gray-100 px-4 py-3">
+                  <div className="text-sm font-semibold text-gray-800">
+                    {isProductListLoading ? (
+                      <div className="flex items-center gap-2 font-medium text-red-600">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Loading products...</span>
+                      </div>
+                    ) : (
+                      <p className="leading-snug">
+                        Showing{" "}
+                        <span className="font-bold text-red-600">
+                          {filteredItems.length > 0 ? startIndex + 1 : 0}–{endIndex}
+                        </span>{" "}
+                        of <span className="font-bold">{filteredItems.length}</span> products
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2 p-3">
+                  <div className="grid grid-cols-3 gap-2 lg:flex lg:justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowCategoryPanel((open) => !open)
+                        setShowPriceFilter(false)
+                      }}
+                      className={`h-10 justify-center gap-1.5 rounded-lg border-gray-200 bg-gray-50 px-2 text-xs font-semibold text-gray-800 hover:bg-gray-100 lg:hidden ${
+                        showCategoryPanel || selectedCategory !== null
+                          ? "border-red-300 bg-red-50 text-red-700"
+                          : ""
+                      }`}
+                    >
+                      <Grid3X3 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">Category</span>
+                    </Button>
+
+                    <div className="relative min-w-0">
+                      <ArrowUpDown className="pointer-events-none absolute left-3 top-1/2 hidden h-3.5 w-3.5 -translate-y-1/2 text-gray-400 sm:block" />
+                      <select
+                        value={searchSortBy}
+                        onChange={(e) => handleSortChange(e.target.value)}
+                        aria-label="Sort products"
+                        className="h-10 w-full appearance-none rounded-lg border border-gray-200 bg-gray-50 pl-3 pr-8 text-xs font-semibold text-gray-800 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/20 sm:min-w-[170px] sm:pl-9"
+                      >
+                        <option value="relevance">Default</option>
+                        <option value="price_low">Price: Low to High</option>
+                        <option value="price_high">Price: High to Low</option>
+                        <option value="newest">Newest First</option>
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     </div>
-                  ) : (
-                    <>
-                      Showing <span className="text-red-600 font-bold">{filteredItems.length > 0 ? startIndex + 1 : 0} : {endIndex}</span> Of <span className="font-bold">{filteredItems.length}</span> Products
-                    </>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowPriceFilter((open) => !open)
+                        setShowCategoryPanel(false)
+                      }}
+                      className={`h-10 justify-center gap-1.5 rounded-lg border-gray-200 bg-gray-50 text-xs font-semibold text-gray-800 hover:bg-gray-100 ${
+                        isPriceFilterActive || showPriceFilter
+                          ? "border-red-300 bg-red-50 text-red-700"
+                          : ""
+                      }`}
+                    >
+                      <SlidersHorizontal className="h-3.5 w-3.5" />
+                      Price
+                      {isPriceFilterActive && (
+                        <span className="ml-0.5 rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                          On
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+
+                  {selectedCategory !== null && (
+                    <p className="truncate text-xs font-medium text-red-600 lg:hidden">
+                      {selectedCategoryName}
+                    </p>
                   )}
                 </div>
 
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <span className="text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">Sort By:</span>
-                  <select
-                    value={searchSortBy}
-                    onChange={(e) => handleSortChange(e.target.value)}
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2 font-medium"
-                  >
-                    <option value="relevance">Default Sorting</option>
-                    <option value="price_low">Price: Low to High</option>
-                    <option value="price_high">Price: High to Low</option>
-                    <option value="newest">Newest First</option>
-                  </select>
-                </div>
+                {showCategoryPanel && (
+                  <div className="border-t border-gray-100 bg-gray-50 px-4 py-4 lg:hidden">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Browse categories
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setShowCategoryPanel(false)}
+                        className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-800"
+                        aria-label="Close categories"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                    {renderCategoryPicker(handleCategorySelect)}
+                  </div>
+                )}
+
+                {showPriceFilter && (
+                  <div className="space-y-4 border-t border-gray-100 bg-gray-50 px-4 py-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        Price range
+                      </p>
+                      <p className="text-xs font-bold text-gray-800">
+                        {formatSidebarPrice(sidebarPriceRange[0], selectedCurrency)} –{" "}
+                        {formatSidebarPrice(sidebarPriceRange[1], selectedCurrency)}
+                      </p>
+                    </div>
+
+                    {catalogMin < catalogMax ? (
+                      <div className="px-1 py-2">
+                        <Slider
+                          min={catalogMin}
+                          max={catalogMax}
+                          step={selectedCurrency === "AED" ? 5 : 100}
+                          value={sidebarPriceRange}
+                          onValueChange={(value) => setSidebarPriceRange([value[0], value[1]])}
+                          className="w-full"
+                        />
+                        <div className="mt-2 flex justify-between text-[10px] font-medium text-gray-400">
+                          <span>{formatSidebarPrice(catalogMin, selectedCurrency)}</span>
+                          <span>{formatSidebarPrice(catalogMax, selectedCurrency)}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500">Not enough price data to filter.</p>
+                    )}
+
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleApplyPriceFilter}
+                        className="h-9 flex-1 rounded-lg bg-red-600 text-xs font-bold uppercase tracking-wide text-white hover:bg-red-700"
+                      >
+                        Apply
+                      </Button>
+                      {isPriceFilterActive && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleResetPriceFilter}
+                          className="h-9 shrink-0 rounded-lg border-gray-300 px-4 text-xs font-semibold text-gray-600"
+                        >
+                          Reset
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Product Grid (2-Column on Mobile like real-world e-commerce apps) */}

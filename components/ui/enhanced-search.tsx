@@ -35,12 +35,29 @@ interface EnhancedSearchProps {
   placeholder?: string
   onSearchSubmit?: (query: string) => void
   className?: string
+  dynamicPlaceholder?: boolean
+  placeholderPrefix?: string
 }
+
+const ROTATING_SEARCH_TERMS = [
+  "LED head lights",
+  "car spoilers",
+  "Android stereos",
+  "fog lamps",
+  "door visors",
+  "body covers",
+  "arm rests",
+  "audio speakers",
+  "side mirrors",
+  "infotainment systems",
+]
 
 export default function EnhancedSearch({ 
   placeholder, 
   onSearchSubmit,
-  className = ""
+  className = "",
+  dynamicPlaceholder = true,
+  placeholderPrefix = "Search ",
 }: EnhancedSearchProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
@@ -49,6 +66,8 @@ export default function EnhancedSearch({
   const [recentSearches, setRecentSearches] = useState<string[]>([])
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [isTyping, setIsTyping] = useState(false)
+  const [isFocused, setIsFocused] = useState(false)
+  const [placeholderIndex, setPlaceholderIndex] = useState(0)
   
   const searchRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -66,6 +85,16 @@ export default function EnhancedSearch({
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (!dynamicPlaceholder || searchTerm || isFocused || placeholder) return
+
+    const interval = setInterval(() => {
+      setPlaceholderIndex((current) => (current + 1) % ROTATING_SEARCH_TERMS.length)
+    }, 2800)
+
+    return () => clearInterval(interval)
+  }, [dynamicPlaceholder, searchTerm, isFocused, placeholder])
 
   // Re-trigger search when currency changes
   useEffect(() => {
@@ -102,7 +131,7 @@ export default function EnhancedSearch({
         setIsTyping(false)
       }, 150)
     } else {
-      setShowDropdown(value.length > 0)
+      setShowDropdown(false)
       setSearchResults([])
       setIsTyping(false)
     }
@@ -205,69 +234,126 @@ export default function EnhancedSearch({
   }
 
   const defaultPlaceholder = "Search parts, brands, accessories..."
+  const useAnimatedPlaceholder = dynamicPlaceholder && !placeholder && !searchTerm
+
+  const hasDropdownContent =
+    searchResults.length > 0 ||
+    (suggestions.length > 0 && searchTerm.length >= 2) ||
+    (recentSearches.length > 0 && searchTerm.length < 2) ||
+    searchTerm.length >= 2
 
   return (
     <div ref={searchRef} className={`relative ${className}`}>
       {/* Search Input */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
-        
-        <Input
-          ref={inputRef}
-          type="text"
-          placeholder={placeholder || defaultPlaceholder}
-          value={searchTerm}
-          onChange={(e) => handleSearch(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onFocus={() => searchTerm.length >= 2 && setShowDropdown(true)}
-          className="w-full pl-12 pr-16 h-12 rounded-full bg-white border-0 text-base shadow-lg focus:shadow-xl transition-all duration-300 focus:ring-2 focus:ring-blue-500/20 focus:outline-none placeholder:text-gray-400"
-        />
-        
-        {/* Loading or Clear Button */}
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-          <AnimatePresence mode="wait">
-            {isSearching ? (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
-              </motion.div>
-            ) : searchTerm.length > 0 ? (
-              <motion.div
-                key="clear"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.2 }}
-              >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearSearch}
-                  className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
+      <div className="group relative">
+        <div className="pointer-events-none absolute -inset-0.5 rounded-full bg-gradient-to-r from-red-500/80 via-amber-400/70 to-red-600/80 opacity-0 blur-md transition-opacity duration-500 group-focus-within:opacity-100" />
+
+        <div className="relative flex items-center">
+          <div className="pointer-events-none absolute inset-y-0 left-4 z-10 flex items-center">
+            <motion.span
+              className="inline-flex items-center justify-center text-red-500"
+              animate={isSearching ? { rotate: 360 } : { scale: [1, 1.08, 1] }}
+              transition={
+                isSearching
+                  ? { repeat: Infinity, duration: 1, ease: "linear" }
+                  : { repeat: Infinity, duration: 2.2, ease: "easeInOut" }
+              }
+            >
+              {isSearching ? (
+                <Loader2 className="h-5 w-5" />
+              ) : (
+                <Search className="h-5 w-5" />
+              )}
+            </motion.span>
+          </div>
+
+          <Input
+            ref={inputRef}
+            type="text"
+            placeholder={useAnimatedPlaceholder ? " " : placeholder || defaultPlaceholder}
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => {
+              setIsFocused(true)
+              if (searchTerm.length >= 2) {
+                setShowDropdown(true)
+              } else if (recentSearches.length > 0) {
+                setShowDropdown(true)
+              }
+            }}
+            onBlur={() => setIsFocused(false)}
+            className="relative h-12 w-full rounded-full border border-white/10 bg-white py-0 pl-12 pr-16 text-base leading-none shadow-[0_4px_24px_rgba(0,0,0,0.18)] transition-all duration-300 placeholder:text-gray-400 focus:border-red-200 focus:shadow-[0_6px_28px_rgba(220,38,38,0.18)] focus:outline-none focus:ring-2 focus:ring-red-500/25"
+          />
+
+          {useAnimatedPlaceholder && (
+            <div className="pointer-events-none absolute inset-y-0 left-12 right-16 z-10 flex items-center overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={placeholderIndex}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="flex items-center gap-1.5 truncate text-base text-gray-400"
                 >
-                  <X className="w-4 h-4" />
-                </Button>
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
+                  <span className="shrink-0">{placeholderPrefix}</span>
+                  <span className="truncate font-medium text-gray-500">
+                    {ROTATING_SEARCH_TERMS[placeholderIndex]}
+                  </span>
+                  <motion.span
+                    animate={{ opacity: [1, 0.2, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.1 }}
+                    className="ml-0.5 inline-block h-4 w-0.5 shrink-0 rounded-full bg-red-500"
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          )}
+        
+          {/* Clear Button */}
+          <div className="absolute inset-y-0 right-3 z-10 flex items-center">
+            <AnimatePresence mode="wait">
+              {searchTerm.length > 0 ? (
+                <motion.div
+                  key="clear"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearSearch}
+                    className="h-8 w-8 rounded-full p-0 hover:bg-red-50"
+                  >
+                    <X className="h-4 w-4 text-gray-500" />
+                  </Button>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
       {/* Search Dropdown */}
       <AnimatePresence>
-        {showDropdown && (
+        {showDropdown && hasDropdownContent && (
           <motion.div
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 max-h-96 overflow-hidden"
+            className="absolute top-full left-0 right-0 z-50 mt-2 max-h-96 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl"
           >
+            {isSearching && searchTerm.length >= 2 && searchResults.length === 0 && (
+              <div className="flex items-center justify-center gap-2 p-4 text-sm text-gray-500">
+                <Loader2 className="h-4 w-4 animate-spin text-red-500" />
+                Searching...
+              </div>
+            )}
+
             {/* Search Results */}
             {searchResults.length > 0 && (
               <div className="border-b border-gray-100">
@@ -393,7 +479,7 @@ export default function EnhancedSearch({
             )}
 
             {/* No Results */}
-            {searchTerm.length >= 2 && searchResults.length === 0 && !isSearching && (
+            {searchTerm.length >= 2 && searchResults.length === 0 && suggestions.length === 0 && !isSearching && (
               <div className="p-6 text-center">
                 <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
                   <Search className="w-6 h-6 text-gray-400" />

@@ -98,7 +98,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                       },
                     }}
                   />
-                  <div className="pb-16 lg:pb-0">{children}</div>
+                  <div className="pb-28 lg:pb-0">{children}</div>
                 </CurrencyProvider>
               </ShopProvider>
             </StoreProvider>

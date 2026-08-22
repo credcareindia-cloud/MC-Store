@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowRight, ChevronLeft, ChevronRight, Sparkles } from "lucide-react"
 
 export interface EcommerceBanner {
   id: number
@@ -38,78 +37,35 @@ export interface CarouselSlide {
   metadata: EcommerceBanner["metadata"]
 }
 
-// Fallback banners if API returns empty
 const DEFAULT_BANNERS: EcommerceBanner[] = [
   {
     id: 1,
     device_id: 1,
     category: "ecommerce_banner",
-    name: "Latest Tech Gadgets",
-    notes: "Explore cutting-edge gadgets that upgrade your lifestyle with top performance and sleek modern aesthetics.",
+    name: "Modern Car Infotainment Systems",
+    notes: "Upgrade Your Ride. Smarter. Sharper. Connected.",
     website: "/products",
     is_active: true,
     sort_order: 1,
     metadata: {
-      subtitle: "Discover. Shop. Upgrade.",
-      badgeText: "NEW ARRIVALS",
+      subtitle: "Premium automotive electronics & accessories",
       ctaText: "Shop Now",
-      secondaryCtaText: "Browse Collection",
-      themeColor: "red",
-      imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1600&auto=format&fit=crop",
+      imageUrl: "/vehicle-spare-parts.jpg",
     },
   },
   {
     id: 2,
     device_id: 1,
     category: "ecommerce_banner",
-    name: "Next-Gen Spatial Audio",
-    notes: "Immerse yourself in crystal clear soundscapes with active noise cancellation and high-fidelity wireless audio.",
-    website: "/products?category=Audio",
+    name: "See Better. Drive Better",
+    notes: "Premium headlamps designed for improved visibility and modern styling.",
+    website: "/products",
     is_active: true,
     sort_order: 2,
     metadata: {
-      subtitle: "Pure Acoustic Precision",
-      badgeText: "HOT DEAL",
-      ctaText: "Explore Audio",
-      secondaryCtaText: "View Specs",
-      themeColor: "violet",
-      imageUrl: "https://images.unsplash.com/photo-1546435770-a3e426bf472b?q=80&w=1600&auto=format&fit=crop",
-    },
-  },
-  {
-    id: 3,
-    device_id: 1,
-    category: "ecommerce_banner",
-    name: "Smartwatches & Fitness Trackers",
-    notes: "Track every step, heart rate metric, and fitness milestone with vibrant AMOLED touch displays.",
-    website: "/products?category=Wearables",
-    is_active: true,
-    sort_order: 3,
-    metadata: {
-      subtitle: "Track. Achieve. Excel.",
-      badgeText: "BEST SELLER",
-      ctaText: "Shop Wearables",
-      secondaryCtaText: "Compare Models",
-      themeColor: "blue",
-      imageUrl: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?q=80&w=1600&auto=format&fit=crop",
-    },
-  },
-  {
-    id: 4,
-    device_id: 1,
-    category: "ecommerce_banner",
-    name: "Smart Home & Accessories",
-    notes: "Transform your space with intelligent wireless hubs, high-fidelity speakers, and multi-device charging docks.",
-    website: "/products?category=Smart%20Home",
-    is_active: true,
-    sort_order: 4,
-    metadata: {
-      subtitle: "Smarter Living Experience",
-      badgeText: "FEATURED",
-      ctaText: "Upgrade Now",
-      secondaryCtaText: "Learn More",
-      themeColor: "emerald",
-      imageUrl: "https://images.unsplash.com/photo-1558089687-f282ffcbc126?q=80&w=1600&auto=format&fit=crop",
+      subtitle: "Lighting upgrades for every drive",
+      ctaText: "Shop Head Lamps",
+      imageUrl: "https://images.unsplash.com/photo-1489824904134-891ab64532f1?q=80&w=2000&auto=format&fit=crop",
     },
   },
 ]
@@ -123,7 +79,7 @@ function extractSlidesFromBanners(banners: EcommerceBanner[]): CarouselSlide[] {
 
     if (Array.isArray(meta.images) && meta.images.length > 0) {
       imageUrls = meta.images
-        .map((img: any) => {
+        .map((img: { url?: string; imageUrl?: string; src?: string } | string) => {
           if (typeof img === "string") return img
           if (img && typeof img === "object") return img.url || img.imageUrl || img.src || ""
           return ""
@@ -136,7 +92,7 @@ function extractSlidesFromBanners(banners: EcommerceBanner[]): CarouselSlide[] {
     }
 
     if (imageUrls.length === 0) {
-      imageUrls = ["https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1600&auto=format&fit=crop"]
+      imageUrls = ["/vehicle-spare-parts.jpg"]
     }
 
     imageUrls.forEach((url, imgIdx) => {
@@ -155,14 +111,73 @@ function extractSlidesFromBanners(banners: EcommerceBanner[]): CarouselSlide[] {
   return slides
 }
 
+function MobileCarouselSkeleton() {
+  return (
+    <div className="px-4 pt-3 pb-4 md:hidden">
+      <div className="aspect-[2.15/1] w-full animate-pulse rounded-2xl bg-zinc-200" />
+      <div className="mt-3 flex justify-center gap-1.5">
+        <div className="h-1.5 w-6 rounded-full bg-zinc-200" />
+        <div className="h-1.5 w-1.5 rounded-full bg-zinc-200" />
+        <div className="h-1.5 w-1.5 rounded-full bg-zinc-200" />
+      </div>
+    </div>
+  )
+}
+
+function DesktopCarouselSkeleton() {
+  return (
+    <div className="hidden h-[calc(100dvh-var(--landing-header-height,5.75rem))] min-h-[480px] max-h-[920px] items-center justify-center bg-zinc-950 md:flex">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+    </div>
+  )
+}
+
+function CarouselDots({
+  slides,
+  currentIndex,
+  onSelect,
+  variant = "mobile",
+}: {
+  slides: CarouselSlide[]
+  currentIndex: number
+  onSelect: (index: number) => void
+  variant?: "mobile" | "desktop"
+}) {
+  if (slides.length <= 1) return null
+
+  const isMobile = variant === "mobile"
+
+  return (
+    <div
+      className={
+        isMobile
+          ? "mt-3 flex items-center justify-center gap-1.5"
+          : "absolute bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 md:bottom-8"
+      }
+    >
+      {slides.map((slide, idx) => (
+        <button
+          key={slide.slideId}
+          type="button"
+          onClick={() => onSelect(idx)}
+          aria-label={`Go to slide ${idx + 1}`}
+          className={`rounded-full transition-all duration-300 ${
+            isMobile
+              ? `h-1.5 ${idx === currentIndex ? "w-5 bg-zinc-800" : "w-1.5 bg-zinc-300"}`
+              : `h-1.5 ${idx === currentIndex ? "w-8 bg-white" : "w-1.5 bg-white/40 hover:bg-white/70"}`
+          }`}
+        />
+      ))}
+    </div>
+  )
+}
+
 export default function EcommerceHeroCarousel() {
   const [banners, setBanners] = useState<EcommerceBanner[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [isHovered, setIsHovered] = useState(false)
   const touchStartX = useRef<number | null>(null)
 
-  // Fetch banners from master_data API
   useEffect(() => {
     async function fetchBanners() {
       try {
@@ -199,16 +214,14 @@ export default function EcommerceHeroCarousel() {
     setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length)
   }, [slides.length])
 
-  // Automatic image sliding timer (3 seconds interval)
   useEffect(() => {
     if (slides.length <= 1) return
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slides.length)
-    }, 3000)
+    }, 5000)
     return () => clearInterval(interval)
   }, [slides.length])
 
-  // Touch handlers for mobile swipe
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX
   }
@@ -217,163 +230,147 @@ export default function EcommerceHeroCarousel() {
     if (touchStartX.current === null) return
     const touchEndX = e.changedTouches[0].clientX
     const diff = touchStartX.current - touchEndX
-    if (diff > 50) {
-      nextSlide()
-    } else if (diff < -50) {
-      prevSlide()
-    }
+    if (diff > 40) nextSlide()
+    else if (diff < -40) prevSlide()
     touchStartX.current = null
   }
 
   if (loading) {
     return (
-      <div className="w-full h-[450px] sm:h-[540px] md:h-[620px] bg-slate-900 animate-pulse flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm font-medium text-slate-400">Loading...</span>
-        </div>
-      </div>
+      <>
+        <MobileCarouselSkeleton />
+        <DesktopCarouselSkeleton />
+      </>
     )
   }
 
-  if (slides.length === 0) {
-    return null
-  }
+  if (slides.length === 0) return null
+
+  const activeSlide = slides[currentIndex]
+  const meta = activeSlide.metadata || {}
 
   return (
-    <section className="relative w-full overflow-hidden bg-slate-950">
-      {/* Full Width Sliding Images Track */}
-      <div
-        className="relative w-full h-[460px] sm:h-[540px] md:h-[620px] lg:h-[680px]"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+    <>
+      {/* Mobile: app-style promo card carousel */}
+      <section className="bg-white px-4 pt-3 pb-1 md:hidden">
+        <div
+          className="overflow-hidden rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.08)] ring-1 ring-black/[0.06]"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div
+            className="flex transition-transform duration-500 ease-out"
+            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          >
+            {slides.map((slide, index) => {
+              const slideMeta = slide.metadata || {}
+              return (
+                <article
+                  key={slide.slideId}
+                  className="relative aspect-[2.15/1] w-full shrink-0 overflow-hidden bg-zinc-100"
+                >
+                  <Image
+                    src={slide.imageUrl}
+                    alt={slide.name || "Promo banner"}
+                    fill
+                    priority={index === 0}
+                    sizes="(max-width: 768px) 100vw, 0px"
+                    className="object-cover object-center"
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+
+                  <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3.5">
+                    <h2 className="line-clamp-2 flex-1 text-sm font-bold leading-tight text-white">
+                      {slide.name}
+                    </h2>
+                    <Link
+                      href={slide.website || "/products"}
+                      className="shrink-0"
+                    >
+                      <span className="inline-flex items-center justify-center rounded-full bg-red-600 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm transition-colors hover:bg-red-500 active:bg-red-700">
+                        {slideMeta.ctaText || "Shop Now"}
+                      </span>
+                    </Link>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        </div>
+
+        <CarouselDots
+          slides={slides}
+          currentIndex={currentIndex}
+          onSelect={setCurrentIndex}
+          variant="mobile"
+        />
+      </section>
+
+      {/* Desktop: full-height hero */}
+      <section
+        className="relative hidden w-full overflow-hidden bg-zinc-950 md:block md:h-[calc(100dvh-var(--landing-header-height,5.75rem))] md:min-h-[480px] md:max-h-[920px]"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Carousel Slide Track */}
-        <div
-          className="flex w-full h-full transition-transform duration-700 ease-in-out"
-          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-        >
-          {slides.map((slide, index) => {
-            const meta = slide.metadata || {}
+        {slides.map((slide, index) => (
+          <div
+            key={slide.slideId}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              index === currentIndex ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <Image
+              src={slide.imageUrl}
+              alt={slide.name || "Hero banner"}
+              fill
+              priority={index === 0}
+              sizes="100vw"
+              className="object-cover object-[center_35%] lg:object-center"
+            />
+          </div>
+        ))}
 
-            return (
-              <div
-                key={slide.slideId}
-                className="relative w-full h-full flex-shrink-0 flex items-center"
-              >
-                {/* 1. Full-Width Background Image */}
-                <Image
-                  src={slide.imageUrl}
-                  alt={slide.name || "E-Commerce Banner"}
-                  fill
-                  priority={index === 0}
-                  className="object-cover object-center w-full h-full"
-                />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
 
-                {/* 2. Gradient Overlay for readability */}
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/70 to-slate-950/20 sm:to-transparent z-10" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/30 z-10" />
+        <div className="relative z-10 flex h-full flex-col justify-center">
+          <div className="mx-auto w-full max-w-7xl px-6 lg:px-10">
+            <div className="max-w-2xl space-y-4 md:space-y-6">
+              {meta.subtitle && (
+                <p className="text-xs font-medium uppercase tracking-[0.22em] text-amber-200/90 md:text-sm">
+                  {meta.subtitle}
+                </p>
+              )}
 
-                {/* 3. Text & CTA Overlay Content */}
-                <div className="relative z-20 w-full max-w-7xl mx-auto px-6 sm:px-12 md:px-16">
-                  <div className="max-w-2xl space-y-4 sm:space-y-6">
-                    
-                    {/* Badge & Subtitle */}
-                    <div className="flex flex-wrap items-center gap-3">
-                      {meta.badgeText && (
-                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-red-600 text-white font-extrabold text-xs uppercase tracking-wider shadow-lg">
-                          <Sparkles className="w-3.5 h-3.5" />
-                          {meta.badgeText}
-                        </span>
-                      )}
-                      {meta.subtitle && (
-                        <span className="text-xs sm:text-sm font-semibold tracking-wide text-slate-300 uppercase">
-                          {meta.subtitle}
-                        </span>
-                      )}
-                    </div>
+              <h1 className="text-4xl font-semibold uppercase leading-[1.06] tracking-tight text-white md:text-5xl lg:text-[4.25rem]">
+                {activeSlide.name}
+              </h1>
 
-                    {/* Headline */}
-                    <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.08] drop-shadow-md">
-                      {slide.name}
-                    </h1>
+              {activeSlide.notes && (
+                <p className="max-w-xl text-base leading-relaxed text-white/90 md:text-lg">
+                  {activeSlide.notes}
+                </p>
+              )}
 
-                    {/* Description Notes */}
-                    {slide.notes && (
-                      <p className="text-sm sm:text-base md:text-lg text-slate-200 line-clamp-3 font-normal max-w-xl leading-relaxed drop-shadow">
-                        {slide.notes}
-                      </p>
-                    )}
-
-                    {/* CTA Action Buttons */}
-                    <div className="flex flex-wrap items-center gap-4 pt-2">
-                      <Link href={slide.website || "/products"}>
-                        <button className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold text-sm sm:text-base shadow-xl hover:shadow-red-600/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0">
-                          <span>{meta.ctaText || "Shop Now"}</span>
-                          <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                        </button>
-                      </Link>
-
-                      {meta.secondaryCtaText && (
-                        <Link href="/products">
-                          <button className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/30 backdrop-blur-md font-semibold text-sm sm:text-base shadow-lg transition-all">
-                            {meta.secondaryCtaText}
-                          </button>
-                        </Link>
-                      )}
-                    </div>
-
-                  </div>
-                </div>
-
+              <div className="pt-2">
+                <Link href={activeSlide.website || "/products"}>
+                  <span className="inline-flex items-center justify-center rounded-full border border-amber-400/90 bg-black/20 px-8 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-sm transition-all hover:border-amber-300 hover:bg-amber-400/10">
+                    {meta.ctaText || "Shop Now"}
+                  </span>
+                </Link>
               </div>
-            )
-          })}
+            </div>
+          </div>
         </div>
 
-        {/* Previous Chevron Button */}
-        {slides.length > 1 && (
-          <button
-            onClick={prevSlide}
-            aria-label="Previous Banner"
-            className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full bg-slate-950/50 hover:bg-slate-900/90 text-white border border-white/20 backdrop-blur-md transition-all opacity-80 hover:opacity-100 hover:scale-110 active:scale-95"
-          >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-        )}
-
-        {/* Next Chevron Button */}
-        {slides.length > 1 && (
-          <button
-            onClick={nextSlide}
-            aria-label="Next Banner"
-            className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full bg-slate-950/50 hover:bg-slate-900/90 text-white border border-white/20 backdrop-blur-md transition-all opacity-80 hover:opacity-100 hover:scale-110 active:scale-95"
-          >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-        )}
-
-        {/* Bottom Pagination Dots Indicator Bar */}
-        {slides.length > 1 && (
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-950/40 backdrop-blur-md border border-white/10">
-            {slides.map((slide, idx) => (
-              <button
-                key={slide.slideId}
-                onClick={() => setCurrentIndex(idx)}
-                aria-label={`Go to banner slide ${idx + 1}`}
-                className={`h-2.5 rounded-full transition-all duration-500 ${
-                  idx === currentIndex
-                    ? "w-8 bg-red-600 shadow-md shadow-red-600/50"
-                    : "w-2.5 bg-white/40 hover:bg-white/70"
-                }`}
-              />
-            ))}
-          </div>
-        )}
-
-      </div>
-    </section>
+        <CarouselDots
+          slides={slides}
+          currentIndex={currentIndex}
+          onSelect={setCurrentIndex}
+          variant="desktop"
+        />
+      </section>
+    </>
   )
 }
