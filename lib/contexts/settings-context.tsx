@@ -49,7 +49,7 @@ const defaultSettings: Settings = {
   opening_hours:
     '{"monday": "5:00 PM - 10:00 PM", "tuesday": "5:00 PM - 10:00 PM", "wednesday": "5:00 PM - 10:00 PM", "thursday": "5:00 PM - 10:00 PM", "friday": "5:00 PM - 11:00 PM", "saturday": "5:00 PM - 11:00 PM", "sunday": "4:00 PM - 9:00 PM"}',
   social_facebook: "",
-  social_instagram: "",
+  social_instagram: "https://www.instagram.com/moto_cartt",
   social_twitter: "",
 }
 

@@ -9,12 +9,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useState } from "react"
-import { Mail, Phone, MapPin, Send, Facebook, Instagram, Twitter, Clock, MessageCircle, CheckCircle2, Headphones, ShieldCheck, Sparkles } from "lucide-react"
+import { Mail, Phone, MapPin, Send, Facebook, Instagram, Clock, MessageCircle, CheckCircle2, Headphones, ShieldCheck, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 import {
   SITE_ADDRESS_LINES,
   SITE_CONTACT_EMAIL,
+  SITE_INSTAGRAM_URL,
   SITE_PHONE_DISPLAY,
   SITE_PHONE_E164,
   SITE_POSTAL_CODE,
@@ -23,6 +24,7 @@ import {
 export default function ContactPage() {
   const { settings } = useSettings()
   const brandName = settings.restaurant_name || "MotoClub"
+  const instagramUrl = settings.social_instagram || SITE_INSTAGRAM_URL
 
   const [formData, setFormData] = useState({
     name: "",
@@ -178,16 +180,9 @@ export default function ContactPage() {
                         <Facebook className="w-5 h-5" />
                       </a>
                     )}
-                    {settings.social_instagram && (
-                      <a href={settings.social_instagram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-zinc-800 hover:bg-red-600 hover:text-white text-zinc-300 flex items-center justify-center transition-all">
-                        <Instagram className="w-5 h-5" />
-                      </a>
-                    )}
-                    {settings.social_twitter && (
-                      <a href={settings.social_twitter} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-zinc-800 hover:bg-red-600 hover:text-white text-zinc-300 flex items-center justify-center transition-all">
-                        <Twitter className="w-5 h-5" />
-                      </a>
-                    )}
+                    <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-zinc-800 hover:bg-red-600 hover:text-white text-zinc-300 flex items-center justify-center transition-all">
+                      <Instagram className="w-5 h-5" />
+                    </a>
                   </div>
                 </div>
               </div>

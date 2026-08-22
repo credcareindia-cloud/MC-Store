@@ -13,6 +13,9 @@ export const SITE_PHONE_E164 = "+919995442239"
 /** Digits only for wa.me (no +) */
 export const SITE_WHATSAPP_E164_DIGITS = "919995442239"
 
+/** Official Instagram profile */
+export const SITE_INSTAGRAM_URL = "https://www.instagram.com/moto_cartt"
+
 /** UPI / GPay payment number */
 export const SITE_PHONE_PAYMENT_DISPLAY = "85473 15581"
 

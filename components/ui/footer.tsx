@@ -8,9 +8,7 @@ import {
   MapPin,
   Phone,
   Mail,
-  Facebook,
   Instagram,
-  Twitter,
   Wrench,
   ChevronRight,
   Clock,
@@ -19,6 +17,7 @@ import { useSettings } from "@/lib/contexts/settings-context"
 import {
   SITE_ADDRESS_LINES,
   SITE_CONTACT_EMAIL,
+  SITE_INSTAGRAM_URL,
   SITE_PHONE_DISPLAY,
   SITE_PHONE_E164,
   SITE_POSTAL_CODE,
@@ -56,6 +55,7 @@ export default function Footer() {
   const telHref = phoneDigits
     ? `tel:+${phoneDigits.startsWith("91") ? phoneDigits : `91${phoneDigits}`}`
     : SITE_PHONE_E164
+  const instagramUrl = settings.social_instagram || SITE_INSTAGRAM_URL
 
   return (
     <footer id="contact" className="relative bg-stone-900 text-zinc-100 border-t-4 border-red-600">
@@ -74,20 +74,15 @@ export default function Footer() {
             </p>
 
             <div className="flex flex-wrap gap-2">
-              {[
-                { Icon: Facebook, href: "#", label: "Facebook" },
-                { Icon: Instagram, href: "#", label: "Instagram" },
-                { Icon: Twitter, href: "#", label: "Twitter" },
-              ].map(({ Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:text-white hover:border-zinc-500 hover:bg-zinc-800 transition-colors"
-                >
-                  <Icon className="h-[18px] w-[18px]" />
-                </a>
-              ))}
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:text-white hover:border-zinc-500 hover:bg-zinc-800 transition-colors"
+              >
+                <Instagram className="h-[18px] w-[18px]" />
+              </a>
             </div>
           </div>
 

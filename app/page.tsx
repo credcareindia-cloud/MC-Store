@@ -1,32 +1,19 @@
-"use client"
+import type { Metadata } from "next"
+import HomeJsonLd from "@/components/seo/home-json-ld"
+import LandingPageClient from "@/app/landing-page-client"
+import { buildPageMetadata, SITE_DESCRIPTION, SITE_TAGLINE } from "@/lib/seo"
 
-export const dynamic = "force-dynamic"
-
-import LandingNavbar from "@/components/ui/landing-navbar"
-import Footer from "@/components/ui/footer"
-import EcommerceHeroCarousel from "@/components/sections/ecommerce-hero-carousel"
-import TrendingProducts from "@/components/sections/trending-products"
-import VisitShopSection from "@/components/sections/visit-shop-section"
-import AboutSection from "@/components/sections/about-section"
-import TrustHighlights from "@/components/sections/trust-highlights"
-import NewUserSpinnerSection from "@/components/sections/new-user-spinner-section"
-import { useAuth } from "@/lib/contexts/auth-context"
+export const metadata: Metadata = buildPageMetadata({
+  title: SITE_TAGLINE,
+  description: SITE_DESCRIPTION,
+  path: "/",
+})
 
 export default function RootLandingPage() {
-  const { isAuthenticated } = useAuth()
-
   return (
-    <main className="min-h-screen bg-white text-zinc-900 antialiased">
-      <LandingNavbar />
-      <EcommerceHeroCarousel />
-
-      {!isAuthenticated && <NewUserSpinnerSection />}
-
-      <TrendingProducts limit={8} />
-      <VisitShopSection />
-      <AboutSection />
-      <TrustHighlights />
-      <Footer />
-    </main>
+    <>
+      <HomeJsonLd />
+      <LandingPageClient />
+    </>
   )
 }

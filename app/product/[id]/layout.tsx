@@ -1,101 +1,85 @@
-import { Metadata } from 'next'
-import { ReactNode } from 'react'
+import { Metadata } from "next"
+import { ReactNode } from "react"
+import ProductJsonLd from "@/components/seo/product-json-ld"
+import { getCachedProduct } from "@/lib/seo/get-cached-product"
+import {
+  absoluteUrl,
+  buildPageMetadata,
+  DEFAULT_OG_IMAGE,
+  SITE_NAME,
+} from "@/lib/seo"
 
 interface ProductLayoutProps {
   children: ReactNode
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
-// Generate metadata for social media sharing
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+export async function generateMetadata({ params }: ProductLayoutProps): Promise<Metadata> {
   try {
-    // Await params as required by Next.js 15
     const { id } = await params
-    
-    // Fetch product data for metadata
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://motoclub.in'
-    const response = await fetch(`${baseUrl}/api/products/${id}`, {
-      cache: 'no-store' // Ensure fresh data for metadata
-    })
-    
-    if (!response.ok) {
-      return {
-        title: 'Product Not Found - Motoclub',
-        description: 'The requested product could not be found.',
-      }
+    const product = await getCachedProduct(id)
+
+    if (!product) {
+      return buildPageMetadata({
+        title: "Product Not Found",
+        description: "The requested product could not be found.",
+        path: `/product/${id}`,
+        noIndex: true,
+      })
     }
 
-    const data = await response.json()
-    const product = data.product || data
-    
-    // Get the first image or fallback
-    const productImage = product.image_urls?.[0] || '/logo.png'
-    const productName = product.name || 'Product'
-    const productDescription = product.description || 'Automobile parts and accessories from Motoclub'
-    
-    // Format price for display
-    const formatPrice = (price: number, currency: string) => {
-      if (currency === 'AED') {
-        return `AED ${price.toFixed(2)}`
-      } else {
-        return `₹${price.toFixed(2)}`
-      }
-    }
-    
-    // Clean title without price for consistent social sharing
-    const title = `${productName} | Motoclub`
-    const description = `${productDescription} | Buy at Motoclub — spare parts & accessories with delivery across India.`
-    const productUrl = `${baseUrl}/product/${id}`
-    const imageUrl = productImage.startsWith('http') ? productImage : `${baseUrl}${productImage}`
-    
+    const title = product.name
+    const description =
+      product.description?.slice(0, 155) ||
+      `Buy ${product.name} online at ${SITE_NAME}. Genuine automobile spare parts with delivery across India.`
+    const productUrl = absoluteUrl(`/product/${id}`)
+    const image = product.image_urls?.[0] || product.image_url || DEFAULT_OG_IMAGE
+    const imageUrl = image.startsWith("http") ? image : absoluteUrl(image)
+    const price = product.variants?.[0]?.price ?? product.price
+    const inStock = (product.total_stock ?? 0) > 0
+
     return {
-      title,
-      description,
+      ...buildPageMetadata({
+        title,
+        description,
+        path: `/product/${id}`,
+        ogImage: imageUrl,
+      }),
       openGraph: {
-        title,
-        description,
-        type: 'website',
+        type: "website",
+        locale: "en_IN",
         url: productUrl,
-        siteName: 'Motoclub',
-        images: [
-          {
-            url: imageUrl,
-            width: 800,
-            height: 600,
-            alt: productName,
-          }
-        ],
-        locale: 'en_IN',
-      },
-      twitter: {
-        card: 'summary_large_image',
+        siteName: SITE_NAME,
         title,
         description,
-        images: [imageUrl],
-        creator: '@motoclub',
-        site: '@motoclub',
+        images: [{ url: imageUrl, width: 1200, height: 630, alt: product.name }],
       },
       other: {
-        // WhatsApp and social media specific meta tags
-        'og:image:width': '800',
-        'og:image:height': '600',
-        'og:image:type': 'image/jpeg',
-        'product:price:amount': product.variants?.[0]?.price_aed || product.variants?.[0]?.price_inr || '',
-        'product:price:currency': product.variants?.[0]?.price_aed ? 'AED' : 'INR',
-        'product:availability': product.is_available ? 'in stock' : 'out of stock',
-        'product:brand': 'Motoclub',
-        'product:category': product.category_name || 'Products',
-      }
+        "product:price:amount": price.toFixed(2),
+        "product:price:currency": "INR",
+        "product:availability": inStock ? "in stock" : "out of stock",
+        "product:brand": product.company_name || SITE_NAME,
+        "product:category": product.category_name || "Automobile Parts",
+      },
     }
   } catch (error) {
-    console.error('Error generating metadata:', error)
-    return {
-      title: 'Motoclub',
-      description: 'Automobile spare parts and accessories, delivered across India.',
-    }
+    console.error("Error generating product metadata:", error)
+    return buildPageMetadata({
+      title: "Product",
+      description: "Automobile spare parts and accessories from MotoCart.",
+      path: "/products",
+    })
   }
 }
 
-export default function ProductLayout({ children }: ProductLayoutProps) {
-  return <>{children}</>
+export default async function ProductLayout({ children, params }: ProductLayoutProps) {
+  const { id } = await params
+  const product = await getCachedProduct(id)
+
+  return (
+    <>
+      {product ? <ProductJsonLd product={product} /> : null}
+      {children}
+    </>
+  )
 }
