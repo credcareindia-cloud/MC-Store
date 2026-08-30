@@ -243,11 +243,19 @@ function mapProduct(row: Record<string, unknown>, variants: any[] = []): any {
     total_stock: totalStock
   }
 }
+export const PRODUCT_ELIGIBILITY_SQL = `
+  (p.own_ecom_status IS NULL OR p.own_ecom_status != 'not_listed')
+  AND p.price > 0
+  AND (
+    (p.image_url IS NOT NULL AND TRIM(p.image_url) != '' AND p.image_url NOT IN ('[]', 'null', '"[]"', '"null"') AND p.image_url LIKE '%/%')
+    OR (p.image_urls IS NOT NULL AND p.image_urls::text NOT IN ('[]', 'null', '"[]"', '"null"') AND TRIM(p.image_urls::text) != '' AND p.image_urls::text LIKE '%/%')
+  )
+`
 
 // ── Category Service ─────────────────────────────────────────────────────────
 
 export async function getCategories(): Promise<ErpCategory[]> {
-  const filterPart = "AND (p.own_ecom_status IS NULL OR p.own_ecom_status != 'not_listed')"
+  const filterPart = `AND ${PRODUCT_ELIGIBILITY_SQL}`
 
   const rows = await query<Record<string, unknown>>(`
     SELECT 
@@ -303,7 +311,7 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
   const offset = (Math.max(1, page) - 1) * limit
   const params: unknown[] = []
   
-  const conditions: string[] = ["(p.own_ecom_status IS NULL OR p.own_ecom_status != 'not_listed')"]
+  const conditions: string[] = [PRODUCT_ELIGIBILITY_SQL]
 
   if (categoryId != null) {
     params.push(categoryId)
@@ -411,7 +419,7 @@ async function batchGetVariants(productIds: number[]): Promise<Record<number, Er
 // ── Single Product Service ────────────────────────────────────────────────────
 
 export async function getProductById(id: number): Promise<ErpProduct | null> {
-  const filterPart = "AND (p.own_ecom_status IS NULL OR p.own_ecom_status != 'not_listed')"
+  const filterPart = `AND ${PRODUCT_ELIGIBILITY_SQL}`
 
   const rows = await query<Record<string, unknown>>(`
     SELECT 
@@ -496,7 +504,7 @@ export async function getProductById(id: number): Promise<ErpProduct | null> {
 
 export async function getRelatedProducts(categoryId: number | null, excludeId: number, limit = 8): Promise<ErpProduct[]> {
   if (categoryId == null) return []
-  const filterPart = "AND (p.own_ecom_status IS NULL OR p.own_ecom_status != 'not_listed')"
+  const filterPart = `AND ${PRODUCT_ELIGIBILITY_SQL}`
 
   const rows = await query<Record<string, unknown>>(`
     SELECT 
@@ -562,7 +570,7 @@ export async function searchProducts(
   const fullLike = `%${rawTerm}%`
 
   const params: unknown[] = [fullLike]
-  const conditions: string[] = ["(p.own_ecom_status IS NULL OR p.own_ecom_status != 'not_listed')"]
+  const conditions: string[] = [PRODUCT_ELIGIBILITY_SQL]
 
   if (categoryId != null) {
     params.push(categoryId)
@@ -648,7 +656,7 @@ export async function searchProducts(
 // ── Trending Products Service ──────────────────────────────────────────────────
 
 export async function getTrendingProducts(limit = 12): Promise<ErpProduct[]> {
-  const filterPart = "AND (p.own_ecom_status IS NULL OR p.own_ecom_status != 'not_listed')"
+  const filterPart = `AND ${PRODUCT_ELIGIBILITY_SQL}`
 
   const rows = await query<Record<string, unknown>>(`
     WITH max_sale_date AS (
@@ -716,13 +724,11 @@ export async function getTrendingProducts(limit = 12): Promise<ErpProduct[]> {
 // ── DB Health Check ───────────────────────────────────────────────────────────
 
 export async function getDbHealth() {
-  const activeFilter = "(own_ecom_status IS NULL OR own_ecom_status != 'not_listed')"
-
   const rows = await query<Record<string, unknown>>(`
     SELECT 
       current_database() AS db_name,
       current_schema() AS schema_name,
-      (SELECT COUNT(*) FROM products WHERE ${activeFilter})::int AS active_products,
+      (SELECT COUNT(*) FROM products p WHERE ${PRODUCT_ELIGIBILITY_SQL})::int AS active_products,
       (SELECT COUNT(*) FROM product_categories)::int AS categories,
       (SELECT COUNT(*) FROM product_variants)::int AS variants
   `)
