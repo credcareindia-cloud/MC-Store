@@ -165,7 +165,7 @@ export default function LandingNavbar() {
               <User className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-56 bg-white border border-zinc-200 shadow-lg p-1">
             <div className="border-b px-3 py-2">
               <p className="text-sm font-semibold text-zinc-900">{user?.name || "Account"}</p>
               <p className="truncate text-xs text-zinc-500">{user?.email || user?.phone}</p>

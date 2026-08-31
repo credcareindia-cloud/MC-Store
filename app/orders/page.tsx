@@ -7,7 +7,7 @@ import { useLoginModal } from '@/lib/stores/useLoginModal'
 import Footer from "@/components/ui/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ShoppingBag, Clock, CheckCircle, XCircle, Truck, ChefHat, Package, Send, Box, ChevronDown, ChevronUp, ExternalLink, PackageCheck, Zap, MapPin, Home, RotateCcw } from "lucide-react"
+import { ShoppingBag, Clock, CheckCircle, XCircle, Truck, ChefHat, Package, Send, Box, ChevronDown, ChevronUp, ExternalLink, PackageCheck, Zap, MapPin, Home, RotateCcw, Star } from "lucide-react"
 import Image from "next/image"
 import { useAuth } from "@/lib/contexts/auth-context"
 import { format } from "path"
@@ -229,6 +229,7 @@ const OrderTimeline = ({ currentStatus }: { currentStatus: string }) => {
 
 interface OrderItem {
   id: number
+  menu_item_id: number
   menu_item_name: string
   quantity: number
   unit_price: number | string
@@ -273,9 +274,36 @@ export default function OrdersPage() {
     }
   }, [isAuthenticated, authLoading, router])
 
+  const [activeReviewItem, setActiveReviewItem] = useState<{
+    product_id: number
+    order_id: number
+    product_name: string
+    product_image_url?: string
+  } | null>(null)
+  const [reviewRating, setReviewRating] = useState(5)
+  const [reviewText, setReviewText] = useState("")
+  const [reviewHoverRating, setReviewHoverRating] = useState(0)
+  const [submittingReview, setSubmittingReview] = useState(false)
+  const [pendingReviews, setPendingReviews] = useState<any[]>([])
+
+  const fetchPendingReviews = async () => {
+    try {
+      const res = await fetch("/api/reviews/pending")
+      if (res.ok) {
+        const data = await res.json()
+        if (Array.isArray(data)) {
+          setPendingReviews(data)
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch pending reviews:", err)
+    }
+  }
+
   useEffect(() => {
     if (isAuthenticated && user) {
       fetchUserOrders()
+      fetchPendingReviews()
     }
   }, [isAuthenticated, user])
 
@@ -763,66 +791,110 @@ export default function OrdersPage() {
                                     {formatCurrency(item.total_price, order.currency)}
                                   </p>
                                   <p className="text-xs text-gray-500">total</p>
-                                  {isDeliveredOrder && (() => {
-                                    if (!itemElig.canReturn || itemActiveReturn) {
-                                      const statusLower = (itemActiveReturn?.status || 'pending').toLowerCase()
+                                  {isDeliveredOrder && (
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                      {(() => {
+                                        if (!itemElig.canReturn || itemActiveReturn) {
+                                          const statusLower = (itemActiveReturn?.status || 'pending').toLowerCase()
 
-                                      if (statusLower === 'approved' || statusLower === 'completed') {
+                                          if (statusLower === 'approved' || statusLower === 'completed') {
+                                            return (
+                                              <Button
+                                                disabled
+                                                variant="outline"
+                                                size="sm"
+                                                className="bg-emerald-50 border-emerald-300 text-emerald-800 font-semibold text-xs py-1 px-2.5 h-auto cursor-not-allowed opacity-95"
+                                              >
+                                                <CheckCircle className="w-3 h-3 mr-1 text-emerald-600" />
+                                                Returned
+                                              </Button>
+                                            )
+                                          }
+
+                                          if (statusLower === 'rejected') {
+                                            return (
+                                              <Button
+                                                disabled
+                                                variant="outline"
+                                                size="sm"
+                                                className="mt-2 bg-rose-50 border-rose-300 text-rose-800 font-semibold text-xs py-1 px-2.5 h-auto cursor-not-allowed opacity-95"
+                                              >
+                                                <XCircle className="w-3 h-3 mr-1 text-rose-600" />
+                                                Return Rejected
+                                              </Button>
+                                            )
+                                          }
+
+                                          return (
+                                            <Button
+                                              disabled
+                                              variant="outline"
+                                              size="sm"
+                                              className="bg-amber-50 border-amber-300 text-amber-800 font-semibold text-xs py-1 px-2.5 h-auto cursor-not-allowed opacity-95"
+                                            >
+                                              <Clock className="w-3 h-3 mr-1 text-amber-600 animate-pulse" />
+                                              Return Requested
+                                            </Button>
+                                          )
+                                        }
+
+                                        return (
+                                          <Button
+                                            onClick={(e) => {
+                                              e.stopPropagation()
+                                              setActiveReturnModalOrder(order)
+                                            }}
+                                            variant="outline"
+                                            size="sm"
+                                            className="border-zinc-900 text-zinc-900 hover:bg-zinc-900 hover:text-white font-semibold text-xs py-1 px-2.5 h-auto transition-colors"
+                                          >
+                                            <RotateCcw className="w-3 h-3 mr-1" />
+                                            Request Return
+                                          </Button>
+                                        )
+                                      })()}
+
+                                      {(() => {
+                                        const isPendingReview = pendingReviews.some(
+                                          (pr) => pr.product_id === item.menu_item_id && pr.order_id === order.id
+                                        )
+                                        if (isPendingReview) {
+                                          return (
+                                            <Button
+                                              onClick={(e) => {
+                                                e.stopPropagation()
+                                                setReviewRating(5)
+                                                setReviewText("")
+                                                setActiveReviewItem({
+                                                  product_id: item.menu_item_id,
+                                                  order_id: order.id,
+                                                  product_name: item.menu_item_name,
+                                                  product_image_url: item.product_image_url
+                                                })
+                                              }}
+                                              variant="outline"
+                                              size="sm"
+                                              className="border-red-600 text-red-600 hover:bg-red-50 font-semibold text-xs py-1 px-2.5 h-auto transition-colors"
+                                            >
+                                              <Star className="w-3 h-3 mr-1 fill-red-600 text-red-600" />
+                                              Write a Review
+                                            </Button>
+                                          )
+                                        }
                                         return (
                                           <Button
                                             disabled
                                             variant="outline"
                                             size="sm"
-                                            className="mt-2 bg-emerald-50 border-emerald-300 text-emerald-800 font-semibold text-xs py-1 px-2.5 h-auto cursor-not-allowed opacity-95"
+                                            className="bg-gray-50 border-gray-200 text-gray-400 font-semibold text-xs py-1 px-2.5 h-auto cursor-not-allowed opacity-75"
                                           >
-                                            <CheckCircle className="w-3 h-3 mr-1 text-emerald-600" />
-                                            Returned
+                                            <Star className="w-3 h-3 mr-1 fill-gray-300 text-gray-300" />
+                                            Reviewed
                                           </Button>
                                         )
-                                      }
-
-                                      if (statusLower === 'rejected') {
-                                        return (
-                                          <Button
-                                            disabled
-                                            variant="outline"
-                                            size="sm"
-                                            className="mt-2 bg-rose-50 border-rose-300 text-rose-800 font-semibold text-xs py-1 px-2.5 h-auto cursor-not-allowed opacity-95"
-                                          >
-                                            <XCircle className="w-3 h-3 mr-1 text-rose-600" />
-                                            Return Rejected
-                                          </Button>
-                                        )
-                                      }
-
-                                      return (
-                                        <Button
-                                          disabled
-                                          variant="outline"
-                                          size="sm"
-                                          className="mt-2 bg-amber-50 border-amber-300 text-amber-800 font-semibold text-xs py-1 px-2.5 h-auto cursor-not-allowed opacity-95"
-                                        >
-                                          <Clock className="w-3 h-3 mr-1 text-amber-600 animate-pulse" />
-                                          Return Requested
-                                        </Button>
-                                      )
-                                    }
-
-                                    return (
-                                      <Button
-                                        onClick={(e) => {
-                                          e.stopPropagation()
-                                          setActiveReturnModalOrder(order)
-                                        }}
-                                        variant="outline"
-                                        size="sm"
-                                        className="mt-2 border-zinc-900 text-zinc-900 hover:bg-zinc-900 hover:text-white font-semibold text-xs py-1 px-2.5 h-auto transition-colors"
-                                      >
-                                        <RotateCcw className="w-3 h-3 mr-1" />
-                                        Request Return
-                                      </Button>
-                                    )
-                                  })()}
+                                      })()}
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -975,6 +1047,150 @@ export default function OrdersPage() {
         returnRequest={activeViewReturn}
         onStatusChange={fetchUserOrders}
       />
+
+      {/* Review & Rating Modal */}
+      {activeReviewItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-gray-100 flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+              <h3 className="font-bold text-gray-900 text-lg">Share Your Feedback</h3>
+              <button 
+                type="button"
+                onClick={() => setActiveReviewItem(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-50"
+                aria-label="Close modal"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <form 
+              onSubmit={async (e) => {
+                e.preventDefault()
+                setSubmittingReview(true)
+                try {
+                  const res = await fetch("/api/reviews", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      productId: activeReviewItem.product_id,
+                      orderId: activeReviewItem.order_id,
+                      rating: reviewRating,
+                      review: reviewText,
+                    }),
+                  })
+                  if (res.ok) {
+                    setActiveReviewItem(null)
+                    setReviewText("")
+                    setReviewRating(5)
+                    fetchPendingReviews()
+                  } else {
+                    const err = await res.json()
+                    alert(err.error || "Failed to submit review")
+                  }
+                } catch (err) {
+                  console.error(err)
+                  alert("Something went wrong.")
+                } finally {
+                  setSubmittingReview(false)
+                }
+              }} 
+              className="flex-1 overflow-y-auto p-6 space-y-6"
+            >
+              <div className="text-center text-sm text-gray-500 text-gray-500">
+                You recently received this item. How was your experience?
+              </div>
+
+              {/* Product details */}
+              <div className="flex items-center gap-4 bg-stone-50 p-3 rounded-xl border border-gray-200">
+                <div className="relative w-16 h-16 bg-white rounded-lg overflow-hidden shrink-0 border border-gray-200">
+                  <Image
+                    src={activeReviewItem.product_image_url || "/placeholder.svg"}
+                    alt={activeReviewItem.product_name}
+                    fill
+                    className="object-contain p-1"
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-sm font-bold text-gray-900 truncate uppercase text-gray-900">
+                    {activeReviewItem.product_name}
+                  </h4>
+                  <p className="text-xs text-gray-400">Order Ref: #{activeReviewItem.order_id}</p>
+                </div>
+              </div>
+
+              {/* Star selector */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 text-center text-gray-700">
+                  Your Rating
+                </label>
+                <div className="flex justify-center items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const isSelected = star <= (reviewHoverRating || reviewRating);
+                    return (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewRating(star)}
+                        onMouseEnter={() => setReviewHoverRating(star)}
+                        onMouseLeave={() => setReviewHoverRating(0)}
+                        className="p-1 transition-transform active:scale-95 text-gray-300"
+                        aria-label={`Rate ${star} stars`}
+                      >
+                        <Star 
+                          className={`w-10 h-10 transition-colors ${
+                            isSelected 
+                              ? "fill-red-600 text-red-600" 
+                              : "text-gray-300"
+                          }`} 
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Review text field */}
+              <div className="space-y-2">
+                <label htmlFor="review-text" className="block text-xs font-bold uppercase tracking-wider text-gray-700 text-gray-700">
+                  Write a Review
+                </label>
+                <textarea
+                  id="review-text"
+                  required
+                  rows={4}
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  placeholder="Tell us about the quality, shipping, or overall experience..."
+                  className="w-full text-sm border border-gray-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 placeholder-gray-400 bg-white text-gray-900"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setActiveReviewItem(null)}
+                  disabled={submittingReview}
+                  className="flex-1 py-3 text-sm font-semibold rounded-xl text-gray-700"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={submittingReview}
+                  className="flex-1 py-3 text-sm font-bold uppercase tracking-wider bg-red-600 text-white rounded-xl hover:bg-red-700"
+                >
+                  {submittingReview ? "Submitting..." : "Submit Review"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

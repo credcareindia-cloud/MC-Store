@@ -378,7 +378,9 @@ async function getAuthenticatedUser() {
   return await getUserFromToken()
 }
 
+let _ordersTableInitialized = false
 async function ensureOrdersTableExists() {
+  if (_ordersTableInitialized) return
   try {
     console.log('Starting database schema setup...')
 
@@ -467,13 +469,16 @@ async function ensureOrdersTableExists() {
 
       console.log('Orders table schema updated successfully')
     }
+    _ordersTableInitialized = true
   } catch (error) {
     console.error('Error setting up orders table:', error)
     throw error
   }
 }
 
+let _orderItemsTableInitialized = false
 async function ensureOrderItemsTableExists() {
+  if (_orderItemsTableInitialized) return
   try {
     // Check if order_items table exists
     const tableExists = await sql`
@@ -539,6 +544,7 @@ async function ensureOrderItemsTableExists() {
         }
       }
     }
+    _orderItemsTableInitialized = true
   } catch (error) {
     console.error('Error creating order_items table:', error)
     throw error

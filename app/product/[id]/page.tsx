@@ -33,6 +33,8 @@ interface Variant {
   available_aed: boolean
   available_inr: boolean
   stock_quantity: number
+  image_url?: string | null
+  image_urls?: string[]
 }
 
 interface Product {
@@ -61,6 +63,8 @@ interface Product {
   stock_quantity: number
   sku?: string
   variants: Variant[]
+  avg_rating?: number
+  total_reviews?: number
 }
 
 
@@ -80,6 +84,33 @@ export default function ProductPage() {
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null)
   const [showBlur, setShowBlur] = useState(false)
   const [animationType, setAnimationType] = useState<'cart' | 'wishlist' | 'buy' | null>(null)
+
+  const [reviews, setReviews] = useState<any[]>([])
+  const [reviewsPage, setReviewsPage] = useState(1)
+  const [totalReviewsPages, setTotalReviewsPages] = useState(1)
+  const [reviewsLoading, setReviewsLoading] = useState(false)
+
+  const fetchReviews = async (pageNum: number) => {
+    try {
+      setReviewsLoading(true)
+      const res = await fetch(`/api/reviews?productId=${params.id}&page=${pageNum}&limit=5`)
+      if (res.ok) {
+        const data = await res.json()
+        setReviews(data.reviews || [])
+        setTotalReviewsPages(data.totalPages || 1)
+      }
+    } catch (err) {
+      console.error("Error fetching reviews:", err)
+    } finally {
+      setReviewsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (product) {
+      fetchReviews(reviewsPage)
+    }
+  }, [params.id, reviewsPage, product])
 
   const triggerBlurAnimation = (type: 'cart' | 'wishlist' | 'buy') => {
     setAnimationType(type)
@@ -129,8 +160,8 @@ export default function ProductPage() {
           id: product.id,
           name: product.name,
           price: product.price,
-          price_aed: selectedVariant?.discount_aed || selectedVariant?.price_aed || product.price_aed,
-          price_inr: selectedVariant?.discount_inr || selectedVariant?.price_inr || product.price_inr,
+          price_aed: (selectedVariant?.discount_aed || selectedVariant?.price_aed || product.price_aed) ?? undefined,
+          price_inr: (selectedVariant?.discount_inr || selectedVariant?.price_inr || product.price_inr) ?? undefined,
           default_currency: product.default_currency,
           image_url: product.image_urls?.[0] || '',
           image_urls: product.image_urls || [],
@@ -249,8 +280,36 @@ export default function ProductPage() {
     }
   }
 
+  const getVariantDisplayName = (v: Variant) => {
+    const parts = []
+    if (v.name && v.name.toLowerCase() !== 'default' && v.name.toLowerCase() !== 'default variant') {
+      parts.push(v.name)
+    }
+    if ((v as any).color) parts.push((v as any).color)
+    if ((v as any).size) parts.push((v as any).size)
+    
+    if (parts.length === 0) {
+      return v.name || `Variant ${v.id}`
+    }
+    return parts.join(' / ')
+  }
+
+  const getProductImageUrls = () => {
+    if (!product) return []
+    if (selectedVariant && selectedVariant.image_urls && selectedVariant.image_urls.length > 0) {
+      return selectedVariant.image_urls
+    }
+    if (selectedVariant && selectedVariant.image_url) {
+      const variantImg = selectedVariant.image_url
+      const otherImgs = product.image_urls.filter(img => img !== variantImg)
+      return [variantImg, ...otherImgs]
+    }
+    return product.image_urls || []
+  }
+
   const handleVariantChange = (variant: Variant) => {
     setSelectedVariant(variant)
+    setSelectedImageIndex(0)
     setQuantity(1)
     if (variant.stock_quantity === 0) {
       toast.error('This variant is out of stock')
@@ -345,7 +404,7 @@ export default function ProductPage() {
     ...(product.color ? [{ label: "Color", value: product.color }] : []),
     ...(product.storage_capacity ? [{ label: "Storage", value: product.storage_capacity }] : []),
     ...(product.condition_type && product.condition_type !== 'none' ? [{ label: "Condition", value: conditionLabels[product.condition_type] }] : []),
-    ...(product.warranty_months && product.warranty_months !== "0"
+    ...(product.warranty_months && product.warranty_months !== 0
       ? [{ label: "Warranty", value: `${product.warranty_months} months` }]
       : []),
     { label: "Availability", value: selectedCurrency },
@@ -442,7 +501,7 @@ export default function ProductPage() {
                 {/* Main image */}
                 <div className="relative bg-gray-50 rounded-2xl overflow-hidden aspect-square">
                   <Image
-                    src={product.image_urls[selectedImageIndex] || `/placeholder.svg?height=600&width=600&query=${encodeURIComponent(product.name)}`}
+                    src={getProductImageUrls()[selectedImageIndex] || `/placeholder.svg?height=600&width=600&query=${encodeURIComponent(product.name)}`}
                     alt={product.name || 'Product image'}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 58vw, 660px"
@@ -505,9 +564,9 @@ export default function ProductPage() {
                 </div>
 
                 {/* Thumbnails */}
-                {product.image_urls.length > 1 && (
+                {getProductImageUrls().length > 1 && (
                   <div className="grid grid-cols-4 gap-2">
-                    {product.image_urls.slice(0, 4).map((image, index) => (
+                    {getProductImageUrls().slice(0, 4).map((image: string, index: number) => (
                       <button
                         key={index}
                         onClick={() => setSelectedImageIndex(index)}
@@ -542,11 +601,21 @@ export default function ProductPage() {
                 {/* Rating + Reviews */}
                 <div className="flex items-center gap-3 mt-2">
                   <div className="flex items-center text-red-600">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-current text-red-600" />
-                    ))}
+                    {[...Array(5)].map((_, i) => {
+                      const isFilled = i + 1 <= Math.round(product.avg_rating || 0);
+                      return (
+                        <Star 
+                          key={i} 
+                          className={`w-4 h-4 text-red-600 ${
+                            isFilled ? "fill-current text-red-600" : "text-gray-300"
+                          }`} 
+                        />
+                      );
+                    })}
                   </div>
-                  <span className="text-xs text-gray-500 font-semibold">5 Review(s) / Add Review</span>
+                  <span className="text-xs text-gray-500 font-semibold">
+                    {product.avg_rating ? `${product.avg_rating.toFixed(1)} / 5` : "No ratings"} ({product.total_reviews || 0} Reviews)
+                  </span>
                 </div>
               </div>
 
@@ -572,6 +641,41 @@ export default function ProductPage() {
                 <p className="text-sm text-gray-600 leading-relaxed">
                   {product.description}
                 </p>
+              )}
+
+              {/* Variant Selector */}
+              {product.variants && product.variants.length > 1 && (
+                <div className="space-y-3 pt-2">
+                  <span className="text-xs font-bold uppercase text-gray-700">Select Variant:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {product.variants.map((v) => {
+                      const isSelected = selectedVariant?.id === v.id;
+                      const isAvail = hasSelectedCurrencyPrice(v);
+                      const isOutOfStock = v.stock_quantity <= 0;
+                      const displayName = getVariantDisplayName(v);
+                      const price = selectedCurrency === 'AED' ? v.price_aed : v.price_inr;
+                      const priceStr = price != null ? (selectedCurrency === 'AED' ? `AED ${price.toFixed(2)}` : `₹${price.toFixed(2)}`) : 'N/A';
+                      return (
+                        <button
+                          key={v.id}
+                          onClick={() => handleVariantChange(v)}
+                          disabled={!isAvail}
+                          className={`px-3 py-2 text-xs font-bold rounded-lg border transition-all ${
+                            isSelected
+                              ? "border-red-600 bg-red-50 text-red-600 shadow-sm"
+                              : isAvail
+                              ? isOutOfStock
+                                ? "border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300 opacity-60"
+                                : "border-gray-200 bg-white text-gray-700 hover:border-gray-400"
+                              : "border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed line-through"
+                          }`}
+                        >
+                          {displayName} - {priceStr} {isOutOfStock ? " (Out of stock)" : ""}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
 
               {/* OTHER DETAILS Section (Screenshot 2) */}
@@ -693,6 +797,100 @@ export default function ProductPage() {
               </div>
 
 
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Product Reviews Section */}
+      <div className="border-t border-gray-100 bg-gray-50/50 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Rating Summary */}
+            <div className="lg:col-span-4 space-y-4">
+              <h2 className="text-xl font-bold text-gray-900 uppercase tracking-tight">Customer Reviews</h2>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-extrabold text-gray-900">
+                  {product.avg_rating ? product.avg_rating.toFixed(1) : "0.0"}
+                </span>
+                <span className="text-sm text-gray-500">out of 5</span>
+              </div>
+              <div className="flex items-center text-red-600">
+                {[...Array(5)].map((_, i) => {
+                  const isFilled = i + 1 <= Math.round(product.avg_rating || 0);
+                  return (
+                    <Star 
+                      key={i} 
+                      className={`w-5 h-5 ${isFilled ? "fill-current text-red-600" : "text-gray-300"}`} 
+                    />
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
+                Based on {product.total_reviews || 0} customer reviews
+              </p>
+            </div>
+
+            {/* Reviews List */}
+            <div className="lg:col-span-8 space-y-6">
+              {reviewsLoading ? (
+                <div className="text-center py-6 text-sm text-gray-500">Loading reviews...</div>
+              ) : reviews.length === 0 ? (
+                <div className="text-center py-6 text-sm text-gray-500 bg-white rounded-2xl border border-gray-100 p-6">
+                  No reviews yet for this product. Be the first to share your thoughts after purchase!
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((r: any) => (
+                    <div key={r.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="text-sm font-bold text-gray-900 uppercase">{r.customer_name}</h4>
+                          <div className="flex items-center text-red-600 mt-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star 
+                                key={i} 
+                                className={`w-3.5 h-3.5 ${i + 1 <= r.rating ? "fill-current text-red-600" : "text-gray-300"}`} 
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-400">
+                          {new Date(r.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{r.review}</p>
+                    </div>
+                  ))}
+
+                  {/* Pagination */}
+                  {totalReviewsPages > 1 && (
+                    <div className="flex items-center justify-between gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm mt-4">
+                      <span className="text-xs text-gray-500">
+                        Page {reviewsPage} of {totalReviewsPages}
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={reviewsPage === 1}
+                          onClick={() => setReviewsPage(prev => Math.max(prev - 1, 1))}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={reviewsPage === totalReviewsPages}
+                          onClick={() => setReviewsPage(prev => Math.min(prev + 1, totalReviewsPages))}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

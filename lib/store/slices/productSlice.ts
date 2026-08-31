@@ -28,6 +28,8 @@ interface Product {
   sku: string
   shop_category: string
   created_at: string
+  variants?: any[]
+  image_urls?: string[]
 }
 
 interface Category {

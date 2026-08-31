@@ -24,6 +24,8 @@ import { useShop } from "@/lib/contexts/shop-context"
 import LoginModal from "@/components/auth/login-modal"
 import { NavbarSkeleton } from "@/components/ui/navbar-skeleton"
 
+import ReviewModal from "@/components/reviews/review-modal"
+
 const baseNavigation = [
   { name: "Home", href: "/home" },
   { name: "About Us", href: "/about" },
@@ -450,7 +452,7 @@ function Nav() {
                         <User className="w-6 h-6" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-80 p-0 border-0 shadow-2xl">
+                    <DropdownMenuContent align="end" className="w-80 p-0 border-0 shadow-2xl bg-white rounded-lg">
                       <div className="bg-zinc-900 rounded-t-lg p-6 border-b border-zinc-800">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
@@ -1113,6 +1115,7 @@ function Nav() {
       </nav>
 
       <LoginModal isOpen={isLoginModalOpen} onClose={closeModal} />
+      <ReviewModal isAuthenticated={isAuthenticated} />
     </>
   )
 }

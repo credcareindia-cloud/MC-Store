@@ -89,7 +89,7 @@ export default function BottomTabs() {
                           <span className="mt-0.5 text-[10px] font-semibold">My</span>
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="mb-3 w-64 border-0 p-0 shadow-2xl">
+                      <DropdownMenuContent align="end" className="mb-3 w-64 border-0 p-0 shadow-2xl bg-white rounded-lg">
                         <div className="rounded-t-lg border-b border-zinc-800 bg-zinc-900 p-4">
                           <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800">

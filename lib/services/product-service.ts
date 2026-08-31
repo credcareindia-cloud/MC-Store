@@ -74,6 +74,8 @@ export interface ErpProduct {
   category_name: string | null
   total_stock: number
   variants: ErpVariant[]
+  avg_rating?: number
+  total_reviews?: number
 }
 
 export interface ProductFilters {
@@ -396,10 +398,32 @@ async function batchGetVariants(productIds: number[]): Promise<Record<number, Er
   const variantRows = await query<Record<string, unknown>>(`
     SELECT 
       pv.*,
-      COALESCE(
-        (SELECT SUM(GREATEST(0, pds.stock))::int FROM product_device_stock pds WHERE pds.product_id = pv.product_id),
-        (SELECT SUM(GREATEST(0, pb.remaining_quantity))::int FROM product_batches pb WHERE pb.product_variant_id = pv.id),
-        10
+      (
+        CASE 
+          WHEN EXISTS (
+            SELECT 1 FROM product_batches pb 
+            JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
+            WHERE pb.product_variant_id = pv.id
+          ) THEN (
+            SELECT COALESCE(SUM(GREATEST(0, pbds.stock))::int, 0)
+            FROM product_batches pb 
+            JOIN product_batch_device_stock pbds ON pbds.batch_id = pb.id 
+            WHERE pb.product_variant_id = pv.id
+          )
+          WHEN EXISTS (
+            SELECT 1 FROM product_batches pb 
+            WHERE pb.product_variant_id = pv.id
+          ) THEN (
+            SELECT COALESCE(SUM(GREATEST(0, pb.remaining_quantity))::int, 0)
+            FROM product_batches pb 
+            WHERE pb.product_variant_id = pv.id
+          )
+          ELSE (
+            SELECT COALESCE(SUM(GREATEST(0, pds.stock))::int, 0)
+            FROM product_device_stock pds 
+            WHERE pds.product_id = pv.product_id
+          )
+        END
       )::int AS stock
     FROM product_variants pv
     WHERE pv.product_id = ANY($1::int[])
@@ -417,6 +441,26 @@ async function batchGetVariants(productIds: number[]): Promise<Record<number, Er
 }
 
 // ── Single Product Service ────────────────────────────────────────────────────
+
+let _reviewsTableCreated = false
+async function ensureReviewsTableExists() {
+  if (_reviewsTableCreated) return
+  await query(`
+    CREATE TABLE IF NOT EXISTS product_reviews (
+      id SERIAL PRIMARY KEY,
+      product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      user_id VARCHAR(255) NOT NULL,
+      order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+      rating INTEGER CHECK (rating >= 1 AND rating <= 5) NOT NULL,
+      review TEXT NOT NULL,
+      customer_name VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_user_product_order_review ON product_reviews(user_id, product_id, order_id);
+  `)
+  _reviewsTableCreated = true
+}
 
 export async function getProductById(id: number): Promise<ErpProduct | null> {
   const filterPart = `AND ${PRODUCT_ELIGIBILITY_SQL}`
@@ -497,7 +541,23 @@ export async function getProductById(id: number): Promise<ErpProduct | null> {
   `, [id])
 
   const variants = variantRows.map(mapVariant)
-  return mapProduct(rows[0], variants)
+  
+  await ensureReviewsTableExists()
+  const statsRes = await query<Record<string, unknown>>(`
+    SELECT 
+      COALESCE(AVG(rating), 0)::float AS avg_rating,
+      COUNT(*)::int AS total_reviews
+    FROM product_reviews
+    WHERE product_id = $1
+  `, [id])
+
+  const avgRating = statsRes[0] ? toNumber(statsRes[0].avg_rating) : 0
+  const totalReviews = statsRes[0] ? toNumber(statsRes[0].total_reviews) : 0
+
+  const productData = mapProduct(rows[0], variants)
+  productData.avg_rating = avgRating
+  productData.total_reviews = totalReviews
+  return productData
 }
 
 // ── Related Products ──────────────────────────────────────────────────────────
@@ -546,7 +606,9 @@ export async function getRelatedProducts(categoryId: number | null, excludeId: n
     LIMIT $3
   `, [categoryId, excludeId, limit])
 
-  return rows.map(r => mapProduct(r))
+  const productIds = rows.map(r => toNumber(r.id))
+  const variantMap = await batchGetVariants(productIds)
+  return rows.map(row => mapProduct(row, variantMap[toNumber(row.id)] ?? []))
 }
 
 // ── Search Service ────────────────────────────────────────────────────────────

@@ -26,6 +26,20 @@ interface ProductListProps {
   showTopPicks?: boolean
 }
 
+function getVariantDisplayName(v: any) {
+  const parts = []
+  if (v.name && v.name.toLowerCase() !== "default" && v.name.toLowerCase() !== "default variant") {
+    parts.push(v.name)
+  }
+  if (v.color) parts.push(v.color)
+  if (v.size) parts.push(v.size)
+
+  if (parts.length === 0) {
+    return v.name || `Variant ${v.id}`
+  }
+  return parts.join(" / ")
+}
+
 function getProductSellingPrice(product: any, currency: string) {
   const availableVariant =
     product.variants?.find((v: any) =>
@@ -58,6 +72,7 @@ function formatSidebarPrice(amount: number, currency: string) {
 export default function ProductList({ showSpinner = false, onCloseSpinner, showTopPicks = false }: ProductListProps) {
   const { user, isAuthenticated } = useAuth()
   const [authInitialized, setAuthInitialized] = useState(false)
+  const [selectedVariants, setSelectedVariants] = useState<Record<number, any>>({})
   const { openModal } = useLoginModal()
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [showFilters, setShowFilters] = useState(false)
@@ -189,7 +204,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
     }, 150)
   }
 
-  const handleAddToCart = (product: any) => {
+  const handleAddToCart = (product: any, selectedVariant?: any) => {
     if (!isAuthenticated) {
       openModal()
       return
@@ -198,7 +213,9 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
       menuItem: product,
       quantity: 1,
       selectedCurrency,
-      userId: user?.id
+      userId: user?.id,
+      variant_id: selectedVariant?.id,
+      selected_variant: selectedVariant
     }))
     // Trigger cart animation
     triggerBlurAnimation('cart')
@@ -226,46 +243,57 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
     if (!filters || Object.keys(filters).length === 0) return items
     
     return items.filter(item => {
-      // Get the best available variant for filtering
-      const availableVariant = item.variants?.find((v: any) => 
+      const validVariants = item.variants?.filter((v: any) => 
         selectedCurrency === 'AED' ? v.available_aed : v.available_inr
-      ) || item.variants?.[0]
-
-      const originalPrice = selectedCurrency === 'AED' 
-        ? (availableVariant?.price_aed || 0)
-        : (availableVariant?.price_inr || 0)
-
-      const discountPrice = selectedCurrency === 'AED' 
-        ? (availableVariant?.discount_aed || 0)
-        : (availableVariant?.discount_inr || 0)
-
-      // A product has a discount only if:
-      // 1. Both original price and discount price exist and are > 0
-      // 2. Discount price is meaningfully less than original price (at least 1% difference)
-      const hasDiscount = originalPrice > 0 && 
-                         discountPrice > 0 && 
-                         discountPrice < originalPrice &&
-                         ((originalPrice - discountPrice) / originalPrice) >= 0.01
-
-      // Use discount price if available, otherwise original price
-      const currentPrice = hasDiscount ? discountPrice : originalPrice
+      ) || []
+      
+      if (validVariants.length === 0 && item.variants?.[0]) {
+        validVariants.push(item.variants[0])
+      }
 
       // Apply discount filter
-      if (filters.discount && !hasDiscount) return false
+      if (filters.discount) {
+        const hasDiscount = validVariants.some((v: any) => {
+          const originalPrice = selectedCurrency === 'AED' ? (v.price_aed || 0) : (v.price_inr || 0)
+          const discountPrice = selectedCurrency === 'AED' ? (v.discount_aed || 0) : (v.discount_inr || 0)
+          return originalPrice > 0 && discountPrice > 0 && discountPrice < originalPrice && ((originalPrice - discountPrice) / originalPrice) >= 0.01
+        })
+        if (!hasDiscount) return false
+      }
 
-      // Calculate discount percentage for range filters
-      const discountPercentage = hasDiscount ? ((originalPrice - currentPrice) / originalPrice) * 100 : 0
+      // Discount ranges:
+      const matchDiscountRange = (min: number, max: number) => {
+        return validVariants.some((v: any) => {
+          const originalPrice = selectedCurrency === 'AED' ? (v.price_aed || 0) : (v.price_inr || 0)
+          const discountPrice = selectedCurrency === 'AED' ? (v.discount_aed || 0) : (v.discount_inr || 0)
+          const hasDiscount = originalPrice > 0 && discountPrice > 0 && discountPrice < originalPrice && ((originalPrice - discountPrice) / originalPrice) >= 0.01
+          const pct = hasDiscount ? ((originalPrice - discountPrice) / originalPrice) * 100 : 0
+          return pct >= min && pct < max
+        })
+      }
 
-      // Apply discount percentage range filters
-      if (filters.discount_10_20 && (discountPercentage < 10 || discountPercentage >= 20)) return false
-      if (filters.discount_20_30 && (discountPercentage < 20 || discountPercentage >= 30)) return false
-      if (filters.discount_30_40 && (discountPercentage < 30 || discountPercentage >= 40)) return false
-      if (filters.discount_40_plus && discountPercentage < 40) return false
+      if (filters.discount_10_20 && !matchDiscountRange(10, 20)) return false
+      if (filters.discount_20_30 && !matchDiscountRange(20, 30)) return false
+      if (filters.discount_30_40 && !matchDiscountRange(30, 40)) return false
+      if (filters.discount_40_plus && !validVariants.some((v: any) => {
+        const originalPrice = selectedCurrency === 'AED' ? (v.price_aed || 0) : (v.price_inr || 0)
+        const discountPrice = selectedCurrency === 'AED' ? (v.discount_aed || 0) : (v.discount_inr || 0)
+        const hasDiscount = originalPrice > 0 && discountPrice > 0 && discountPrice < originalPrice && ((originalPrice - discountPrice) / originalPrice) >= 0.01
+        const pct = hasDiscount ? ((originalPrice - discountPrice) / originalPrice) * 100 : 0
+        return pct >= 40
+      })) return false
 
       // Apply price range slider filter
       if (filters.priceRange && Array.isArray(filters.priceRange)) {
         const [minPrice, maxPrice] = filters.priceRange
-        if (currentPrice < minPrice || currentPrice > maxPrice) return false
+        const hasPriceMatch = validVariants.some((v: any) => {
+          const originalPrice = selectedCurrency === 'AED' ? (v.price_aed || 0) : (v.price_inr || 0)
+          const discountPrice = selectedCurrency === 'AED' ? (v.discount_aed || 0) : (v.discount_inr || 0)
+          const hasDiscount = originalPrice > 0 && discountPrice > 0 && discountPrice < originalPrice && ((originalPrice - discountPrice) / originalPrice) >= 0.01
+          const price = hasDiscount ? discountPrice : originalPrice
+          return price >= minPrice && price <= maxPrice
+        })
+        if (!hasPriceMatch) return false
       }
 
       // Apply featured filter
@@ -552,10 +580,19 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
     let max = 0
 
     for (const item of sortedBaseItems) {
-      const price = getProductSellingPrice(item, selectedCurrency)
-      if (price > 0) {
-        min = Math.min(min, price)
-        max = Math.max(max, price)
+      const validVariants = item.variants?.filter((v: any) => 
+        selectedCurrency === 'AED' ? v.available_aed : v.available_inr
+      ) || []
+      
+      for (const v of validVariants) {
+        const originalPrice = selectedCurrency === 'AED' ? (v.price_aed || 0) : (v.price_inr || 0)
+        const discountPrice = selectedCurrency === 'AED' ? (v.discount_aed || 0) : (v.discount_inr || 0)
+        const hasDiscount = originalPrice > 0 && discountPrice > 0 && discountPrice < originalPrice && ((originalPrice - discountPrice) / originalPrice) >= 0.01
+        const price = hasDiscount ? discountPrice : originalPrice
+        if (price > 0) {
+          min = Math.min(min, price)
+          max = Math.max(max, price)
+        }
       }
     }
 
@@ -1029,7 +1066,29 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3 sm:gap-6">
                   {paginatedItems.map((item) => {
-                    const availableVariant = item.variants?.find((v: any) => v.available_aed || v.available_inr) || item.variants?.[0]
+                    const validVariants = item.variants?.filter((v: any) => 
+                      selectedCurrency === 'AED' ? v.available_aed : v.available_inr
+                    ) || []
+                    
+                    let defaultVariant = item.variants?.find((v: any) => 
+                      selectedCurrency === 'AED' ? v.available_aed : v.available_inr
+                    ) || item.variants?.[0]
+
+                    if (activeFilters.priceRange && Array.isArray(activeFilters.priceRange)) {
+                      const [minPrice, maxPrice] = activeFilters.priceRange
+                      const matchingVariant = validVariants.find((v: any) => {
+                        const price = selectedCurrency === 'AED' 
+                          ? (v.discount_aed && v.discount_aed > 0 ? v.discount_aed : v.price_aed || 0)
+                          : (v.discount_inr && v.discount_inr > 0 ? v.discount_inr : v.price_inr || 0)
+                        return price >= minPrice && price <= maxPrice
+                      })
+                      if (matchingVariant) {
+                        defaultVariant = matchingVariant
+                      }
+                    }
+
+                    const currentVariant = selectedVariants[item.id] || defaultVariant
+                    const stockQty = currentVariant?.stock_quantity ?? item.stock_quantity ?? 0
 
                     return (
                       <div
@@ -1040,7 +1099,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
                         {/* Image Container (Responsive Height for 2-column mobile grid) */}
                         <div className="relative bg-stone-100 p-3 sm:p-6 flex items-center justify-center h-36 sm:h-52 group-hover:bg-stone-200/60 transition-colors">
                           <Image
-                            src={item.image_urls?.[0] || item.image_url || "/placeholder.svg"}
+                            src={currentVariant?.image_url || item.image_urls?.[0] || item.image_url || "/placeholder.svg"}
                             alt={item.name}
                             width={200}
                             height={200}
@@ -1070,15 +1129,47 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
                             <h3 className="font-bold text-gray-900 text-xs sm:text-sm uppercase line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] group-hover:text-red-600 transition-colors">
                               {item.name}
                             </h3>
+                            
+                            {/* Variant Dropdown Selector */}
+                            {item.variants && item.variants.length > 1 && (
+                              <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                                <select
+                                  value={currentVariant?.id || ""}
+                                  onChange={(e) => {
+                                    const selectedId = Number(e.target.value)
+                                    const found = item.variants.find((v: any) => v.id === selectedId)
+                                    if (found) {
+                                      setSelectedVariants(prev => ({
+                                        ...prev,
+                                        [item.id]: found
+                                      }))
+                                    }
+                                  }}
+                                  className="w-full text-[11px] font-semibold border border-gray-200 rounded-lg p-1 bg-white focus:outline-none focus:ring-1 focus:ring-red-500 text-gray-700"
+                                >
+                                  {item.variants.map((v: any) => {
+                                    const isAvail = selectedCurrency === 'AED' ? v.available_aed : v.available_inr;
+                                    const displayName = getVariantDisplayName(v);
+                                    const price = selectedCurrency === 'AED' ? v.price_aed : v.price_inr;
+                                    const priceStr = price != null ? (selectedCurrency === 'AED' ? `AED ${price.toFixed(2)}` : `₹${price.toFixed(2)}`) : 'N/A';
+                                    return (
+                                      <option key={v.id} value={v.id} disabled={!isAvail || v.stock_quantity <= 0}>
+                                        {displayName} - {priceStr} {(!isAvail || v.stock_quantity <= 0) ? " (Out of stock)" : ""}
+                                      </option>
+                                    );
+                                  })}
+                                </select>
+                              </div>
+                            )}
                           </div>
 
                           <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-100">
                             <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
                               <span className="text-sm sm:text-base font-extrabold text-red-600">
-                                {availableVariant
+                                {currentVariant
                                   ? formatPriceWithSmallDecimals(
-                                      availableVariant.price_aed,
-                                      availableVariant.price_inr,
+                                      currentVariant.price_aed,
+                                      currentVariant.price_inr,
                                       "AED",
                                       true,
                                       "#dc2626"
@@ -1087,11 +1178,11 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
                               </span>
                             </div>
 
-                            {item.stock_quantity > 0 ? (
+                            {stockQty > 0 ? (
                               <Button
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handleAddToCart(item)
+                                  handleAddToCart(item, currentVariant)
                                 }}
                                 className="w-full bg-red-600 hover:bg-red-700 text-white font-bold text-[10px] sm:text-xs uppercase tracking-wider py-1.5 sm:py-2 rounded-lg transition-colors flex items-center justify-center gap-1 sm:gap-2"
                               >
@@ -1101,13 +1192,14 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
                             ) : (
                               <Button
                                 onClick={(e) => {
+                                  e.stopPropagation()
                                   handleWhatsAppProductRequest(e, {
                                     productName: item.name,
                                     productId: item.id,
-                                    sku: item.sku,
+                                    sku: currentVariant?.sku || item.sku,
                                     brand: item.brand || item.category_name,
-                                    priceText: availableVariant
-                                      ? `AED ${availableVariant.price_aed || ''} / ₹ ${availableVariant.price_inr || ''}`
+                                    priceText: currentVariant
+                                      ? `AED ${currentVariant.price_aed || ''} / ₹ ${currentVariant.price_inr || ''}`
                                       : `₹ ${item.price}`,
                                     productUrl: typeof window !== 'undefined' ? `${window.location.origin}/product/${item.id}` : undefined
                                   })
