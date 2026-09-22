@@ -718,7 +718,7 @@ export async function searchProducts(
 // ── Trending Products Service ──────────────────────────────────────────────────
 
 export async function getTrendingProducts(limit = 12): Promise<ErpProduct[]> {
-  const filterPart = `AND ${PRODUCT_ELIGIBILITY_SQL}`
+  const filterPart = `AND ${PRODUCT_ELIGIBILITY_SQL} AND p.trending = TRUE`
 
   const rows = await query<Record<string, unknown>>(`
     WITH max_sale_date AS (
