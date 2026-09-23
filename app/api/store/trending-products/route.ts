@@ -10,6 +10,8 @@ import { NextResponse } from "next/server"
 import { getTrendingProducts } from "@/lib/services/product-service"
 
 export const dynamic = "force-dynamic"
+export const fetchCache = "force-no-store"
+export const revalidate = 0
 
 function slugify(text: string, id: number): string {
   if (!text) return String(id)

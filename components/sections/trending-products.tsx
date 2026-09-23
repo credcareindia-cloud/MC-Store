@@ -72,7 +72,15 @@ export default function TrendingProducts({
     try {
       setLoading(true)
       setError(null)
-      const res = await fetch(`/api/store/trending-products?limit=${limit}`)
+      // Add cache buster and no-store to ensure we never get stale trending products
+      const timestamp = new Date().getTime()
+      const res = await fetch(`/api/store/trending-products?limit=${limit}&_t=${timestamp}`, {
+        cache: "no-store",
+        headers: {
+          "Pragma": "no-cache",
+          "Cache-Control": "no-cache"
+        }
+      })
       if (!res.ok) {
         throw new Error(`Failed to fetch trending products (HTTP ${res.status})`)
       }
