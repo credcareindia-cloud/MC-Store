@@ -186,7 +186,7 @@ export default function TrendingProducts({
 
           <button
             type="button"
-            onClick={() => router.push("/products")}
+            onClick={() => router.push("/products/trending")}
             className="flex shrink-0 items-center gap-0.5 pt-1 text-xs font-semibold text-zinc-700 transition-colors hover:text-red-600 sm:pt-0 sm:text-sm"
           >
             View all

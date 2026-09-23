@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Star, ChevronLeft, ChevronRight, Zap, Grid3X3, List, SlidersHorizontal, Tag, Heart, ChevronDown, ShoppingCart, Loader2, Flame, ArrowUpDown, Bookmark, MessageCircle, Search, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/lib/contexts/auth-context"
@@ -24,6 +25,7 @@ interface ProductListProps {
   showSpinner?: boolean
   onCloseSpinner?: () => void
   showTopPicks?: boolean
+  trendingOnly?: boolean
 }
 
 function getVariantDisplayName(v: any) {
@@ -69,7 +71,7 @@ function formatSidebarPrice(amount: number, currency: string) {
   return `AED ${amount.toLocaleString()}`
 }
 
-export default function ProductList({ showSpinner = false, onCloseSpinner, showTopPicks = false }: ProductListProps) {
+export default function ProductList({ showSpinner = false, onCloseSpinner, showTopPicks = false, trendingOnly = false }: ProductListProps) {
   const { user, isAuthenticated } = useAuth()
   const [authInitialized, setAuthInitialized] = useState(false)
   const [selectedVariants, setSelectedVariants] = useState<Record<number, any>>({})
@@ -179,12 +181,12 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
   }, [selectedCurrency])
 
   useEffect(() => {
-    dispatch(fetchProducts())
+    dispatch(fetchProducts(trendingOnly))
     dispatch(fetchCategories())
     if (categoryFromUrl) {
       dispatch(setSelectedCategory(Number(categoryFromUrl)))
     }
-  }, [dispatch, categoryFromUrl])
+  }, [dispatch, categoryFromUrl, trendingOnly])
 
   // Add this useEffect to handle search from URL
   useEffect(() => {
@@ -339,6 +341,9 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
       }
       searchUrl.searchParams.set('limit', '50')
       searchUrl.searchParams.set('sort', sort)
+      if (trendingOnly) {
+        searchUrl.searchParams.set('trending', 'true')
+      }
 
       const response = await fetch(searchUrl.toString())
       const searchData = await response.json()
@@ -1133,10 +1138,10 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
                             {/* Variant Dropdown Selector */}
                             {item.variants && item.variants.length > 1 && (
                               <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-                                <select
-                                  value={currentVariant?.id || ""}
-                                  onChange={(e) => {
-                                    const selectedId = Number(e.target.value)
+                                <Select
+                                  value={currentVariant?.id?.toString() || ""}
+                                  onValueChange={(val) => {
+                                    const selectedId = Number(val)
                                     const found = item.variants.find((v: any) => v.id === selectedId)
                                     if (found) {
                                       setSelectedVariants(prev => ({
@@ -1145,20 +1150,29 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
                                       }))
                                     }
                                   }}
-                                  className="w-full text-[11px] font-semibold border border-gray-200 rounded-lg p-1 bg-white focus:outline-none focus:ring-1 focus:ring-red-500 text-gray-700"
                                 >
-                                  {item.variants.map((v: any) => {
-                                    const isAvail = selectedCurrency === 'AED' ? v.available_aed : v.available_inr;
-                                    const displayName = getVariantDisplayName(v);
-                                    const price = selectedCurrency === 'AED' ? v.price_aed : v.price_inr;
-                                    const priceStr = price != null ? (selectedCurrency === 'AED' ? `AED ${price.toFixed(2)}` : `₹${price.toFixed(2)}`) : 'N/A';
-                                    return (
-                                      <option key={v.id} value={v.id} disabled={!isAvail || v.stock_quantity <= 0}>
-                                        {displayName} - {priceStr} {(!isAvail || v.stock_quantity <= 0) ? " (Out of stock)" : ""}
-                                      </option>
-                                    );
-                                  })}
-                                </select>
+                                  <SelectTrigger className="w-full h-8 text-[11px] font-semibold border-gray-200 bg-white focus:ring-red-500 text-gray-700">
+                                    <SelectValue placeholder="Select variant" />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-white border-gray-200 shadow-lg z-[100]">
+                                    {item.variants.map((v: any) => {
+                                      const isAvail = selectedCurrency === 'AED' ? v.available_aed : v.available_inr;
+                                      const displayName = getVariantDisplayName(v);
+                                      const price = selectedCurrency === 'AED' ? v.price_aed : v.price_inr;
+                                      const priceStr = price != null ? (selectedCurrency === 'AED' ? `AED ${price.toFixed(2)}` : `₹${price.toFixed(2)}`) : 'N/A';
+                                      return (
+                                        <SelectItem 
+                                          key={v.id} 
+                                          value={v.id.toString()} 
+                                          disabled={!isAvail || v.stock_quantity <= 0} 
+                                          className="text-[11px] font-semibold hover:bg-red-50 focus:bg-red-50 cursor-pointer"
+                                        >
+                                          {displayName} - {priceStr} {(!isAvail || v.stock_quantity <= 0) ? " (Out of stock)" : ""}
+                                        </SelectItem>
+                                      );
+                                    })}
+                                  </SelectContent>
+                                </Select>
                               </div>
                             )}
                           </div>
@@ -1301,11 +1315,23 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
               {filteredItems.length === 0 && !isProductListLoading && (
                 <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
                   <div className="text-5xl mb-3">🚗</div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">No products found</h3>
-                  <p className="text-sm text-gray-500 mb-4">Try selecting another category or resetting search filters.</p>
-                  <Button onClick={() => handleCategoryChange(null)} className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase px-4 py-2 rounded-lg">
-                    View All Products
-                  </Button>
+                  {trendingOnly ? (
+                    <>
+                      <h3 className="text-lg font-bold text-gray-900 mb-1">No trending products found</h3>
+                      <p className="text-sm text-gray-500 mb-4">Check back later for our latest featured products.</p>
+                      <Button onClick={() => router.push('/products')} className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase px-4 py-2 rounded-lg">
+                        Continue Shopping
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-lg font-bold text-gray-900 mb-1">No products found</h3>
+                      <p className="text-sm text-gray-500 mb-4">Try selecting another category or resetting search filters.</p>
+                      <Button onClick={() => handleCategoryChange(null)} className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase px-4 py-2 rounded-lg">
+                        View All Products
+                      </Button>
+                    </>
+                  )}
                 </div>
               )}
             </div>

@@ -10,10 +10,11 @@ export const dynamic = "force-dynamic"
 
 export async function GET(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id, 10)
+    const { id: paramId } = await params;
+    const id = parseInt(paramId, 10)
 
     if (isNaN(id) || id <= 0) {
       return NextResponse.json({ error: "Invalid product ID" }, { status: 400 })

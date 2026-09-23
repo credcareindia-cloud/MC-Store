@@ -10,7 +10,7 @@
  *   trending  – "true" for trending-only
  */
 import { NextResponse } from "next/server"
-import { getProducts } from "@/lib/services/product-service"
+import { getProducts, getTrendingProducts } from "@/lib/services/product-service"
 
 export const dynamic = "force-dynamic"
 
@@ -29,14 +29,28 @@ export async function GET(request: Request) {
     type SortBy = typeof validSorts[number]
     const sortBy: SortBy = validSorts.includes(sortParam as SortBy) ? (sortParam as SortBy) : "newest"
 
-    const result = await getProducts({
-      categoryId: categoryParam && !isNaN(Number(categoryParam)) ? Number(categoryParam) : undefined,
-      search,
-      trending: trendingOnly || undefined,
-      page,
-      limit,
-      sortBy,
-    })
+    const categoryId = categoryParam && !isNaN(Number(categoryParam)) ? Number(categoryParam) : undefined
+
+    let result
+    if (trendingOnly) {
+      const items = await getTrendingProducts({ limit, categoryId })
+      result = {
+        items,
+        total: items.length,
+        page: 1,
+        limit,
+        totalPages: 1
+      }
+    } else {
+      result = await getProducts({
+        categoryId,
+        search,
+        trending: trendingOnly || undefined,
+        page,
+        limit,
+        sortBy,
+      })
+    }
 
     return NextResponse.json({
       items: result.items,

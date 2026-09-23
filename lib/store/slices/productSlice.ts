@@ -77,8 +77,9 @@ export const initializeApp = createAsyncThunk(
   }
 )
 
-export const fetchProducts = createAsyncThunk("products/fetchItems", async () => {
-  const response = await fetch("/api/products?limit=1000")
+export const fetchProducts = createAsyncThunk("products/fetchItems", async (trending?: boolean) => {
+  const url = trending ? "/api/products?limit=1000&trending=true" : "/api/products?limit=1000"
+  const response = await fetch(url)
   if (!response.ok) throw new Error("Failed to fetch products")
   return response.json()
 })

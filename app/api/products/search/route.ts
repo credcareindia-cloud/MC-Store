@@ -14,6 +14,7 @@ export async function GET(request: Request) {
     const query = searchParams.get("q")?.trim()
     const categoryParam = searchParams.get("category")
     const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") ?? "24", 10)))
+    const trending = searchParams.get("trending") === "true"
 
     if (!query || query.length < 2) {
       return NextResponse.json({
@@ -29,6 +30,7 @@ export async function GET(request: Request) {
     const result = await searchProducts(query, {
       categoryId,
       limit,
+      trending,
     })
 
     const suggestionsSet = new Set<string>()

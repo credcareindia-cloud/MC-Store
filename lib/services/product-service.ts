@@ -621,9 +621,9 @@ export interface SearchResult {
 
 export async function searchProducts(
   searchQuery: string,
-  filters: { categoryId?: number | null; limit?: number } = {}
+  filters: { categoryId?: number | null; limit?: number; trending?: boolean } = {}
 ): Promise<SearchResult> {
-  const { categoryId, limit = 48 } = filters
+  const { categoryId, limit = 48, trending } = filters
   const rawTerm = searchQuery.trim().toLowerCase()
 
   if (rawTerm.length < 2) return { items: [], total: 0, query: searchQuery }
@@ -637,6 +637,12 @@ export async function searchProducts(
   if (categoryId != null) {
     params.push(categoryId)
     conditions.push(`p.category_id = $${params.length}`)
+  }
+
+  if (trending) {
+    conditions.push(`p.trending = TRUE`)
+    conditions.push(`p.name IS NOT NULL AND p.name != ''`)
+    conditions.push(`LOWER(p.name) NOT LIKE '%dummy%' AND LOWER(p.name) NOT LIKE '%test%' AND LOWER(p.name) NOT LIKE '%-=-=%'`)
   }
 
   // Require matching all search words across fields
@@ -717,8 +723,25 @@ export async function searchProducts(
 
 // ── Trending Products Service ──────────────────────────────────────────────────
 
-export async function getTrendingProducts(limit = 12): Promise<ErpProduct[]> {
+export async function getTrendingProducts(limitOrFilters: number | ProductFilters = 12): Promise<ErpProduct[]> {
+  let limit = 12
+  let categoryId: number | null = null
+
+  if (typeof limitOrFilters === 'number') {
+    limit = limitOrFilters
+  } else {
+    limit = limitOrFilters.limit ?? 12
+    categoryId = limitOrFilters.categoryId ?? null
+  }
+
   const filterPart = `AND ${PRODUCT_ELIGIBILITY_SQL} AND p.trending = TRUE`
+  const params: unknown[] = [limit]
+  let categoryFilter = ''
+
+  if (categoryId != null) {
+    params.push(categoryId)
+    categoryFilter = `AND p.category_id = $2`
+  }
 
   const rows = await query<Record<string, unknown>>(`
     WITH max_sale_date AS (
@@ -772,10 +795,11 @@ export async function getTrendingProducts(limit = 12): Promise<ErpProduct[]> {
       AND LOWER(p.name) NOT LIKE '%test%'
       AND LOWER(p.name) NOT LIKE '%-=-=%'
       ${filterPart}
+      ${categoryFilter}
     GROUP BY p.id, pc.name, msd.max_date
     ORDER BY p.trending DESC, trending_score DESC, total_sales_qty DESC, p.created_at DESC
     LIMIT $1
-  `, [limit])
+  `, params)
 
   const productIds = rows.map(r => toNumber(r.id))
   const variantMap = await batchGetVariants(productIds)
