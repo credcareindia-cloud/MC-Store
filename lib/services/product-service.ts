@@ -248,10 +248,7 @@ function mapProduct(row: Record<string, unknown>, variants: any[] = []): any {
 export const PRODUCT_ELIGIBILITY_SQL = `
   (p.own_ecom_status IS NULL OR p.own_ecom_status != 'not_listed')
   AND p.price > 0
-  AND (
-    (p.image_url IS NOT NULL AND TRIM(p.image_url) != '' AND p.image_url NOT IN ('[]', 'null', '"[]"', '"null"') AND p.image_url LIKE '%/%')
-    OR (p.image_urls IS NOT NULL AND p.image_urls::text NOT IN ('[]', 'null', '"[]"', '"null"') AND TRIM(p.image_urls::text) != '' AND p.image_urls::text LIKE '%/%')
-  )
+  AND p.trending = TRUE
 `
 
 // ── Category Service ─────────────────────────────────────────────────────────
