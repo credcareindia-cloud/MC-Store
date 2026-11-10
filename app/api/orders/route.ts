@@ -4,6 +4,7 @@ import { cookies } from "next/headers"
 import { jwtVerify } from "jose"
 import nodemailer from 'nodemailer'
 import { SITE_CONTACT_EMAIL, SITE_PHONE_DISPLAY, SITE_PHONE_E164 } from '@/lib/site-contact'
+import { IS_COD_ENABLED } from '@/lib/payment-config'
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key-change-in-production")
 
@@ -756,6 +757,13 @@ export async function POST(request: Request) {
     const discountAmount = orderData.discountAmount || 0
     const totalAmount = subtotal + deliveryFee + taxAmount - discountAmount
     const finalTotal = totalAmount
+
+    // Check if Cash On Delivery is temporarily disabled
+    if (orderData.paymentMethod === 'cod' && !IS_COD_ENABLED) {
+      return NextResponse.json({
+        error: "Cash On Delivery is temporarily unavailable. Please choose UPI / Online Payment."
+      }, { status: 400 })
+    }
 
     // For UPI payments require payment verification
     if (orderData.paymentMethod === 'upi' && !orderData.paymentId) {

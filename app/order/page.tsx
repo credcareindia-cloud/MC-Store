@@ -29,6 +29,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import toast from 'react-hot-toast'
 import { SITE_PHONE_PAYMENT_DISPLAY, SITE_WHATSAPP_E164_DIGITS } from "@/lib/site-contact"
+import { IS_COD_ENABLED } from "@/lib/payment-config"
 
 const WHATSAPP_ORDER_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_ORDER_NUMBER
 
@@ -136,6 +137,12 @@ export default function OrderPage() {
     setPaymentMethod('upi')
     setDetailedAddress(prev => ({ ...prev, country: 'India' }))
   }, [selectedCurrency])
+
+  useEffect(() => {
+    if (!IS_COD_ENABLED && paymentMethod === 'cod') {
+      setPaymentMethod('upi')
+    }
+  }, [paymentMethod])
 
   // Load saved addresses on mount
   useEffect(() => {
@@ -1170,6 +1177,12 @@ export default function OrderPage() {
         return
       }
     }
+
+    if (paymentMethod === "cod" && !IS_COD_ENABLED) {
+      toast.error('Cash On Delivery is Temporarily Unavailable. Please choose UPI / Online Payment.', { position: 'top-center' })
+      return
+    }
+
     if (paymentMethod === "upi" && selectedCurrency === 'INR') {
       try {
         setIsProcessingPayment(true)
@@ -1870,7 +1883,10 @@ export default function OrderPage() {
               <CardContent>
                 <RadioGroup
                   value={paymentMethod}
-                  onValueChange={setPaymentMethod}
+                  onValueChange={(val) => {
+                    if (val === 'cod' && !IS_COD_ENABLED) return
+                    setPaymentMethod(val)
+                  }}
                   className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                 >
                   <div 
@@ -1887,15 +1903,33 @@ export default function OrderPage() {
                   </div>
 
                   <div 
-                    onClick={() => setPaymentMethod('cod')}
-                    className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
-                      paymentMethod === 'cod' ? 'border-zinc-900 bg-zinc-50/80 ring-1 ring-zinc-900 shadow-sm' : 'border-gray-200 bg-white hover:border-gray-300'
+                    onClick={() => {
+                      if (!IS_COD_ENABLED) return
+                      setPaymentMethod('cod')
+                    }}
+                    className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
+                      !IS_COD_ENABLED
+                        ? 'border-gray-200 bg-gray-50/70 opacity-60 cursor-not-allowed select-none'
+                        : paymentMethod === 'cod'
+                        ? 'border-zinc-900 bg-zinc-50/80 ring-1 ring-zinc-900 shadow-sm cursor-pointer'
+                        : 'border-gray-200 bg-white hover:border-gray-300 cursor-pointer'
                     }`}
                   >
-                    <RadioGroupItem value="cod" id="cod" />
-                    <Label htmlFor="cod" className="text-sm sm:text-base font-semibold cursor-pointer flex-1">
-                      <div>Cash on Delivery (COD)</div>
-                      <div className="text-xs text-amber-700 font-normal mt-0.5">Pay with cash upon delivery</div>
+                    <RadioGroupItem value="cod" id="cod" disabled={!IS_COD_ENABLED} />
+                    <Label
+                      htmlFor="cod"
+                      className={`text-sm sm:text-base font-semibold flex-1 ${
+                        !IS_COD_ENABLED ? 'cursor-not-allowed' : 'cursor-pointer'
+                      }`}
+                    >
+                      <div className={!IS_COD_ENABLED ? 'text-gray-500' : 'text-gray-900'}>
+                        Cash on Delivery (COD)
+                      </div>
+                      <div className={`text-xs mt-0.5 ${!IS_COD_ENABLED ? 'text-amber-800 font-medium' : 'text-amber-700 font-normal'}`}>
+                        {!IS_COD_ENABLED
+                          ? 'Cash On Delivery is Temporarily Unavailable'
+                          : 'Pay with cash upon delivery'}
+                      </div>
                     </Label>
                   </div>
                 </RadioGroup>
@@ -1907,7 +1941,7 @@ export default function OrderPage() {
                     </p>
                   </div>
                 )}
-                {paymentMethod === 'cod' && (
+                {paymentMethod === 'cod' && IS_COD_ENABLED && (
                   <div className="mt-4 p-3.5 bg-amber-50/80 border border-amber-200/60 rounded-xl">
                     <p className="text-sm text-amber-900 font-medium flex items-center gap-2">
                       <span className="text-base">💵</span> Pay cash directly to the delivery agent when your order arrives
@@ -2493,7 +2527,7 @@ export default function OrderPage() {
                         )}
                       </div>
 
-                      {paymentMethod === "cod" ? (
+                      {paymentMethod === "cod" && IS_COD_ENABLED ? (
                         <Button
                           onClick={handleSubmitOrder}
                           disabled={loading || isProcessingPayment}
