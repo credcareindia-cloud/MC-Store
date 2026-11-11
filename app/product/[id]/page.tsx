@@ -621,11 +621,11 @@ export default function ProductPage() {
 
               {/* Price block - ONLY MRP */}
               <div className="flex items-baseline gap-3">
-                {currencyAvailable && selectedVariant ? (
+                {currencyAvailable && (selectedVariant || product) ? (
                   <span className="text-3xl font-extrabold text-red-600">
                     {formatPriceWithSmallDecimals(
-                      selectedVariant.price_aed,
-                      selectedVariant.price_inr,
+                      (selectedVariant?.price_aed && selectedVariant.price_aed > 0) ? selectedVariant.price_aed : product.price_aed,
+                      (selectedVariant?.price_inr && selectedVariant.price_inr > 0) ? selectedVariant.price_inr : (product.price_inr || product.price),
                       selectedCurrency,
                       true,
                       "#dc2626"
@@ -653,8 +653,10 @@ export default function ProductPage() {
                       const isAvail = hasSelectedCurrencyPrice(v);
                       const isOutOfStock = v.stock_quantity <= 0;
                       const displayName = getVariantDisplayName(v);
-                      const price = selectedCurrency === 'AED' ? v.price_aed : v.price_inr;
-                      const priceStr = price != null ? (selectedCurrency === 'AED' ? `AED ${price.toFixed(2)}` : `₹${price.toFixed(2)}`) : 'N/A';
+                      const price = selectedCurrency === 'AED'
+                        ? ((v.price_aed && v.price_aed > 0) ? v.price_aed : product.price_aed)
+                        : ((v.price_inr && v.price_inr > 0) ? v.price_inr : (product.price_inr || product.price));
+                      const priceStr = price != null && price > 0 ? (selectedCurrency === 'AED' ? `AED ${price.toFixed(2)}` : `₹${price.toFixed(2)}`) : 'N/A';
                       return (
                         <button
                           key={v.id}

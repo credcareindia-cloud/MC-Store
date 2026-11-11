@@ -877,7 +877,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
                               {item.name}
                             </h4>
                             <p className="text-xs font-bold text-red-600 mt-1">
-                              {v
+                              {v && (selectedCurrency === 'AED' ? (v.price_aed && v.price_aed > 0) : (v.price_inr && v.price_inr > 0))
                                 ? formatPriceWithSmallDecimals(v.price_aed, v.price_inr, "AED", true, "#dc2626")
                                 : `₹ ${item.price}`}
                             </p>
@@ -1180,7 +1180,7 @@ export default function ProductList({ showSpinner = false, onCloseSpinner, showT
                           <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-100">
                             <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
                               <span className="text-sm sm:text-base font-extrabold text-red-600">
-                                {currentVariant
+                                {currentVariant && (selectedCurrency === 'AED' ? (currentVariant.price_aed && currentVariant.price_aed > 0) : (currentVariant.price_inr && currentVariant.price_inr > 0))
                                   ? formatPriceWithSmallDecimals(
                                       currentVariant.price_aed,
                                       currentVariant.price_inr,

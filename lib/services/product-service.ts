@@ -126,7 +126,8 @@ function toNumber(val: unknown): number {
 
 function mapVariant(row: Record<string, unknown>): any {
   const price = toNumber(row.price)
-  const mrp = row.mrp !== null && row.mrp !== undefined ? toNumber(row.mrp) : price
+  const rawMrp = toNumber(row.mrp)
+  const mrp = rawMrp > 0 ? rawMrp : price
   const stock = toNumber(row.stock)
   const status = String(row.status ?? "active")
   
@@ -149,12 +150,12 @@ function mapVariant(row: Record<string, unknown>): any {
     stock: stock,
     
     // Front-end compatibility properties:
-    price_inr: mrp,
+    price_inr: mrp > 0 ? mrp : price,
     discount_inr: price,
-    price_aed: parseFloat((mrp / 22.5).toFixed(2)),
+    price_aed: parseFloat(((mrp > 0 ? mrp : price) / 22.5).toFixed(2)),
     discount_aed: parseFloat((price / 22.5).toFixed(2)),
-    available_inr: status === "active",
-    available_aed: status === "active",
+    available_inr: status === "active" && (price > 0 || mrp > 0),
+    available_aed: status === "active" && (price > 0 || mrp > 0),
     stock_quantity: stock
   }
 }
@@ -207,9 +208,9 @@ function mapProduct(row: Record<string, unknown>, variants: any[] = []): any {
   }
 
   const firstVariant = mappedVariants[0]
-  const mrp = firstVariant?.mrp ?? price
-  const mrp_inr = firstVariant?.price_inr ?? mrp
-  const mrp_aed = firstVariant?.price_aed ?? parseFloat((mrp / 22.5).toFixed(2))
+  const mrp = (firstVariant?.mrp && firstVariant.mrp > 0) ? firstVariant.mrp : price
+  const mrp_inr = (firstVariant?.price_inr && firstVariant.price_inr > 0) ? firstVariant.price_inr : mrp
+  const mrp_aed = (firstVariant?.price_aed && firstVariant.price_aed > 0) ? firstVariant.price_aed : parseFloat((mrp / 22.5).toFixed(2))
 
   return {
     id: id,
