@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { useDispatch, useSelector } from "react-redux"
 import type { AppDispatch, RootState } from "@/lib/store"
@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { useLoginModal } from '@/lib/stores/useLoginModal'
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, ShoppingCart, Heart, Share2, AlertCircle, Plus, Minus, Truck, Shield, Zap, ChevronRight, Sparkles, Verified, Check, Package, Info, Star, MessageCircle } from "lucide-react"
+import { ArrowLeft, ShoppingCart, Heart, Share2, AlertCircle, Plus, Minus, Truck, Shield, Zap, ChevronLeft, ChevronRight, Sparkles, Verified, Check, Package, Info, Star, MessageCircle } from "lucide-react"
 import Image from "next/image"
 import Navbar from "@/components/ui/navbar"
 import Footer from "@/components/ui/footer"
@@ -307,6 +307,59 @@ export default function ProductPage() {
     return product.image_urls || []
   }
 
+  const productImages = getProductImageUrls()
+
+  const handlePrevImage = () => {
+    if (productImages.length <= 1) return
+    setSelectedImageIndex((prev) => (prev === 0 ? productImages.length - 1 : prev - 1))
+  }
+
+  const handleNextImage = () => {
+    if (productImages.length <= 1) return
+    setSelectedImageIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1))
+  }
+
+  // Swipe handling for mobile & tablet
+  const touchStartXRef = useRef<number | null>(null)
+  const touchStartYRef = useRef<number | null>(null)
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    touchStartXRef.current = e.touches[0].clientX
+    touchStartYRef.current = e.touches[0].clientY
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return
+    const diffX = touchStartXRef.current - e.changedTouches[0].clientX
+    const diffY = touchStartYRef.current - e.changedTouches[0].clientY
+
+    // Detect horizontal swipe if deltaX is dominant and exceeds 40px threshold
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+      if (diffX > 0) {
+        handleNextImage()
+      } else {
+        handlePrevImage()
+      }
+    }
+    touchStartXRef.current = null
+    touchStartYRef.current = null
+  }
+
+  // Keyboard arrow keys navigation (Desktop / Laptops)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeTag = (document.activeElement as HTMLElement)?.tagName
+      if (['INPUT', 'TEXTAREA'].includes(activeTag)) return
+      if (e.key === 'ArrowLeft') {
+        handlePrevImage()
+      } else if (e.key === 'ArrowRight') {
+        handleNextImage()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [productImages.length])
+
   const handleVariantChange = (variant: Variant) => {
     setSelectedVariant(variant)
     setSelectedImageIndex(0)
@@ -498,16 +551,63 @@ export default function ProductPage() {
             {/* ─── Left: Images ─── */}
             <div className="lg:col-span-7">
               <div className="lg:sticky lg:top-24 space-y-3">
-                {/* Main image */}
-                <div className="relative bg-gray-50 rounded-2xl overflow-hidden aspect-square">
+                {/* Main image with swipe & arrow navigation */}
+                <div 
+                  className="relative bg-gray-50 rounded-2xl overflow-hidden aspect-square select-none group touch-pan-y"
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                >
                   <Image
-                    src={getProductImageUrls()[selectedImageIndex] || `/placeholder.svg?height=600&width=600&query=${encodeURIComponent(product.name)}`}
+                    src={productImages[selectedImageIndex] || `/placeholder.svg?height=600&width=600&query=${encodeURIComponent(product.name)}`}
                     alt={product.name || 'Product image'}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 58vw, 660px"
-                    className="object-contain p-6 sm:p-10"
+                    className="object-contain p-6 sm:p-10 transition-opacity duration-300"
                     priority
                   />
+
+                  {/* Left & Right Arrow Navigation (Desktop & Laptops click, hidden on mobile) */}
+                  {productImages.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handlePrevImage()
+                        }}
+                        className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/85 hover:bg-white text-gray-800 shadow-md backdrop-blur-sm items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:scale-105 active:scale-95"
+                        aria-label="Previous image"
+                      >
+                        <ChevronLeft className="w-5 h-5 text-gray-800" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleNextImage()
+                        }}
+                        className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/85 hover:bg-white text-gray-800 shadow-md backdrop-blur-sm items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:scale-105 active:scale-95"
+                        aria-label="Next image"
+                      >
+                        <ChevronRight className="w-5 h-5 text-gray-800" />
+                      </button>
+                    </>
+                  )}
+
+                  {/* Mobile Swipe Pagination Dots Indicator */}
+                  {productImages.length > 1 && (
+                    <div className="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-full pointer-events-none">
+                      {productImages.map((_, i) => (
+                        <span
+                          key={i}
+                          className={`h-1.5 rounded-full transition-all duration-300 ${
+                            selectedImageIndex === i ? "w-4 bg-white" : "w-1.5 bg-white/50"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
 
                   {/* Top-left badges */}
                   <div className="absolute top-4 left-4 flex flex-col gap-2">
@@ -564,9 +664,9 @@ export default function ProductPage() {
                 </div>
 
                 {/* Thumbnails */}
-                {getProductImageUrls().length > 1 && (
-                  <div className="grid grid-cols-4 gap-2">
-                    {getProductImageUrls().slice(0, 4).map((image: string, index: number) => (
+                {productImages.length > 1 && (
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                    {productImages.slice(0, 8).map((image: string, index: number) => (
                       <button
                         key={index}
                         onClick={() => setSelectedImageIndex(index)}
