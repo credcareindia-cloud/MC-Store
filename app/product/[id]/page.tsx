@@ -11,7 +11,7 @@ import { useAuth } from "@/lib/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { useLoginModal } from '@/lib/stores/useLoginModal'
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, ShoppingCart, Heart, Share2, AlertCircle, Plus, Minus, Truck, Shield, Zap, ChevronLeft, ChevronRight, Sparkles, Verified, Check, Package, Info, Star, MessageCircle } from "lucide-react"
+import { ArrowLeft, ShoppingCart, Heart, Share2, AlertCircle, Plus, Minus, Truck, Shield, Zap, ChevronLeft, ChevronRight, Sparkles, Verified, Check, Package, Info, Star, MessageCircle, Play } from "lucide-react"
 import Image from "next/image"
 import Navbar from "@/components/ui/navbar"
 import Footer from "@/components/ui/footer"
@@ -46,6 +46,7 @@ interface Product {
   price_inr?: number | null
   default_currency: 'AED' | 'INR'
   image_urls: string[]
+  video_url?: string | null
   category_id: number
   category_name: string
   is_available: boolean
@@ -309,14 +310,21 @@ export default function ProductPage() {
 
   const productImages = getProductImageUrls()
 
+  const mediaItems: { type: 'image' | 'video'; url: string }[] = [
+    ...productImages.map((url) => ({ type: 'image' as const, url })),
+    ...(product?.video_url ? [{ type: 'video' as const, url: product.video_url }] : []),
+  ]
+
+  const currentMedia = mediaItems[selectedImageIndex] || mediaItems[0]
+
   const handlePrevImage = () => {
-    if (productImages.length <= 1) return
-    setSelectedImageIndex((prev) => (prev === 0 ? productImages.length - 1 : prev - 1))
+    if (mediaItems.length <= 1) return
+    setSelectedImageIndex((prev) => (prev === 0 ? mediaItems.length - 1 : prev - 1))
   }
 
   const handleNextImage = () => {
-    if (productImages.length <= 1) return
-    setSelectedImageIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1))
+    if (mediaItems.length <= 1) return
+    setSelectedImageIndex((prev) => (prev === mediaItems.length - 1 ? 0 : prev + 1))
   }
 
   // Swipe handling for mobile & tablet
@@ -358,7 +366,7 @@ export default function ProductPage() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [productImages.length])
+  }, [mediaItems.length])
 
   const handleVariantChange = (variant: Variant) => {
     setSelectedVariant(variant)
@@ -551,23 +559,36 @@ export default function ProductPage() {
             {/* ─── Left: Images ─── */}
             <div className="lg:col-span-7">
               <div className="lg:sticky lg:top-24 space-y-3">
-                {/* Main image with swipe & arrow navigation */}
+                {/* Main media container with swipe & arrow navigation */}
                 <div 
                   className="relative bg-gray-50 rounded-2xl overflow-hidden aspect-square select-none group touch-pan-y"
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}
                 >
-                  <Image
-                    src={productImages[selectedImageIndex] || `/placeholder.svg?height=600&width=600&query=${encodeURIComponent(product.name)}`}
-                    alt={product.name || 'Product image'}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 58vw, 660px"
-                    className="object-contain p-6 sm:p-10 transition-opacity duration-300"
-                    priority
-                  />
+                  {currentMedia?.type === 'video' ? (
+                    <div className="w-full h-full bg-black flex items-center justify-center">
+                      <video
+                        key={currentMedia.url}
+                        src={currentMedia.url}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <Image
+                      src={currentMedia?.url || `/placeholder.svg?height=600&width=600&query=${encodeURIComponent(product.name)}`}
+                      alt={product.name || 'Product image'}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 58vw, 660px"
+                      className="object-contain p-6 sm:p-10 transition-opacity duration-300"
+                      priority
+                    />
+                  )}
 
                   {/* Left & Right Arrow Navigation (Desktop & Laptops click, hidden on mobile) */}
-                  {productImages.length > 1 && (
+                  {mediaItems.length > 1 && (
                     <>
                       <button
                         type="button"
@@ -576,7 +597,7 @@ export default function ProductPage() {
                           handlePrevImage()
                         }}
                         className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/85 hover:bg-white text-gray-800 shadow-md backdrop-blur-sm items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:scale-105 active:scale-95"
-                        aria-label="Previous image"
+                        aria-label="Previous media"
                       >
                         <ChevronLeft className="w-5 h-5 text-gray-800" />
                       </button>
@@ -588,17 +609,17 @@ export default function ProductPage() {
                           handleNextImage()
                         }}
                         className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/85 hover:bg-white text-gray-800 shadow-md backdrop-blur-sm items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100 hover:scale-105 active:scale-95"
-                        aria-label="Next image"
+                        aria-label="Next media"
                       >
                         <ChevronRight className="w-5 h-5 text-gray-800" />
                       </button>
                     </>
                   )}
 
-                  {/* Mobile Swipe Pagination Dots Indicator */}
-                  {productImages.length > 1 && (
+                  {/* Mobile Swipe Pagination Dots Indicator (hidden when video is active so controls remain unobstructed) */}
+                  {mediaItems.length > 1 && currentMedia?.type !== 'video' && (
                     <div className="sm:hidden absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-black/40 backdrop-blur-sm px-2.5 py-1 rounded-full pointer-events-none">
-                      {productImages.map((_, i) => (
+                      {mediaItems.map((_, i) => (
                         <span
                           key={i}
                           className={`h-1.5 rounded-full transition-all duration-300 ${
@@ -609,52 +630,56 @@ export default function ProductPage() {
                     </div>
                   )}
 
-                  {/* Top-left badges */}
-                  <div className="absolute top-4 left-4 flex flex-col gap-2">
-                    {product.is_new && (
-                      <span className="bg-emerald-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                        New
-                      </span>
-                    )}
-                    {product.condition_type && product.condition_type !== 'none' && (
-                      <span className="bg-zinc-900 text-white text-xs font-semibold px-3 py-1 rounded-full capitalize">
-                        {conditionLabels[product.condition_type]}
-                      </span>
-                    )}
-                  </div>
+                  {/* Top-left badges (hidden during video playback) */}
+                  {currentMedia?.type !== 'video' && (
+                    <div className="absolute top-4 left-4 flex flex-col gap-2">
+                      {product.is_new && (
+                        <span className="bg-emerald-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                          New
+                        </span>
+                      )}
+                      {product.condition_type && product.condition_type !== 'none' && (
+                        <span className="bg-zinc-900 text-white text-xs font-semibold px-3 py-1 rounded-full capitalize">
+                          {conditionLabels[product.condition_type]}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
-                  {/* Top-right actions */}
-                  <div className="absolute top-4 right-4 flex flex-col gap-2">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleToggleWishlist(product) }}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
-                        isInWishlist(product.id)
-                          ? 'bg-zinc-900 text-white shadow-lg'
-                          : 'bg-white/90 backdrop-blur-sm text-gray-600 hover:bg-white shadow-md hover:text-zinc-900'
-                      }`}
-                      aria-label={isInWishlist(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
-                    >
-                      <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-white' : ''}`} />
-                    </button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white transition-colors text-gray-600 hover:text-zinc-900"
-                          aria-label="Share product"
-                        >
-                          <Share2 className="w-5 h-5" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="rounded-xl">
-                        <DropdownMenuItem onClick={() => navigator.clipboard.writeText(window.location.href).then(() => toast.success('Link copied!')).catch(() => toast.error('Failed to copy'))}>
-                          Copy Link
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                  {/* Top-right actions (hidden during video playback) */}
+                  {currentMedia?.type !== 'video' && (
+                    <div className="absolute top-4 right-4 flex flex-col gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleToggleWishlist(product) }}
+                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${
+                          isInWishlist(product.id)
+                            ? 'bg-zinc-900 text-white shadow-lg'
+                            : 'bg-white/90 backdrop-blur-sm text-gray-600 hover:bg-white shadow-md hover:text-zinc-900'
+                        }`}
+                        aria-label={isInWishlist(product.id) ? 'Remove from wishlist' : 'Add to wishlist'}
+                      >
+                        <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-white' : ''}`} />
+                      </button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md hover:bg-white transition-colors text-gray-600 hover:text-zinc-900"
+                            aria-label="Share product"
+                          >
+                            <Share2 className="w-5 h-5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="rounded-xl">
+                          <DropdownMenuItem onClick={() => navigator.clipboard.writeText(window.location.href).then(() => toast.success('Link copied!')).catch(() => toast.error('Failed to copy'))}>
+                            Copy Link
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )}
 
-                  {/* Stock indicator */}
-                  {stockQty > 0 && stockQty <= 5 && (
+                  {/* Stock indicator (hidden during video playback) */}
+                  {currentMedia?.type !== 'video' && stockQty > 0 && stockQty <= 5 && (
                     <div className="absolute bottom-4 left-4">
                       <span className="bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
                         Only {stockQty} left
@@ -664,28 +689,63 @@ export default function ProductPage() {
                 </div>
 
                 {/* Thumbnails */}
-                {productImages.length > 1 && (
+                {mediaItems.length > 1 && (
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                    {productImages.slice(0, 8).map((image: string, index: number) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedImageIndex(index)}
-                        className={`relative aspect-square rounded-xl overflow-hidden bg-gray-50 transition-all duration-200 ${
-                          selectedImageIndex === index
-                            ? "ring-2 ring-zinc-900 ring-offset-2"
-                            : "hover:ring-2 hover:ring-gray-200 hover:ring-offset-1"
-                        }`}
-                        aria-label={`Select image ${index + 1}`}
-                      >
-                        <Image
-                          src={image || "/placeholder.svg"}
-                          alt={`${product.name} ${index + 1}`}
-                          fill
-                          sizes="100px"
-                          className="object-contain p-2"
-                        />
-                      </button>
-                    ))}
+                    {mediaItems.slice(0, 8).map((media, index) => {
+                      const isSelected = selectedImageIndex === index
+                      if (media.type === 'video') {
+                        return (
+                          <button
+                            key={`video-${index}`}
+                            type="button"
+                            onClick={() => setSelectedImageIndex(index)}
+                            className={`relative aspect-square rounded-xl overflow-hidden bg-zinc-900 transition-all duration-200 group/vthumb ${
+                              isSelected
+                                ? "ring-2 ring-zinc-900 ring-offset-2"
+                                : "hover:ring-2 hover:ring-gray-300 hover:ring-offset-1"
+                            }`}
+                            aria-label="Play product video"
+                          >
+                            {productImages[0] ? (
+                              <Image
+                                src={productImages[0]}
+                                alt="Video thumbnail"
+                                fill
+                                sizes="120px"
+                                className="object-contain p-1.5 opacity-40 group-hover/vthumb:opacity-60 transition-opacity"
+                              />
+                            ) : null}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+                              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/95 text-zinc-900 flex items-center justify-center shadow-md group-hover/vthumb:scale-110 transition-transform">
+                                <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-zinc-900 text-zinc-900 ml-0.5" />
+                              </div>
+                              <span className="text-[10px] font-bold text-white tracking-wide mt-1 drop-shadow-sm uppercase">Video</span>
+                            </div>
+                          </button>
+                        )
+                      }
+                      return (
+                        <button
+                          key={`img-${index}`}
+                          type="button"
+                          onClick={() => setSelectedImageIndex(index)}
+                          className={`relative aspect-square rounded-xl overflow-hidden bg-gray-50 transition-all duration-200 ${
+                            isSelected
+                              ? "ring-2 ring-zinc-900 ring-offset-2"
+                              : "hover:ring-2 hover:ring-gray-200 hover:ring-offset-1"
+                          }`}
+                          aria-label={`Select image ${index + 1}`}
+                        >
+                          <Image
+                            src={media.url || "/placeholder.svg"}
+                            alt={`${product.name} ${index + 1}`}
+                            fill
+                            sizes="100px"
+                            className="object-contain p-2"
+                          />
+                        </button>
+                      )
+                    })}
                   </div>
                 )}
               </div>

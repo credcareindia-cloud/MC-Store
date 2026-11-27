@@ -225,6 +225,7 @@ function mapProduct(row: Record<string, unknown>, variants: any[] = []): any {
     primary_currency: "INR",
     image_url: main_image,
     image_urls: image_urls.length > 0 ? image_urls : (main_image ? [main_image] : []),
+    video_url: (typeof row.video_url === "string" && row.video_url.trim() !== "") ? row.video_url.trim() : null,
     category_id: row.category_id !== null ? toNumber(row.category_id) : null,
     category_name: row.category_name as string | null ?? row.category as string | null ?? "Common",
     is_available: totalStock > 0,
