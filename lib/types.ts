@@ -20,6 +20,7 @@ export interface MenuItem {
   price_inr?: number | null
   default_currency: 'AED' | 'INR'
   image_urls: string[]
+  video_url?: string | null
   category_id: number
   category_name: string
   is_available: boolean
